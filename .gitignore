@@ -1,0 +1,14 @@
+node_modules
+dist
+.env
+.env.local
+*.log
+scripts/.entry-server.generated.mjs
+*.tsbuildinfo
+
+# Gerado por scripts/fetch-feeds.mjs e scripts/parse-coupons.mjs a cada build —
+# não versionado (muda toda semana e é grande demais pra valer a pena no git).
+public/data/
+
+# Config/estado local do Claude Code, não é parte do projeto.
+.claude/

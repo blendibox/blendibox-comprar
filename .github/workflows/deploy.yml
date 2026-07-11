@@ -1,0 +1,58 @@
+name: Atualizar feed e publicar
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Toda segunda-feira às 06:00 UTC (03:00 horário de Brasília)
+    - cron: '0 6 * * 1'
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Baixar feed e gerar JSON + build
+        env:
+          AWIN_API_KEY: ${{ secrets.AWIN_API_KEY }}
+          # Domínio próprio (CNAME) serve a partir da raiz, não de /repo-name/.
+          VITE_BASE_PATH: /
+          SITE_URL: https://comprar.blendibox.com.br
+        run: npm run build
+
+      - name: Upload do artefato do Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy no GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
