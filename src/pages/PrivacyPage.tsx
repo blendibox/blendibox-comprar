@@ -21,7 +21,7 @@ export function PrivacyPage() {
         <p>
           Se você se cadastrar na newsletter, usamos seu e-mail para enviar cupons e ofertas
           semanais, e eventualmente lembretes sobre produtos que você visitou no site. O
-          processamento é feito pela Brevo, nossa plataforma de envio de e-mails, que atua como
+          processamento é feito pela Resend, nossa plataforma de envio de e-mails, que atua como
           operadora dos dados nos termos da LGPD (Lei 13.709/2018).
         </p>
       </section>
@@ -61,7 +61,8 @@ export function PrivacyPage() {
         <h2>Contato</h2>
         <p>
           Para dúvidas sobre seus dados ou para solicitar a exclusão do seu cadastro, entre em
-          contato pelo e-mail <a href="mailto:contato@blendibox.com.br">contato@blendibox.com.br</a>.
+          contato pelo e-mail{' '}
+          <a href="mailto:atendimento@blendibox.com.br">atendimento@blendibox.com.br</a>.
         </p>
       </section>
 

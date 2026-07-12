@@ -134,13 +134,34 @@ tratamento e o Google as remove do índice naturalmente com o tempo.
 download direto) e versionado no repo — substitua o arquivo e dê push quando
 quiser atualizar os cupons; o build já reprocessa tudo.
 
-## Newsletter e LGPD
+## Newsletter, Resend e LGPD
 
-O formulário no rodapé (`src/components/NewsletterSignup.tsx`) usa a Brevo —
-crie uma conta em brevo.com, monte um formulário de inscrição (Contacts >
-Forms) e cole a URL de action gerada em `src/config/newsletter.ts`. Até isso
-ser configurado, o formulário mostra "em breve" em vez de quebrado. O
-cadastro exige aceite explícito da Política de Privacidade
+O formulário no rodapé (`src/components/NewsletterSignup.tsx`) usa o Resend
+pra guardar os e-mails cadastrados numa Audience. Como a chave da API do
+Resend é secreta (não pode ficar no JS do navegador), o formulário não fala
+direto com o Resend — ele chama um **Cloudflare Worker** (`worker/`), que é
+quem de fato conversa com a API do Resend usando a chave guardada como secret.
+
+Deploy do Worker (precisa de conta gratuita na Cloudflare e do `wrangler`):
+
+```bash
+cd worker
+npx wrangler login
+npx wrangler secret put RESEND_API_KEY        # cole a chave do painel do Resend
+npx wrangler secret put RESEND_AUDIENCE_ID    # ID da Audience criada em resend.com/audiences
+npx wrangler deploy
+```
+
+O comando `deploy` imprime uma URL tipo
+`https://blendibox-newsletter.<seu-subdominio>.workers.dev` — cole ela em
+`src/config/newsletter.ts` (`NEWSLETTER_WORKER_URL`). Até isso ser
+configurado, o formulário mostra "em breve" em vez de quebrado.
+
+Pra mandar a newsletter semanal de verdade, use a aba **Broadcasts** do
+Resend (compõe e envia pra Audience inteira) — ela já cuida do link de
+descadastro por contato automaticamente, sem precisar programar nada extra.
+
+O cadastro exige aceite explícito da Política de Privacidade
 (`/privacidade`, `src/pages/PrivacyPage.tsx`) — os textos de política e termos
 são um modelo geral, vale revisão jurídica antes de publicar oficialmente.
 

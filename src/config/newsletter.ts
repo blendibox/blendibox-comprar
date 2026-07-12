@@ -1,7 +1,5 @@
-// Depois de criar a conta na Brevo (https://www.brevo.com), crie um formulário
-// de inscrição (Contacts > Forms > Create a form) e copie a URL de "action"
-// gerada por eles pra cá — ela é única da sua conta/lista, não dá pra
-// adivinhar. O nome do campo de e-mail também vem de lá (geralmente "EMAIL").
-export const NEWSLETTER_FORM_ACTION = 'https://SEU-ID.sibforms.com/serve/SEU-FORM-ID'
-export const NEWSLETTER_EMAIL_FIELD = 'EMAIL'
-export const NEWSLETTER_CONFIGURED = !NEWSLETTER_FORM_ACTION.includes('SEU-ID')
+// Depois de fazer o deploy do Worker (veja worker/README ou o README
+// principal), cole aqui a URL gerada pelo `wrangler deploy`
+// (algo como https://blendibox-newsletter.SEU-SUBDOMINIO.workers.dev).
+export const NEWSLETTER_WORKER_URL = 'https://blendibox-newsletter.SEU-SUBDOMINIO.workers.dev'
+export const NEWSLETTER_CONFIGURED = !NEWSLETTER_WORKER_URL.includes('SEU-SUBDOMINIO')

@@ -601,6 +601,11 @@ a {
   font-size: 13px;
 }
 
+.newsletter__error {
+  color: #f87171;
+  font-size: 12px;
+}
+
 .newsletter__form {
   display: flex;
   flex-direction: column;
