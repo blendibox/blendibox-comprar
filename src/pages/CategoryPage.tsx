@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useIndex } from '../hooks/useIndex'
 import { consumeInitialData } from '../lib/initialData'
 import type { ListInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
+import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 
 const PAGE_SIZE = 60
 
@@ -13,6 +14,7 @@ export function CategoryPage() {
   const [initial] = useState<ListInitialData | null>(() => consumeInitialData<ListInitialData>(path))
   const { products, state } = useIndex()
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [sort, setSort] = useState<SortOption>('relevancia')
 
   const filtered = useMemo(
     () => products.filter((p) => p.vertical === vertical && p.categorySlug === categorySlug),
@@ -20,9 +22,14 @@ export function CategoryPage() {
   )
 
   const ready = state === 'ready'
-  const items = ready ? filtered : initial?.items ?? []
+  const sortedFiltered = useMemo(() => sortProducts(filtered, sort), [filtered, sort])
+  const items = ready ? sortedFiltered : initial?.items ?? []
   const totalCount = ready ? filtered.length : initial?.totalCount ?? 0
   const visible = items.slice(0, visibleCount)
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [vertical, categorySlug, sort])
 
   return (
     <div className="page">
@@ -38,6 +45,18 @@ export function CategoryPage() {
 
       {state === 'loading' && !initial && <p className="status">Carregando...</p>}
       {state === 'ready' && filtered.length === 0 && <p className="status">Nenhum produto encontrado nesta categoria.</p>}
+
+      {(ready || initial) && items.length > 0 && (
+        <div className="filters">
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+            {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+              <option key={key} value={key}>
+                {SORT_LABELS[key]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {(ready || initial) && (
         <>

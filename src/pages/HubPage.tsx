@@ -6,6 +6,7 @@ import { consumeInitialData } from '../lib/initialData'
 import type { CouponEntry, HubInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
+import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 
 const PAGE_SIZE = 60
 
@@ -32,6 +33,7 @@ export function HubPage() {
   }, [ready, products, slug, isVertical])
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  const [sort, setSort] = useState<SortOption>('relevancia')
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
 
   useEffect(() => {
@@ -40,6 +42,10 @@ export function HubPage() {
       .then((data) => setCoupons(data.filter((c) => c.merchantSlug === slug)))
       .catch(() => setCoupons([]))
   }, [slug, isVertical])
+
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE)
+  }, [slug, sort])
 
   const merchants = useMemo(() => {
     if (!ready || !isVertical) return []
@@ -59,7 +65,8 @@ export function HubPage() {
     return Array.from(map.entries()).sort((a, b) => b[1] - a[1])
   }, [ready, filtered])
 
-  const items = ready ? filtered : initial?.items ?? []
+  const sortedFiltered = useMemo(() => sortProducts(filtered, sort), [filtered, sort])
+  const items = ready ? sortedFiltered : initial?.items ?? []
   const totalCount = ready ? filtered.length : initial?.totalCount ?? 0
   const displayMerchants = ready ? merchants : initial?.merchants ?? []
   const displayCategories = ready ? categories : initial?.categories ?? []
@@ -129,6 +136,18 @@ export function HubPage() {
       )}
 
       {!ready && !initial && <p className="status">Carregando...</p>}
+
+      {(ready || initial) && items.length > 0 && (
+        <div className="filters">
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+            {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+              <option key={key} value={key}>
+                {SORT_LABELS[key]}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {(ready || initial) && (
         <>

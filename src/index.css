@@ -548,6 +548,18 @@ a {
   line-height: 1.4;
 }
 
+.featured-section {
+  margin-bottom: 32px;
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%);
+}
+
+.featured-section h2 {
+  color: #fff;
+  margin: 0 0 16px;
+}
+
 .coupon-card__code {
   align-self: flex-start;
   background: #fdf2f8;
