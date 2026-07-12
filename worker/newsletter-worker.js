@@ -93,7 +93,7 @@ export default {
           Authorization: `Bearer ${env.RESEND_API_KEY}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ event: 'newsletter.subscribed', email }),
+        body: JSON.stringify({ event: 'subscriber', email }),
       })
     } catch {
       // ignora — cadastro já confirmado, evento é best-effort
