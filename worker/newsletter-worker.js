@@ -84,13 +84,11 @@ export default {
     }
 
     // Dispara o evento que aciona a automação de boas-vindas configurada no
-    // painel do Resend (Automations). Best-effort: se isso falhar, o cadastro
-    // em si já foi feito com sucesso, então não bloqueia a resposta ao usuário.
-    // DEBUG TEMPORÁRIO: captura status/corpo da chamada pra diagnosticar por
-    // que a automação não estava disparando — remover depois de confirmado.
-    let eventDebug
+    // painel do Resend (Automations → trigger de evento custom "subscriber").
+    // Best-effort: se isso falhar, o cadastro em si já foi feito com sucesso,
+    // então não bloqueia a resposta ao usuário.
     try {
-      const eventRes = await fetch('https://api.resend.com/events/send', {
+      await fetch('https://api.resend.com/events/send', {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -98,12 +96,11 @@ export default {
         },
         body: JSON.stringify({ event: 'subscriber', email }),
       })
-      eventDebug = { status: eventRes.status, body: await eventRes.text() }
-    } catch (err) {
-      eventDebug = { error: String(err) }
+    } catch {
+      // ignora — cadastro já confirmado, evento é best-effort
     }
 
-    return new Response(JSON.stringify({ ok: true, eventDebug }), {
+    return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { ...headers, 'Content-Type': 'application/json' },
     })
