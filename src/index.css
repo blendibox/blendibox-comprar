@@ -156,6 +156,25 @@ a {
   overflow-x: auto;
   padding-bottom: 8px;
   scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0f172a;
+}
+
+.blendibox-carousel__track::-webkit-scrollbar {
+  height: 8px;
+}
+
+.blendibox-carousel__track::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+
+.blendibox-carousel__track::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}
+
+.blendibox-carousel__track::-webkit-scrollbar-thumb:hover {
+  background: #475569;
 }
 
 .blendibox-carousel__item {
@@ -496,6 +515,19 @@ a {
   cursor: not-allowed;
 }
 
+.product-card__caption {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+  background: var(--color-pink);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .comparator-tray {
   position: fixed;
   bottom: 0;
@@ -642,6 +674,20 @@ a {
 .featured-section h2 {
   color: #fff;
   margin: 0 0 16px;
+}
+
+.recent-sales-section {
+  margin-bottom: 32px;
+}
+
+.recent-sales-section h2 {
+  margin: 0 0 4px;
+}
+
+.recent-sales-section__hint {
+  margin: 0 0 16px;
+  color: #666;
+  font-size: 13px;
 }
 
 .coupon-card__code {

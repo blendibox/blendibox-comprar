@@ -11,13 +11,14 @@ export function formatPrice(value: number | null | undefined, currency: string) 
   }
 }
 
-export function ProductCard({ product }: { product: ProductIndexEntry }) {
+export function ProductCard({ product, caption }: { product: ProductIndexEntry; caption?: string }) {
   const href = `/${product.merchantSlug}/${product.slug}`
   const { isSelected, toggle, isFull } = useComparator()
   const selected = isSelected(product.merchantSlug, product.slug)
 
   return (
     <Link className="product-card" to={href}>
+      {caption && <span className="product-card__caption">{caption}</span>}
       <img
         className="product-card__image"
         src={product.awImageUrl}

@@ -108,6 +108,13 @@ export interface BlendiboxProduct {
   image: string
 }
 
+export interface SalesHighlight {
+  merchantSlug: string
+  productName: string
+  skuSlug: string
+  label: string
+}
+
 export interface FeedMeta {
   generatedAt: string
   totalProducts: number

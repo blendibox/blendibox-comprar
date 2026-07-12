@@ -12,8 +12,9 @@
     "coupons": "node scripts/parse-coupons.mjs",
     "price-history": "node scripts/update-price-history.mjs",
     "blendibox-feed": "node scripts/fetch-blendibox-feed.mjs",
-    "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/parse-coupons.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
-    "build:no-fetch": "node scripts/parse-coupons.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
+    "sales-highlights": "node scripts/parse-sales-highlights.mjs",
+    "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
+    "build:no-fetch": "node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

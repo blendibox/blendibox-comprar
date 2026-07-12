@@ -1,14 +1,54 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useIndex } from '../hooks/useIndex'
-import { fetchMerchants } from '../lib/api'
-import type { MerchantMeta, ProductIndexEntry } from '../types/product'
+import { fetchMerchants, fetchSalesHighlights } from '../lib/api'
+import type { MerchantMeta, ProductIndexEntry, SalesHighlight } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 
 const PAGE_SIZE = 60
+const MAX_RECENT_SALES = 8
+
+function pickRecentSales(
+  highlights: SalesHighlight[],
+  products: ProductIndexEntry[]
+): { product: ProductIndexEntry; label: string }[] {
+  const byMerchant = new Map<string, ProductIndexEntry[]>()
+  for (const p of products) {
+    const list = byMerchant.get(p.merchantSlug)
+    if (list) list.push(p)
+    else byMerchant.set(p.merchantSlug, [p])
+  }
+
+  const matches: { product: ProductIndexEntry; label: string }[] = []
+  const seenSlugs = new Set<string>()
+  for (const h of highlights) {
+    const candidates = byMerchant.get(h.merchantSlug)
+    const product = candidates?.find((p) => p.slug.endsWith(`-${h.skuSlug}`) || p.slug === h.skuSlug)
+    if (!product || seenSlugs.has(product.slug)) continue
+    seenSlugs.add(product.slug)
+    matches.push({ product, label: h.label })
+    if (matches.length >= MAX_RECENT_SALES) break
+  }
+  return matches
+}
+
+// Vivara, Centauro e Nike são, na prática, os merchants com melhor histórico
+// real de vendas — sempre aparecem primeiro nos Destaques, antes dos outros
+// merchants "priority".
+const FEATURED_ORDER = ['vivara', 'centauro', 'nike']
 
 function pickFeatured(products: ProductIndexEntry[], merchants: MerchantMeta[]): ProductIndexEntry[] {
-  const prioritySlugs = merchants.filter((m) => m.priority).map((m) => m.slug)
+  const prioritySlugs = merchants
+    .filter((m) => m.priority)
+    .map((m) => m.slug)
+    .sort((a, b) => {
+      const ia = FEATURED_ORDER.indexOf(a)
+      const ib = FEATURED_ORDER.indexOf(b)
+      if (ia === -1 && ib === -1) return 0
+      if (ia === -1) return 1
+      if (ib === -1) return -1
+      return ia - ib
+    })
   const featured: ProductIndexEntry[] = []
   for (const slug of prioritySlugs) {
     const items = products
@@ -25,6 +65,7 @@ function pickFeatured(products: ProductIndexEntry[], merchants: MerchantMeta[]):
 export function ListingPage() {
   const { products, meta, state } = useIndex()
   const [merchants, setMerchants] = useState<MerchantMeta[]>([])
+  const [salesHighlights, setSalesHighlights] = useState<SalesHighlight[]>([])
   const [search, setSearch] = useState('')
   const [vertical, setVertical] = useState('todos')
   const [sort, setSort] = useState<SortOption>('relevancia')
@@ -32,9 +73,11 @@ export function ListingPage() {
 
   useEffect(() => {
     fetchMerchants().then(setMerchants).catch(() => setMerchants([]))
+    fetchSalesHighlights().then(setSalesHighlights).catch(() => setSalesHighlights([]))
   }, [])
 
   const featured = useMemo(() => pickFeatured(products, merchants), [products, merchants])
+  const recentSales = useMemo(() => pickRecentSales(salesHighlights, products), [salesHighlights, products])
 
   const verticals = useMemo(() => {
     const set = new Set(products.map((p) => p.vertical))
@@ -61,6 +104,7 @@ export function ListingPage() {
 
   const visible = filtered.slice(0, visibleCount)
   const showFeatured = state === 'ready' && !search && vertical === 'todos' && featured.length > 0
+  const showRecentSales = state === 'ready' && !search && vertical === 'todos' && recentSales.length > 0
 
   return (
     <div className="page">
@@ -80,6 +124,22 @@ export function ListingPage() {
           <div className="product-grid">
             {featured.map((product) => (
               <ProductCard key={`featured-${product.merchantSlug}-${product.slug}`} product={product} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {showRecentSales && (
+        <section className="recent-sales-section">
+          <h2>Comprado recentemente</h2>
+          <p className="recent-sales-section__hint">Produtos que outros clientes compraram através do Compare Ofertas.</p>
+          <div className="product-grid">
+            {recentSales.map(({ product, label }) => (
+              <ProductCard
+                key={`recent-${product.merchantSlug}-${product.slug}`}
+                product={product}
+                caption={`Vendido ${label}`}
+              />
             ))}
           </div>
         </section>
