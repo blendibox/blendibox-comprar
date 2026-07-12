@@ -278,6 +278,8 @@ async function main() {
     { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },
     { routePath: '/termos', title: 'Termos de Uso | Compare Ofertas', description: 'Termos de uso do Compare Ofertas.' },
     { routePath: '/privacidade', title: 'Política de Privacidade | Compare Ofertas', description: 'Política de privacidade e proteção de dados do Compare Ofertas.' },
+    { routePath: '/cupons', title: 'Cupons | Compare Ofertas', description: 'Cupons e promoções ativas das lojas parceiras do Compare Ofertas.' },
+    { routePath: '/comparar', title: 'Comparar ofertas | Compare Ofertas', description: 'Compare lado a lado até 3 ofertas selecionadas.' },
   ]
   for (const { routePath, title, description } of staticPages) {
     const canonical = `${SITE_URL}${routePath}/`
