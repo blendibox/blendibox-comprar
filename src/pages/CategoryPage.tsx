@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useIndex } from '../hooks/useIndex'
-import { consumeInitialData } from '../lib/initialData'
+import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { ListInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
@@ -11,7 +11,7 @@ const PAGE_SIZE = 60
 export function CategoryPage() {
   const { vertical = '', categorySlug = '' } = useParams()
   const path = `/${vertical}/categoria/${categorySlug}/`
-  const [initial] = useState<ListInitialData | null>(() => consumeInitialData<ListInitialData>(path))
+  const [initial] = useState<ListInitialData | null>(() => peekInitialData<ListInitialData>(path))
   const { products, state } = useIndex()
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')
@@ -30,6 +30,10 @@ export function CategoryPage() {
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [vertical, categorySlug, sort])
+
+  useEffect(() => {
+    clearInitialData(path)
+  }, [path])
 
   return (
     <div className="page">
@@ -68,7 +72,7 @@ export function CategoryPage() {
           {ready && visibleCount < filtered.length && (
             <div className="load-more">
               <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                Carregar mais ({filtered.length - visibleCount} restantes)
+                {`Carregar mais (${filtered.length - visibleCount} restantes)`}
               </button>
             </div>
           )}

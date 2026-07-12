@@ -143,8 +143,14 @@ async function main() {
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
 
+  // DEBUG_LIMIT=N: processa só N produtos e pula os hubs — só pra iterar
+  // rápido em debug local (o gargalo real do build é o volume de arquivos).
+  const debugLimit = process.env.DEBUG_LIMIT ? Number(process.env.DEBUG_LIMIT) : null
+
   // --- Páginas de produto (elegíveis ou de merchant prioritário) ---
-  const productFiles = await walkProductFiles(path.join(DATA_DIR, 'products'))
+  let productFiles = await walkProductFiles(path.join(DATA_DIR, 'products'))
+  if (process.env.DEBUG_ONLY_FILE) productFiles = productFiles.filter((f) => f.includes(process.env.DEBUG_ONLY_FILE))
+  else if (debugLimit) productFiles = productFiles.slice(0, debugLimit)
   let productPageCount = 0
   for (const file of productFiles) {
     const product = JSON.parse(await readFile(file, 'utf-8'))
@@ -175,7 +181,7 @@ async function main() {
   const byVertical = new Map()
   const byMerchant = new Map()
   const byCategory = new Map()
-  for (const entry of index) {
+  for (const entry of debugLimit ? [] : index) {
     if (!byVertical.has(entry.vertical)) byVertical.set(entry.vertical, [])
     byVertical.get(entry.vertical).push(entry)
 
@@ -265,6 +271,24 @@ async function main() {
       },
     })
     generatedUrls.push({ url, changefreq: 'weekly', priority: 0.6 })
+  }
+
+  // --- Páginas institucionais (estáticas, sem dado de produto) ---
+  const staticPages = [
+    { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },
+    { routePath: '/termos', title: 'Termos de Uso | Compare Ofertas', description: 'Termos de uso do Compare Ofertas.' },
+    { routePath: '/privacidade', title: 'Política de Privacidade | Compare Ofertas', description: 'Política de privacidade e proteção de dados do Compare Ofertas.' },
+  ]
+  for (const { routePath, title, description } of staticPages) {
+    const canonical = `${SITE_URL}${routePath}/`
+    const url = await renderPage({
+      template,
+      renderRoute,
+      routePath,
+      initialData: undefined,
+      head: { title, description, canonical },
+    })
+    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
   }
 
   generatedUrls.push({ url: `${SITE_URL}/`, changefreq: 'daily', priority: 1.0 })

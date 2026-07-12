@@ -11,7 +11,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const DIST_DIR = path.join(ROOT, 'dist')
 const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
-const MAX_URLS_PER_SITEMAP = 45000
+// Bem abaixo do limite técnico do protocolo (50 mil), pra dar diagnóstico mais
+// granular por lote no Search Console (indexação de um grupo de URLs isolado
+// do resto, útil pra identificar se algum lote específico indexa mal).
+const MAX_URLS_PER_SITEMAP = 10000
 
 function escapeXml(value) {
   return String(value).replace(/&/g, '&amp;')

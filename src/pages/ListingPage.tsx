@@ -122,7 +122,7 @@ export function ListingPage() {
           {visibleCount < filtered.length && (
             <div className="load-more">
               <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                Carregar mais ({filtered.length - visibleCount} restantes)
+                {`Carregar mais (${filtered.length - visibleCount} restantes)`}
               </button>
             </div>
           )}

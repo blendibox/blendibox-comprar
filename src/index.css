@@ -100,7 +100,7 @@ a {
   margin: 0 auto;
   padding: 40px 16px;
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
   gap: 24px;
 }
 
@@ -224,6 +224,11 @@ a {
   object-fit: contain;
   background: #fafafa;
   padding: 8px;
+  transition: transform 0.25s ease;
+}
+
+.product-card:hover .product-card__image {
+  transform: scale(1.06);
 }
 
 .product-card__body {
@@ -302,10 +307,23 @@ a {
 }
 
 .product-detail__price {
-  font-size: 26px;
+  font-size: 34px;
   font-weight: 800;
   color: var(--color-green);
-  margin-bottom: 16px;
+  margin-bottom: 6px;
+}
+
+.freshness-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-teal-dark);
+  background: #ecfdf5;
+  border-radius: 999px;
+  padding: 4px 10px;
+  margin-bottom: 14px;
 }
 
 .cta-button {
@@ -314,6 +332,7 @@ a {
   color: #fff;
   text-decoration: none;
   font-weight: 700;
+  box-shadow: 0 4px 12px rgba(10, 125, 63, 0.3);
   padding: 14px 24px;
   border-radius: 8px;
 }
@@ -569,4 +588,109 @@ a {
   padding: 6px 12px;
   border-radius: 6px;
   letter-spacing: 0.05em;
+}
+
+/* Newsletter (rodapé) */
+.newsletter h4 {
+  color: #fff;
+  margin: 0 0 10px;
+}
+
+.newsletter__soon {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.newsletter__form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.newsletter__form input[type='email'] {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #fff;
+  font-size: 14px;
+}
+
+.newsletter__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+}
+
+.newsletter__consent input {
+  margin-top: 2px;
+}
+
+.newsletter__consent a {
+  color: #cbd5e1;
+  text-decoration: underline;
+}
+
+.newsletter__form button {
+  align-self: flex-start;
+  background: var(--color-green);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Páginas institucionais (sobre/termos/privacidade) */
+.legal-page section {
+  max-width: 720px;
+  margin-bottom: 24px;
+}
+
+.legal-page h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.legal-page p,
+.legal-page li {
+  color: #444;
+  line-height: 1.6;
+}
+
+/* Histórico de preço */
+.price-history {
+  margin-top: 20px;
+}
+
+.price-history h2 {
+  font-size: 15px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+
+.price-history__svg {
+  width: 100%;
+  height: 80px;
+  display: block;
+}
+
+.price-history__caption {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.legal-disclaimer {
+  max-width: 720px;
+  font-size: 12px;
+  color: #999;
+  border-top: 1px solid #eee;
+  padding-top: 12px;
 }

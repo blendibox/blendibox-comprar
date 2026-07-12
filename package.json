@@ -10,7 +10,8 @@
     "redirects": "node scripts/generate-redirects.mjs",
     "sitemap": "node scripts/generate-sitemap.mjs",
     "coupons": "node scripts/parse-coupons.mjs",
-    "build": "node scripts/fetch-feeds.mjs && node scripts/parse-coupons.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
+    "price-history": "node scripts/update-price-history.mjs",
+    "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/parse-coupons.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
     "build:no-fetch": "node scripts/parse-coupons.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
     "preview": "vite preview"
   },

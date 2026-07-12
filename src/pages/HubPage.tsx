@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons } from '../lib/api'
-import { consumeInitialData } from '../lib/initialData'
+import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { CouponEntry, HubInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
@@ -18,7 +18,7 @@ const PAGE_SIZE = 60
 export function HubPage() {
   const { slug = '' } = useParams()
   const path = `/${slug}/`
-  const [initial] = useState<HubInitialData | null>(() => consumeInitialData<HubInitialData>(path))
+  const [initial] = useState<HubInitialData | null>(() => peekInitialData<HubInitialData>(path))
   const { products, state } = useIndex()
   const ready = state === 'ready'
 
@@ -35,6 +35,10 @@ export function HubPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
+
+  useEffect(() => {
+    clearInitialData(path)
+  }, [path])
 
   useEffect(() => {
     if (isVertical) return
@@ -159,7 +163,7 @@ export function HubPage() {
           {ready && visibleCount < filtered.length && (
             <div className="load-more">
               <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                Carregar mais ({filtered.length - visibleCount} restantes)
+                {`Carregar mais (${filtered.length - visibleCount} restantes)`}
               </button>
             </div>
           )}

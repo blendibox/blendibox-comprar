@@ -23,7 +23,7 @@ export function ComparatorTray() {
         ))}
       </div>
       <Link to="/comparar" className="comparator-tray__cta">
-        Comparar ({items.length})
+        {`Comparar (${items.length})`}
       </Link>
     </div>
   )

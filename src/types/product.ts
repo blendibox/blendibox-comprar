@@ -9,6 +9,11 @@ export interface SimilarRef {
   currency: string
 }
 
+export interface PricePoint {
+  date: string
+  price: number
+}
+
 export interface Product {
   awDeepLink: string
   productName: string
@@ -44,6 +49,7 @@ export interface Product {
   categorySlug: string
   similar: SimilarRef[]
   eligibleForStaticPage: boolean
+  priceHistory?: PricePoint[]
 }
 
 export interface ProductIndexEntry {

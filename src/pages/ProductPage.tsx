@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchProduct } from '../lib/api'
-import { consumeInitialData } from '../lib/initialData'
+import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { Product } from '../types/product'
 import { formatPrice } from '../components/ProductCard'
+import { PriceHistoryChart } from '../components/PriceHistoryChart'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -11,7 +12,7 @@ export function ProductPage() {
   const { merchant = '', slug = '' } = useParams()
   const path = `/${merchant}/${slug}/`
 
-  const [initialProduct] = useState<Product | null>(() => consumeInitialData<Product>(path))
+  const [initialProduct] = useState<Product | null>(() => peekInitialData<Product>(path))
   const [product, setProduct] = useState<Product | null>(initialProduct)
   const [state, setState] = useState<LoadState>(initialProduct ? 'ready' : 'loading')
   // Rastreia pra qual path o initialProduct já foi "consumido" (usado). Assim,
@@ -20,6 +21,7 @@ export function ProductPage() {
   const consumedPathRef = useRef<string | null>(initialProduct ? path : null)
 
   useEffect(() => {
+    clearInitialData(path)
     if (consumedPathRef.current === path) {
       consumedPathRef.current = null
       return
@@ -47,30 +49,39 @@ export function ProductPage() {
       </nav>
 
       <div className="product-detail">
-        <img className="product-detail__image" src={product.awImageUrl} alt={product.productName} />
+        <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
+          <img className="product-detail__image" src={product.awImageUrl} alt={product.productName} />
+        </a>
         <div className="product-detail__body">
           <span className="product-card__merchant">{product.merchantDisplayName}</span>
           <h1>{product.productName}</h1>
           <div className="product-detail__price">
             {formatPrice(product.searchPrice, product.currency)}
           </div>
+          <div className="freshness-badge">✓ Preço atualizado toda semana</div>
           <a
             className="cta-button"
             href={product.awDeepLink}
             target="_blank"
             rel="noopener noreferrer sponsored"
           >
-            Ver produto na {product.merchantDisplayName}
+            {'Ver produto na '}
+            {product.merchantDisplayName}
           </a>
           <p className="disclaimer">
-            * Valor {product.lastUpdated ? `na data de atualização (${product.lastUpdated})` : 'na data de publicação'}.
-            Oferta válida enquanto durarem os estoques.
+            {'* Valor '}
+            {product.lastUpdated ? `na data de atualização (${product.lastUpdated})` : 'na data de publicação'}
+            {'. Oferta válida enquanto durarem os estoques.'}
           </p>
+
+          {product.priceHistory && product.priceHistory.length > 1 && (
+            <PriceHistoryChart points={product.priceHistory} currency={product.currency} />
+          )}
 
           {product.description && (
             <div className="product-detail__description">
               <h2>Descrição do fabricante</h2>
-              <p>&ldquo;{product.description}&rdquo;</p>
+              <p>{`“${product.description}”`}</p>
             </div>
           )}
         </div>

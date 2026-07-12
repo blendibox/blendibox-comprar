@@ -44,13 +44,21 @@ automaticamente por um workflow do GitHub Actions.
    achar o produto exato, redireciona pro hub da loja em vez de deixar 404.
 
 6. **`scripts/generate-sitemap.mjs`** gera `sitemap.xml` (particionado em
-   `sitemap-N.xml` se passar de 45 mil URLs) + `robots.txt`, só com as páginas
-   reais (nunca com os stubs de redirect).
+   `sitemap-N.xml` a cada 10 mil URLs — dá diagnóstico mais granular no Search
+   Console) + `robots.txt`, só com as páginas reais (nunca com os stubs de
+   redirect).
 
-7. O workflow **`.github/workflows/deploy.yml`** roda tudo isso toda
+7. **`scripts/update-price-history.mjs`** roda logo depois do fetch e guarda
+   um retrato semanal de preço por produto em `data/price-history.json`
+   (pequeno, versionado no git — o workflow faz commit dele de volta toda
+   semana). Cada produto ganha um campo `priceHistory` com as últimas 12
+   semanas, usado pro gráfico de preço na página do produto.
+
+8. O workflow **`.github/workflows/deploy.yml`** roda tudo isso toda
    segunda-feira (cron), a cada push em `main`, ou manualmente, e publica via
    `actions/deploy-pages` — sem criar branch `gh-pages` nem histórico de
-   commits com dados grandes.
+   commits com dados grandes (a única exceção é o `price-history.json`, que é
+   pequeno e precisa persistir de uma semana pra outra).
 
 ## Estrutura de URL
 
@@ -125,6 +133,16 @@ tratamento e o Google as remove do índice naturalmente com o tempo.
 `data/promotions.csv` é exportado manualmente do painel da Awin (sem link de
 download direto) e versionado no repo — substitua o arquivo e dê push quando
 quiser atualizar os cupons; o build já reprocessa tudo.
+
+## Newsletter e LGPD
+
+O formulário no rodapé (`src/components/NewsletterSignup.tsx`) usa a Brevo —
+crie uma conta em brevo.com, monte um formulário de inscrição (Contacts >
+Forms) e cole a URL de action gerada em `src/config/newsletter.ts`. Até isso
+ser configurado, o formulário mostra "em breve" em vez de quebrado. O
+cadastro exige aceite explícito da Política de Privacidade
+(`/privacidade`, `src/pages/PrivacyPage.tsx`) — os textos de política e termos
+são um modelo geral, vale revisão jurídica antes de publicar oficialmente.
 
 ## Tamanho dos dados
 
