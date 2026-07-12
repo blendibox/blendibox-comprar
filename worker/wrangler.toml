@@ -2,8 +2,17 @@ name = "blendibox-newsletter"
 main = "newsletter-worker.js"
 compatibility_date = "2026-01-01"
 
+# Roda toda segunda às 8h UTC (5h em Brasília) — 2h depois do workflow semanal
+# do site (deploy.yml, 6h UTC), tempo suficiente pro digest.json mais recente
+# já estar publicado no GitHub Pages antes do Worker buscar.
+[triggers]
+crons = ["0 8 * * 1"]
+
 [vars]
 ALLOWED_ORIGIN = "https://comprar.blendibox.com.br"
+SITE_URL = "https://comprar.blendibox.com.br"
+RESEND_SEGMENT_ID = "0236b828-d608-4a80-8216-f2d8d224969b"
+DIGEST_FROM_EMAIL = "Compare Ofertas <ofertas@blendibox.com.br>"
 
 # RESEND_API_KEY e RESEND_AUDIENCE_ID são secrets — configure com:
 #   wrangler secret put RESEND_API_KEY
