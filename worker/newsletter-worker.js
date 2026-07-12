@@ -71,6 +71,22 @@ export default {
       })
     }
 
+    // Dispara o evento que aciona a automação de boas-vindas configurada no
+    // painel do Resend (Automations). Best-effort: se isso falhar, o cadastro
+    // em si já foi feito com sucesso, então não bloqueia a resposta ao usuário.
+    try {
+      await fetch('https://api.resend.com/events/send', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ event: 'newsletter.subscribed', email }),
+      })
+    } catch {
+      // ignora — cadastro já confirmado, evento é best-effort
+    }
+
     return new Response(JSON.stringify({ ok: true }), {
       status: 200,
       headers: { ...headers, 'Content-Type': 'application/json' },
