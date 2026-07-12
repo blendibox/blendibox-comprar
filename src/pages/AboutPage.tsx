@@ -14,9 +14,8 @@ export function AboutPage() {
           tempo (e dinheiro) na hora de comprar.
         </p>
         <p>
-          Não é só um repasse automático do feed das lojas: fazemos uma curadoria das ofertas,
-          destacando marcas e produtos com histórico real de bom preço e relevância, em vez de
-          simplesmente listar tudo sem critério.
+          Fazemos uma curadoria das ofertas, destacando marcas e produtos com histórico real de
+          bom preço e relevância, em vez de simplesmente listar tudo sem critério.
         </p>
         <p>
           Quem assina nossa <Link to="/privacidade">newsletter</Link> recebe cupons exclusivos por

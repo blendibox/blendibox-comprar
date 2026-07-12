@@ -101,6 +101,13 @@ export interface CouponEntry {
   deeplink: string
 }
 
+export interface BlendiboxProduct {
+  title: string
+  link: string
+  brand: string
+  image: string
+}
+
 export interface FeedMeta {
   generatedAt: string
   totalProducts: number

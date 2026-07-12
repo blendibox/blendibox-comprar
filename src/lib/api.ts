@@ -1,4 +1,4 @@
-import type { CouponEntry, FeedMeta, MerchantMeta, Product, ProductIndexEntry } from '../types/product'
+import type { BlendiboxProduct, CouponEntry, FeedMeta, MerchantMeta, Product, ProductIndexEntry } from '../types/product'
 
 function dataUrl(path: string) {
   return `${import.meta.env.BASE_URL}data/${path}`
@@ -28,4 +28,8 @@ export function fetchProduct(merchant: string, slug: string) {
 
 export function fetchCoupons() {
   return getJson<CouponEntry[]>('coupons.json')
+}
+
+export function fetchBlendiboxProducts() {
+  return getJson<BlendiboxProduct[]>('blendibox-products.json')
 }

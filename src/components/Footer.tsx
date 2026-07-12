@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { NewsletterSignup } from './NewsletterSignup'
+import { BlendiboxCarousel } from './BlendiboxCarousel'
 
 export function Footer() {
   return (
@@ -25,6 +26,7 @@ export function Footer() {
         </div>
         <NewsletterSignup />
       </div>
+      <BlendiboxCarousel />
       <div className="footer__copy">{`© ${new Date().getFullYear()} Blendibox. Todos os direitos reservados.`}</div>
     </footer>
   )
