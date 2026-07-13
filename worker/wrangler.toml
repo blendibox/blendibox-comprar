@@ -2,11 +2,16 @@ name = "blendibox-newsletter"
 main = "newsletter-worker.js"
 compatibility_date = "2026-01-01"
 
-# Roda toda segunda às 8h UTC (5h em Brasília) — 2h depois do workflow semanal
-# do site (deploy.yml, 6h UTC), tempo suficiente pro digest.json mais recente
-# já estar publicado no GitHub Pages antes do Worker buscar.
+# TESTE TEMPORÁRIO: roda uma vez só, terça 14/07 às 8h UTC (5h Brasília),
+# pra confirmar que o cron da Cloudflare dispara sozinho sem intervenção
+# manual. Depois de confirmado, reverter pra "0 8 * * 1" (toda segunda).
 [triggers]
-crons = ["0 8 * * 1"]
+crons = ["0 8 14 7 *"]
+
+# Configuração normal (produção), 2h depois do workflow semanal do site
+# (deploy.yml, 6h UTC) — tempo suficiente pro digest.json mais recente já
+# estar publicado no GitHub Pages antes do Worker buscar:
+#   crons = ["0 8 * * 1"]
 
 [vars]
 ALLOWED_ORIGIN = "https://comprar.blendibox.com.br"
