@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
+import { parseBrDate } from '../lib/date'
 import type { CouponEntry, HubInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
@@ -43,7 +44,16 @@ export function HubPage() {
   useEffect(() => {
     if (isVertical) return
     fetchCoupons()
-      .then((data) => setCoupons(data.filter((c) => c.merchantSlug === slug)))
+      .then((data) => {
+        const now = new Date()
+        setCoupons(
+          data.filter((c) => {
+            if (c.merchantSlug !== slug) return false
+            const ends = parseBrDate(c.ends)
+            return !ends || ends >= now
+          })
+        )
+      })
       .catch(() => setCoupons([]))
   }, [slug, isVertical])
 

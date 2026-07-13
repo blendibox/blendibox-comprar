@@ -701,6 +701,11 @@ a {
   letter-spacing: 0.05em;
 }
 
+.coupon-card__expiry {
+  font-size: 12px;
+  color: #888;
+}
+
 /* Newsletter (rodapé) */
 .newsletter h4 {
   color: #fff;

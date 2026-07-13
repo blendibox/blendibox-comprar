@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { CouponCard } from '../components/CouponCard'
+import { parseBrDate } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -13,7 +14,15 @@ export function CouponsPage() {
   useEffect(() => {
     fetchCoupons()
       .then((data) => {
-        setCoupons(data)
+        // O build já filtra cupons vencidos, mas os dados só são atualizados
+        // periodicamente — esse filtro extra evita mostrar um cupom que
+        // venceu entre um build e outro.
+        const now = new Date()
+        const stillValid = data.filter((c) => {
+          const ends = parseBrDate(c.ends)
+          return !ends || ends >= now
+        })
+        setCoupons(stillValid)
         setState('ready')
       })
       .catch(() => setState('error'))
