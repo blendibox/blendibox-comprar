@@ -174,11 +174,17 @@ function buildDigestHtml(digest) {
 async function sendWeeklyDigest(env) {
   const siteUrl = (env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
   const digestRes = await fetch(`${siteUrl}/data/digest.json`)
-  if (!digestRes.ok) return
+  if (!digestRes.ok) {
+    console.error(`sendWeeklyDigest: falha ao buscar digest.json (HTTP ${digestRes.status})`)
+    return
+  }
   const digest = await digestRes.json()
-  if (!digest.items?.length) return
+  if (!digest.items?.length) {
+    console.error('sendWeeklyDigest: digest.json sem items, nada pra enviar')
+    return
+  }
 
-  await fetch('https://api.resend.com/broadcasts', {
+  const broadcastRes = await fetch('https://api.resend.com/broadcasts', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -193,4 +199,11 @@ async function sendWeeklyDigest(env) {
       send: true,
     }),
   })
+
+  const broadcastBody = await broadcastRes.text()
+  if (!broadcastRes.ok) {
+    console.error(`sendWeeklyDigest: Resend recusou o broadcast (HTTP ${broadcastRes.status}): ${broadcastBody}`)
+  } else {
+    console.log(`sendWeeklyDigest: broadcast criado com sucesso: ${broadcastBody}`)
+  }
 }
