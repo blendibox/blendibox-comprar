@@ -12,8 +12,8 @@
     "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": false },
     "17806": { "slug": "centauro", "displayName": "Centauro BR", "vertical": "esporte", "active": true, "priority": true },
     "107702": { "slug": "cloviscalcados", "displayName": "Clovis Calçados BR", "vertical": "moda", "active": true, "priority": true },
-    "30511": { "slug": "lego", "displayName": "Lego BR", "vertical": "brinquedos", "active": false },
-    "17740": { "slug": "kippling", "displayName": "Kipling BR", "vertical": "moda", "active": false },
+    "30511": { "slug": "lego", "displayName": "Lego BR", "vertical": "brinquedos", "active": true },
+    "17740": { "slug": "kippling", "displayName": "Kipling BR", "vertical": "moda", "active": true },
     "51271": { "slug": "mizuno", "displayName": "Mizuno BR", "vertical": "esporte", "active": true, "priority": true },
 
     "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": false },
