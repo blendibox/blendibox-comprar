@@ -171,6 +171,32 @@ function buildDigestHtml(digest) {
     </div>`
 }
 
+// Versão em texto puro do mesmo conteúdo — e-mails só-HTML (sem a parte
+// text/plain) são um sinal que filtros de spam penalizam.
+function buildDigestText(digest) {
+  const lines = ['Ofertas da semana no Compare Ofertas', '']
+
+  for (const item of digest.items) {
+    lines.push(`${item.merchantDisplayName} — ${item.productName}`)
+    lines.push(`${formatPrice(item.price, item.currency)}`)
+    lines.push(item.url)
+    lines.push('')
+  }
+
+  if (digest.coupons.length) {
+    lines.push('Cupons ativos:')
+    for (const c of digest.coupons) {
+      lines.push(`- ${c.advertiser}: ${c.title} — código ${c.code}`)
+    }
+    lines.push('')
+  }
+
+  lines.push('Você recebeu esse e-mail porque assinou a newsletter do Compare Ofertas.')
+  lines.push('{{{RESEND_UNSUBSCRIBE_URL}}}')
+
+  return lines.join('\n')
+}
+
 async function sendWeeklyDigest(env) {
   const siteUrl = (env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
   const digestRes = await fetch(`${siteUrl}/data/digest.json`)
@@ -196,6 +222,7 @@ async function sendWeeklyDigest(env) {
       subject: 'Ofertas da semana no Compare Ofertas',
       name: `Resumo semanal ${new Date().toISOString().slice(0, 10)}`,
       html: buildDigestHtml(digest),
+      text: buildDigestText(digest),
       send: true,
     }),
   })
