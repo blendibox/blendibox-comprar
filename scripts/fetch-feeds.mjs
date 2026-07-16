@@ -12,7 +12,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from 'csv-parse/sync'
 import { slugify } from './lib/slugify.mjs'
-import { fetchOuiParisRows } from './lib/ouiparis.mjs'
+import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -155,7 +155,7 @@ async function main() {
   }
 
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
-  rawRows.push(...(await fetchOuiParisRows()))
+  rawRows.push(...(await fetchGrupoBoticarioRows()))
 
   // Monta cada produto com slug/vertical/merchant resolvidos, e um índice por
   // "vertical/categoria" pra depois calcular os produtos similares.

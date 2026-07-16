@@ -39,7 +39,7 @@ export function ProductPage() {
   if (state === 'loading') return <p className="status">Carregando produto...</p>
   if (state === 'error' || !product) return <p className="status status--error">Produto não encontrado.</p>
 
-  const isOuiParis = product.merchantSlug === 'ouiparis'
+  const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
 
   return (
     <div className="page product-page">
@@ -68,13 +68,14 @@ export function ProductPage() {
             target="_blank"
             rel="noopener noreferrer sponsored"
           >
-            {isOuiParis ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
-            {!isOuiParis && product.merchantDisplayName}
+            {isWhatsappReseller ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
+            {!isWhatsappReseller && product.merchantDisplayName}
           </a>
-          {isOuiParis && (
+          {isWhatsappReseller && (
             <p className="reseller-notice">
-              {'💬 A compra é feita direto com uma representante de vendas autorizada O.U.i Paris, via '}
-              {'WhatsApp. Ao clicar em "Comprar", vai abrir uma conversa já com esse produto e o valor '}
+              {'💬 A compra é feita direto com uma representante de vendas autorizada '}
+              {product.merchantDisplayName}
+              {', via WhatsApp. Ao clicar em "Comprar", vai abrir uma conversa já com esse produto e o valor '}
               {'preenchidos — é só confirmar o pedido por lá.'}
             </p>
           )}

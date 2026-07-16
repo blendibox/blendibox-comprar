@@ -75,8 +75,9 @@ dado carregado.
 1. Crie o repositório no GitHub e suba este projeto.
 2. Em **Settings → Pages**, escolha **Source: GitHub Actions**.
 3. Em **Settings → Secrets and variables → Actions**, adicione o secret
-   `AWIN_API_KEY` (só a chave, sem o resto da URL do feed) e, se for usar o
-   catálogo O.U.i Paris (ver seção própria abaixo), `OUIPARIS_USER_ID`.
+   `AWIN_API_KEY` (só a chave, sem o resto da URL do feed) e, se for usar os
+   catálogos de revenda do Grupo Boticário (ver seção própria abaixo),
+   `OUIPARIS_USER_ID`.
 4. **Domínio próprio**: o arquivo `public/CNAME` já aponta pra
    `comprar.blendibox.com.br`. No provedor de DNS do domínio, configure um
    registro `CNAME` apontando pro `<usuario>.github.io` (ou os registros `A`
@@ -93,8 +94,9 @@ npm install
 $env:AWIN_API_KEY = "sua-chave"   # PowerShell
 npm run fetch-feed
 
-# Opcional: catálogo O.U.i Paris (revenda, não é feed da Awin — ver
-# scripts/lib/ouiparis.mjs). Sem essa variável, o build segue sem esses produtos.
+# Opcional: catálogos de revenda do Grupo Boticário — O.U.i Paris, Eudora,
+# O Boticário e Quem Disse Berenice (revenda, não é feed da Awin — ver
+# scripts/lib/grupoboticario.mjs). Sem essa variável, o build segue sem esses produtos.
 $env:OUIPARIS_USER_ID = "seu-user-id"   # PowerShell
 
 # Build completo (feed + cupons + build + pré-renderização + redirects + sitemap):

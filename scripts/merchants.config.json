@@ -8,6 +8,9 @@
     "100869": { "slug": "amobeleza", "displayName": "AMOBELEZA BR", "vertical": "beleza", "active": true },
     "17662": { "slug": "vivara", "displayName": "Vivara BR", "vertical": "joias", "active": true, "priority": true },
     "ouiparis": { "slug": "ouiparis", "displayName": "O.U.i Paris", "vertical": "beleza", "active": true, "priority": true },
+    "eudora-revenda": { "slug": "eudora-revenda", "displayName": "Eudora (Revenda)", "vertical": "beleza", "active": true, "priority": true },
+    "boticario-revenda": { "slug": "boticario-revenda", "displayName": "O Boticário (Revenda)", "vertical": "beleza", "active": true, "priority": true },
+    "qdb-revenda": { "slug": "qdb-revenda", "displayName": "Quem Disse, Berenice?", "vertical": "beleza", "active": true, "priority": true },
 
     "17652": { "slug": "nike", "displayName": "Nike BR", "vertical": "esporte", "active": true, "priority": true },
     "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": false },
