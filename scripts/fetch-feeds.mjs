@@ -35,6 +35,14 @@ if (!API_KEY) {
 const MAX_SIMILAR = 6
 const MIN_SIMILAR_FOR_STATIC_PAGE = 3
 
+// Pares de merchantSlug que são a mesma marca em canais diferentes (feed de
+// afiliado da Awin x revenda direta via Grupo Boticário) — usado pra
+// cross-referenciar o mesmo produto vendido nos dois canais. Casamento por
+// nome normalizado (sem acento/maiúscula/espaço extra) — não é garantia
+// perfeita, mas testado manualmente com boa precisão (~360 pares corretos
+// pra Eudora, sem falso positivo na amostra revisada).
+const CROSS_CHANNEL_PAIRS = [['eudora', 'eudora-revenda']]
+
 const NUMERIC_FIELDS = new Set([
   'searchPrice',
   'storePrice',
@@ -227,6 +235,33 @@ async function main() {
 
     const merchantMeta = merchantsUsed.get(product.merchantSlug)
     product.eligibleForStaticPage = Boolean(merchantMeta?.priority) || product.similar.length >= MIN_SIMILAR_FOR_STATIC_PAGE
+  }
+
+  // Cross-referencia o mesmo produto entre canais (ex: Eudora via Awin x
+  // Eudora via revenda) — precisa rodar depois do slug já estar definido.
+  const relevantMerchants = new Set(CROSS_CHANNEL_PAIRS.flat())
+  const byMerchantNameSlug = new Map()
+  for (const product of products) {
+    if (!relevantMerchants.has(product.merchantSlug)) continue
+    byMerchantNameSlug.set(`${product.merchantSlug}::${slugify(product.productName)}`, product)
+  }
+  for (const [merchantA, merchantB] of CROSS_CHANNEL_PAIRS) {
+    for (const product of products) {
+      if (product.merchantSlug !== merchantA && product.merchantSlug !== merchantB) continue
+      const otherMerchant = product.merchantSlug === merchantA ? merchantB : merchantA
+      const match = byMerchantNameSlug.get(`${otherMerchant}::${slugify(product.productName)}`)
+      if (!match) continue
+      product.crossChannel = {
+        slug: match.slug,
+        vertical: match.vertical,
+        merchantSlug: match.merchantSlug,
+        merchantDisplayName: match.merchantDisplayName,
+        productName: match.productName,
+        awImageUrl: match.awImageUrl || match.merchantImageUrl,
+        searchPrice: match.searchPrice,
+        currency: match.currency,
+      }
+    }
   }
 
   // Limpa a saída anterior (evita arquivo órfão de produto removido do feed).

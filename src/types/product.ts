@@ -50,6 +50,10 @@ export interface Product {
   similar: SimilarRef[]
   eligibleForStaticPage: boolean
   priceHistory?: PricePoint[]
+  // Mesmo produto vendido num canal diferente da mesma marca (ex: Eudora via
+  // Awin x Eudora via revenda direta) — casamento por nome, ver
+  // scripts/fetch-feeds.mjs (CROSS_CHANNEL_PAIRS).
+  crossChannel?: SimilarRef
 }
 
 export interface ProductIndexEntry {

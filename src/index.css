@@ -460,6 +460,49 @@ a {
   margin-top: 32px;
 }
 
+.cross-channel-section {
+  margin-top: 32px;
+}
+
+.cross-channel-card {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  text-decoration: none;
+  color: inherit;
+  max-width: 480px;
+  transition: box-shadow 0.15s ease;
+}
+
+.cross-channel-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cross-channel-card__image {
+  width: 90px;
+  height: 90px;
+  object-fit: contain;
+  background: #fafafa;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.cross-channel-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cross-channel-card__cheaper {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-green);
+}
+
 @media (max-width: 700px) {
   .product-detail {
     grid-template-columns: 1fr;

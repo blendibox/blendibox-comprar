@@ -100,6 +100,37 @@ export function ProductPage() {
         </div>
       </div>
 
+      {product.crossChannel && (
+        <section className="cross-channel-section">
+          <h2>Esse mesmo produto em outro canal</h2>
+          <Link
+            className="cross-channel-card"
+            to={`/${product.crossChannel.merchantSlug}/${product.crossChannel.slug}`}
+          >
+            <img
+              className="cross-channel-card__image"
+              src={product.crossChannel.awImageUrl}
+              alt={product.crossChannel.productName}
+              loading="lazy"
+            />
+            <div className="cross-channel-card__body">
+              <span className="product-card__merchant">{product.crossChannel.merchantDisplayName}</span>
+              <h3 className="product-card__name">{product.crossChannel.productName}</h3>
+              <div className="product-card__prices">
+                <span className="product-card__price">
+                  {formatPrice(product.crossChannel.searchPrice, product.crossChannel.currency)}
+                </span>
+                {product.crossChannel.searchPrice != null &&
+                  product.searchPrice != null &&
+                  product.crossChannel.searchPrice < product.searchPrice && (
+                    <span className="cross-channel-card__cheaper">✓ Mais barato</span>
+                  )}
+              </div>
+            </div>
+          </Link>
+        </section>
+      )}
+
       {product.similar.length > 0 && (
         <section className="similar-section">
           <h2>Produtos similares</h2>
