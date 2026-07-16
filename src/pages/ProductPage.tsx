@@ -38,6 +38,8 @@ export function ProductPage() {
   if (state === 'loading') return <p className="status">Carregando produto...</p>
   if (state === 'error' || !product) return <p className="status status--error">Produto não encontrado.</p>
 
+  const isOuiParis = product.merchantSlug === 'ouiparis'
+
   return (
     <div className="page product-page">
       <nav className="breadcrumbs">
@@ -65,9 +67,16 @@ export function ProductPage() {
             target="_blank"
             rel="noopener noreferrer sponsored"
           >
-            {'Ver produto na '}
-            {product.merchantDisplayName}
+            {isOuiParis ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
+            {!isOuiParis && product.merchantDisplayName}
           </a>
+          {isOuiParis && (
+            <p className="reseller-notice">
+              {'💬 A compra é feita direto com uma representante de vendas autorizada O.U.i Paris, via '}
+              {'WhatsApp. Ao clicar em "Comprar", vai abrir uma conversa já com esse produto e o valor '}
+              {'preenchidos — é só confirmar o pedido por lá.'}
+            </p>
+          )}
           <p className="disclaimer">
             {'* Valor '}
             {product.lastUpdated ? `na data de atualização (${product.lastUpdated})` : 'na data de publicação'}
