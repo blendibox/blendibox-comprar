@@ -134,7 +134,7 @@ export function ListingPage() {
         <section className="recent-sales-section">
           <h2>Comprado recentemente</h2>
           <p className="recent-sales-section__hint">Produtos que outros clientes compraram através do Compare Ofertas.</p>
-          <div className="product-grid">
+          <Carousel>
             {recentSales.map(({ product, label }) => (
               <ProductCard
                 key={`recent-${product.merchantSlug}-${product.slug}`}
@@ -142,7 +142,7 @@ export function ListingPage() {
                 caption={`Vendido ${label}`}
               />
             ))}
-          </div>
+          </Carousel>
         </section>
       )}
 
