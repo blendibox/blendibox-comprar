@@ -47,7 +47,7 @@ export function CouponsPage() {
 
       {state === 'ready' && coupons.length > 0 && (
         <div className="filters">
-          <select value={merchant} onChange={(e) => setMerchant(e.target.value)}>
+          <select value={merchant} onChange={(e) => setMerchant(e.target.value)} aria-label="Filtrar por loja">
             {merchants.map((m) => (
               <option key={m} value={m}>
                 {m === 'todas' ? 'Todas as lojas' : m}

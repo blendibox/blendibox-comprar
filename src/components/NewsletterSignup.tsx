@@ -11,7 +11,7 @@ export function NewsletterSignup() {
   if (!NEWSLETTER_CONFIGURED) {
     return (
       <div className="newsletter">
-        <h4>Newsletter</h4>
+        <h3>Newsletter</h3>
         <p className="newsletter__soon">Cadastro de cupons por e-mail em breve.</p>
       </div>
     )
@@ -35,7 +35,7 @@ export function NewsletterSignup() {
   if (status === 'done') {
     return (
       <div className="newsletter">
-        <h4>Receba cupons por e-mail</h4>
+        <h3>Receba cupons por e-mail</h3>
         <p className="newsletter__soon">Cadastro feito! Confira seu e-mail.</p>
       </div>
     )
@@ -43,7 +43,7 @@ export function NewsletterSignup() {
 
   return (
     <div className="newsletter">
-      <h4>Receba cupons por e-mail</h4>
+      <h3>Receba cupons por e-mail</h3>
       <form className="newsletter__form" onSubmit={handleSubmit}>
         <input
           type="email"

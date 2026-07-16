@@ -116,6 +116,10 @@ async function renderPage({ template, renderRoute, routePath, initialData, head 
       : ''
   const html = template
     .replace(/<title>.*?<\/title>/, `<title>${escapeHtml(head.title)}</title>`)
+    // Remove a meta description genérica do template antes de injetar a
+    // específica da página — senão fica duplicada (a do template some via
+    // </head> abaixo, mas essa aqui é a que o head original já trazia).
+    .replace(/\s*<meta\s+name="description"[\s\S]*?\/?>/, '')
     .replace('</head>', `    ${headHtml}\n  </head>`)
     .replace('<div id="root"></div>', `<div id="root">${bodyHtml}</div>\n  ${hydrationScript}`)
 

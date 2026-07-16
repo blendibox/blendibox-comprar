@@ -125,15 +125,20 @@ export function ListingPage() {
           placeholder="Buscar produto, loja ou categoria..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          aria-label="Buscar produto, loja ou categoria"
         />
-        <select value={vertical} onChange={(e) => setVertical(e.target.value)}>
+        <select value={vertical} onChange={(e) => setVertical(e.target.value)} aria-label="Departamento">
           {verticals.map((v) => (
             <option key={v} value={v}>
               {v === 'todos' ? 'Todos os departamentos' : v}
             </option>
           ))}
         </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as SortOption)}
+          aria-label="Ordenar por"
+        >
           {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
             <option key={key} value={key}>
               {SORT_LABELS[key]}

@@ -153,7 +153,7 @@ export function HubPage() {
 
       {(ready || initial) && items.length > 0 && (
         <div className="filters">
-          <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+          <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} aria-label="Ordenar por">
             {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
               <option key={key} value={key}>
                 {SORT_LABELS[key]}

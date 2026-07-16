@@ -111,9 +111,10 @@ a {
   margin-bottom: 8px;
 }
 
-.footer h4 {
+.footer h3 {
   color: #fff;
   margin: 0 0 10px;
+  font-size: 16px;
 }
 
 .footer a {
@@ -145,8 +146,9 @@ a {
   padding-top: 24px;
 }
 
-.blendibox-carousel h4 {
+.blendibox-carousel h3 {
   color: #fff;
+  font-size: 16px;
   margin: 0 0 12px;
 }
 
@@ -820,8 +822,9 @@ a {
 }
 
 /* Newsletter (rodapé) */
-.newsletter h4 {
+.newsletter h3 {
   color: #fff;
+  font-size: 16px;
   margin: 0 0 10px;
 }
 

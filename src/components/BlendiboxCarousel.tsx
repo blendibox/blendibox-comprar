@@ -40,7 +40,7 @@ export function BlendiboxCarousel() {
 
   return (
     <div className="blendibox-carousel">
-      <h4>Produtos Blendibox</h4>
+      <h3>Produtos Blendibox</h3>
       <div
         className="blendibox-carousel__track"
         ref={trackRef}
