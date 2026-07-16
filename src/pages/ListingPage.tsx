@@ -119,6 +119,29 @@ export function ListingPage() {
         )}
       </header>
 
+      <div className="filters">
+        <input
+          type="search"
+          placeholder="Buscar produto, loja ou categoria..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select value={vertical} onChange={(e) => setVertical(e.target.value)}>
+          {verticals.map((v) => (
+            <option key={v} value={v}>
+              {v === 'todos' ? 'Todos os departamentos' : v}
+            </option>
+          ))}
+        </select>
+        <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
+          {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+            <option key={key} value={key}>
+              {SORT_LABELS[key]}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {showFeatured && (
         <section className="featured-section">
           <h2>Destaques</h2>
@@ -145,29 +168,6 @@ export function ListingPage() {
           </Carousel>
         </section>
       )}
-
-      <div className="filters">
-        <input
-          type="search"
-          placeholder="Buscar produto, loja ou categoria..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <select value={vertical} onChange={(e) => setVertical(e.target.value)}>
-          {verticals.map((v) => (
-            <option key={v} value={v}>
-              {v === 'todos' ? 'Todos os departamentos' : v}
-            </option>
-          ))}
-        </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)}>
-          {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
-            <option key={key} value={key}>
-              {SORT_LABELS[key]}
-            </option>
-          ))}
-        </select>
-      </div>
 
       {state === 'loading' && <p className="status">Carregando ofertas...</p>}
       {state === 'error' && <p className="status status--error">Não foi possível carregar as ofertas.</p>}
