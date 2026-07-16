@@ -42,7 +42,8 @@
 
     "17648": { "slug": "cea", "displayName": "C&A BR", "vertical": "moda", "active": false },
     "100553": { "slug": "calvinklein", "displayName": "Calvin Klein BR", "vertical": "moda", "active": false },
-    "78310": { "slug": "chillibeans", "displayName": "Chilli Beans BR", "vertical": "moda", "active": false },
+    "78310": { "slug": "chillibeans", "displayName": "Chilli Beans BR", "vertical": "moda", "active": true },
+    "124920": { "slug": "lojaybera", "displayName": "Loja Ybera BR", "vertical": "beleza", "active": true },
     "17846": { "slug": "diesel", "displayName": "Diesel BR", "vertical": "moda", "active": false },
     "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": false },
     "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": false },
