@@ -3,6 +3,7 @@ import { useIndex } from '../hooks/useIndex'
 import { fetchMerchants, fetchSalesHighlights } from '../lib/api'
 import type { MerchantMeta, ProductIndexEntry, SalesHighlight } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
+import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 
 const PAGE_SIZE = 60
@@ -121,11 +122,11 @@ export function ListingPage() {
       {showFeatured && (
         <section className="featured-section">
           <h2>Destaques</h2>
-          <div className="product-grid">
+          <Carousel>
             {featured.map((product) => (
               <ProductCard key={`featured-${product.merchantSlug}-${product.slug}`} product={product} />
             ))}
-          </div>
+          </Carousel>
         </section>
       )}
 
