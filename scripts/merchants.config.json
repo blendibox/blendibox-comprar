@@ -26,6 +26,7 @@
     "17772": { "slug": "brastemp", "displayName": "Brastemp BR", "vertical": "casa", "active": false },
     "17639": { "slug": "consul", "displayName": "Consul BR", "vertical": "casa", "active": false },
     "17858": { "slug": "electrolux", "displayName": "Electrolux BR", "vertical": "casa", "active": false },
+    "24534": { "slug": "motorola", "displayName": "Motorola BR", "vertical": "casa", "active": true },
     "33061": { "slug": "lg", "displayName": "LG BR", "vertical": "casa", "active": false },
     "108626": { "slug": "arno", "displayName": "Arno BR", "vertical": "casa", "active": false },
     "81383": { "slug": "carraro", "displayName": "Carraro BR", "vertical": "casa", "active": false },
