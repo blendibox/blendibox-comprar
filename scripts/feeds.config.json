@@ -2,7 +2,7 @@
   "feeds": [
     {
       "id": "principal",
-      "url": "https://productdata.awin.com/datafeed/download/apikey/{{AWIN_API_KEY}}/language/pt/fid/47705,48267,67677,79601,94345,97300,93360,91869,85451,51837,98680,50585,72027/rid/0/hasEnhancedFeeds/0/columns/aw_deep_link,product_name,aw_product_id,merchant_product_id,merchant_image_url,description,merchant_category,search_price,merchant_name,merchant_id,category_name,category_id,aw_image_url,currency,store_price,delivery_cost,merchant_deep_link,language,last_updated,display_price,data_feed_id,alternate_image_two,reviews,rating,average_rating,number_available,product_GTIN/format/csv/delimiter/%2C/compression/gzip/adultcontent/1/"
+      "url": "https://productdata.awin.com/datafeed/download/apikey/{{AWIN_API_KEY}}/language/pt/fid/47705,48267,67677,79601,94345,97300,93360,91869,85451,51837,98680,50585,72027,43907/rid/0/hasEnhancedFeeds/0/columns/aw_deep_link,product_name,aw_product_id,merchant_product_id,merchant_image_url,description,merchant_category,search_price,merchant_name,merchant_id,category_name,category_id,aw_image_url,currency,store_price,delivery_cost,merchant_deep_link,language,last_updated,display_price,data_feed_id,alternate_image_two,reviews,rating,average_rating,number_available,product_GTIN/format/csv/delimiter/%2C/compression/gzip/adultcontent/1/"
     }
   ]
 }

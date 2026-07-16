@@ -20,7 +20,7 @@
     "17740": { "slug": "kippling", "displayName": "Kipling BR", "vertical": "moda", "active": true },
     "51271": { "slug": "mizuno", "displayName": "Mizuno BR", "vertical": "esporte", "active": true, "priority": true },
 
-    "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": false },
+    "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": true },
     "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": false },
     "106747": { "slug": "aliancas-imperiais", "displayName": "Alianças Imperiais BR", "vertical": "joias", "active": false },
     "17772": { "slug": "brastemp", "displayName": "Brastemp BR", "vertical": "casa", "active": false },

@@ -41,7 +41,10 @@ const MIN_SIMILAR_FOR_STATIC_PAGE = 3
 // nome normalizado (sem acento/maiúscula/espaço extra) — não é garantia
 // perfeita, mas testado manualmente com boa precisão (~360 pares corretos
 // pra Eudora, sem falso positivo na amostra revisada).
-const CROSS_CHANNEL_PAIRS = [['eudora', 'eudora-revenda']]
+const CROSS_CHANNEL_PAIRS = [
+  ['eudora', 'eudora-revenda'],
+  ['oboticario', 'boticario-revenda'],
+]
 
 const NUMERIC_FIELDS = new Set([
   'searchPrice',
