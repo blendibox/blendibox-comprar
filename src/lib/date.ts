@@ -11,3 +11,12 @@ export function formatBrDate(value: string | null | undefined): string | null {
   const date = parseBrDate(value)
   return date ? date.toLocaleDateString('pt-BR') : null
 }
+
+// Formata uma data ISO (ex: lastUpdated do feed) num formato amigável em
+// português, sem hora — só interessa o dia da última atualização de preço.
+export function formatIsoDateBr(value: string | null | undefined): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+}

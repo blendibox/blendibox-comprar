@@ -5,6 +5,7 @@ import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { Product } from '../types/product'
 import { formatPrice } from '../components/ProductCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
+import { formatIsoDateBr } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -79,7 +80,9 @@ export function ProductPage() {
           )}
           <p className="disclaimer">
             {'* Valor '}
-            {product.lastUpdated ? `na data de atualização (${product.lastUpdated})` : 'na data de publicação'}
+            {formatIsoDateBr(product.lastUpdated)
+              ? `atualizado em ${formatIsoDateBr(product.lastUpdated)}`
+              : 'na data de publicação'}
             {'. Oferta válida enquanto durarem os estoques.'}
           </p>
 
