@@ -14,8 +14,9 @@
     "blendibox-feed": "node scripts/fetch-blendibox-feed.mjs",
     "sales-highlights": "node scripts/parse-sales-highlights.mjs",
     "digest": "node scripts/generate-digest.mjs",
-    "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-digest.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
-    "build:no-fetch": "node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-digest.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs",
+    "google-merchant": "node scripts/generate-google-merchant-feed.mjs",
+    "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-digest.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-google-merchant-feed.mjs",
+    "build:no-fetch": "node scripts/parse-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-digest.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-google-merchant-feed.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
