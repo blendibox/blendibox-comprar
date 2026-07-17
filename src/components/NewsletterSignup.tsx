@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 type Status = 'idle' | 'sending' | 'done' | 'error'
 
@@ -26,7 +26,16 @@ export function NewsletterSignup() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       })
-      setStatus(res.ok ? 'done' : 'error')
+      if (res.ok) {
+        setStatus('done')
+        try {
+          localStorage.setItem(NEWSLETTER_SUBSCRIBED_KEY, '1')
+        } catch {
+          // segue sem persistir
+        }
+      } else {
+        setStatus('error')
+      }
     } catch {
       setStatus('error')
     }
