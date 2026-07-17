@@ -1103,11 +1103,26 @@ a {
   color: #5f5f5f;
 }
 
+/* Envolve a roleta e recorta (overflow: hidden) qualquer caixa delimitadora
+   que o giro do disco produza além do círculo visível — sem isso, o Chrome
+   conta essa caixa como overflow do modal e pisca barra de rolagem durante
+   o spin (já visto tanto na horizontal quanto na vertical). */
+.coupon-wheel-stage {
+  width: 300px;
+  height: 300px;
+  margin: 0 auto 20px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .coupon-wheel {
   position: relative;
   width: 260px;
   height: 260px;
-  margin: 0 auto 20px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .coupon-wheel::before {
@@ -1143,6 +1158,12 @@ a {
 .coupon-wheel__label-wrap {
   position: absolute;
   width: 72px;
+  /* Centraliza a própria caixa do wrapper sobre o ponto calculado — sem
+     isso, a caixa (72px de largura) só se estende pra direita/baixo a partir
+     do ponto, ficando até 24px maior que o disco pros labels do lado direito,
+     mesmo parada (o span interno já ficava centralizado visualmente, mas a
+     caixa do wrapper em si não, contribuindo pro overflow do modal). */
+  transform: translate(-50%, -50%);
 }
 
 .coupon-wheel__label {

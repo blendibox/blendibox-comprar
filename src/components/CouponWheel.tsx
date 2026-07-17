@@ -128,51 +128,53 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
         <h2>{'🎉 Roleta de Cupons'}</h2>
         <p className="coupon-wheel-modal__hint">Gire e ganhe um cupom de desconto de verdade.</p>
 
-        <div className="coupon-wheel">
-          <div className="coupon-wheel__pointer">{'▼'}</div>
-          <div
-            className="coupon-wheel__disc"
-            style={{
-              transform: `rotate(${rotation}deg)`,
-              transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
-              background: `conic-gradient(${segments
-                .map((_, i) => `${SEGMENT_COLORS[i % SEGMENT_COLORS.length]} ${i * anglePerSegment}deg ${(i + 1) * anglePerSegment}deg`)
-                .join(', ')})`,
-            }}
-          >
-            {segments.map((s, i) => {
-              // O texto fica num wrapper posicionado por trigonometria (segue
-              // a fatia colorida ao girar), mas o próprio texto recebe uma
-              // rotação inversa à do disco — com a mesma transição — pra
-              // cancelar o giro e ficar sempre na horizontal, mesmo durante
-              // e depois do spin (sem a diagonal ilegível de antes).
-              const midAngleDeg = i * anglePerSegment + anglePerSegment / 2
-              const midAngleRad = (midAngleDeg * Math.PI) / 180
-              const x = LABEL_RADIUS * Math.sin(midAngleRad)
-              const y = -LABEL_RADIUS * Math.cos(midAngleRad)
-              return (
-                <div key={s.id} className="coupon-wheel__label-wrap" style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}>
-                  <span
-                    className="coupon-wheel__label"
-                    style={{
-                      transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
-                      transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
-                    }}
-                  >
-                    {s.advertiser}
-                  </span>
-                </div>
-              )
-            })}
+        <div className="coupon-wheel-stage">
+          <div className="coupon-wheel">
+            <div className="coupon-wheel__pointer">{'▼'}</div>
+            <div
+              className="coupon-wheel__disc"
+              style={{
+                transform: `rotate(${rotation}deg)`,
+                transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
+                background: `conic-gradient(${segments
+                  .map((_, i) => `${SEGMENT_COLORS[i % SEGMENT_COLORS.length]} ${i * anglePerSegment}deg ${(i + 1) * anglePerSegment}deg`)
+                  .join(', ')})`,
+              }}
+            >
+              {segments.map((s, i) => {
+                // O texto fica num wrapper posicionado por trigonometria (segue
+                // a fatia colorida ao girar), mas o próprio texto recebe uma
+                // rotação inversa à do disco — com a mesma transição — pra
+                // cancelar o giro e ficar sempre na horizontal, mesmo durante
+                // e depois do spin (sem a diagonal ilegível de antes).
+                const midAngleDeg = i * anglePerSegment + anglePerSegment / 2
+                const midAngleRad = (midAngleDeg * Math.PI) / 180
+                const x = LABEL_RADIUS * Math.sin(midAngleRad)
+                const y = -LABEL_RADIUS * Math.cos(midAngleRad)
+                return (
+                  <div key={s.id} className="coupon-wheel__label-wrap" style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}>
+                    <span
+                      className="coupon-wheel__label"
+                      style={{
+                        transform: `rotate(${-rotation}deg)`,
+                        transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
+                      }}
+                    >
+                      {s.advertiser}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <button
+              className="coupon-wheel__hub"
+              onClick={spin}
+              disabled={spinning || Boolean(result)}
+              aria-label="Girar a roleta"
+            >
+              {spinning ? '...' : 'Girar!'}
+            </button>
           </div>
-          <button
-            className="coupon-wheel__hub"
-            onClick={spin}
-            disabled={spinning || Boolean(result)}
-            aria-label="Girar a roleta"
-          >
-            {spinning ? '...' : 'Girar!'}
-          </button>
         </div>
 
         {result && !unlocked && (
