@@ -1075,6 +1075,10 @@ a {
   text-align: center;
   max-height: 90vh;
   overflow-y: auto;
+  /* Sem isso, o Chrome conta a caixa delimitadora dos labels girando dentro
+     do disco (mesmo sem sair visualmente da roleta) como overflow horizontal
+     do modal, e pisca uma barra de rolagem lateral durante o spin. */
+  overflow-x: hidden;
 }
 
 .coupon-wheel-modal h2 {
