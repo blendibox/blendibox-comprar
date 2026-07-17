@@ -5,8 +5,9 @@ import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 const MAX_SEGMENTS = 8
-const SEGMENT_COLORS = ['#14b8a6', '#db2777', '#0a7d3f', '#0f172a']
+const SEGMENT_COLORS = ['#14b8a6', '#db2777', '#0a7d3f', '#0f172a', '#5eead4', '#f472b6', '#34d399', '#334155']
 const SPIN_DURATION_MS = 4000
+const LABEL_RADIUS = 82
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr]
@@ -139,27 +140,44 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
                 .join(', ')})`,
             }}
           >
-            {segments.map((s, i) => (
-              <span
-                key={s.id}
-                className="coupon-wheel__label"
-                style={{ transform: `rotate(${i * anglePerSegment + anglePerSegment / 2}deg)` }}
-              >
-                {s.advertiser}
-              </span>
-            ))}
+            {segments.map((s, i) => {
+              // O texto fica num wrapper posicionado por trigonometria (segue
+              // a fatia colorida ao girar), mas o próprio texto recebe uma
+              // rotação inversa à do disco — com a mesma transição — pra
+              // cancelar o giro e ficar sempre na horizontal, mesmo durante
+              // e depois do spin (sem a diagonal ilegível de antes).
+              const midAngleDeg = i * anglePerSegment + anglePerSegment / 2
+              const midAngleRad = (midAngleDeg * Math.PI) / 180
+              const x = LABEL_RADIUS * Math.sin(midAngleRad)
+              const y = -LABEL_RADIUS * Math.cos(midAngleRad)
+              return (
+                <div key={s.id} className="coupon-wheel__label-wrap" style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}>
+                  <span
+                    className="coupon-wheel__label"
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${-rotation}deg)`,
+                      transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
+                    }}
+                  >
+                    {s.advertiser}
+                  </span>
+                </div>
+              )
+            })}
           </div>
-        </div>
-
-        {!result && (
-          <button className="coupon-wheel__spin-button" onClick={spin} disabled={spinning}>
-            {spinning ? 'Girando...' : 'Girar!'}
+          <button
+            className="coupon-wheel__hub"
+            onClick={spin}
+            disabled={spinning || Boolean(result)}
+            aria-label="Girar a roleta"
+          >
+            {spinning ? '...' : 'Girar!'}
           </button>
-        )}
+        </div>
 
         {result && !unlocked && (
           <form className="coupon-wheel__gate" onSubmit={handleUnlock}>
-            <p>{'🔒 Digite seu e-mail pra revelar o cupom que você ganhou:'}</p>
+            <p>{`🔒 Você caiu em ${result.advertiser}! Digite seu e-mail pra revelar o cupom:`}</p>
             <input
               type="email"
               value={email}
