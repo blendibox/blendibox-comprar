@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { ComparatorTray } from './components/ComparatorTray'
 import { TopBar } from './components/TopBar'
+import { CouponWheelButton } from './components/CouponWheel'
 import { ComparatorProvider } from './context/ComparatorContext'
 
 export function Layout() {
@@ -15,6 +16,7 @@ export function Layout() {
       </main>
       <Footer />
       <ComparatorTray />
+      <CouponWheelButton />
     </ComparatorProvider>
   )
 }
