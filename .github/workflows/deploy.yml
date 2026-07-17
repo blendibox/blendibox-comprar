@@ -4,8 +4,13 @@ on:
   push:
     branches: [main]
   schedule:
-    # Toda segunda-feira às 06:00 UTC (03:00 horário de Brasília)
-    - cron: '0 6 * * 1'
+    # Todo dia às 06:00 UTC (03:00 horário de Brasília) — antes era só
+    # segunda-feira, mas o catálogo de livros da Amazon (PA-API) precisa
+    # atualizar no máximo a cada 24h por exigência do próprio termo de uso
+    # da Amazon Associates. Como o deploy sempre republica o dist/ inteiro,
+    # Awin e Grupo Boticário passam a ser rebuscados junto, todo dia também
+    # (efeito colateral aceito — sem custo conhecido até agora).
+    - cron: '0 6 * * *'
   workflow_dispatch: {}
 
 permissions:
@@ -37,6 +42,9 @@ jobs:
         env:
           AWIN_API_KEY: ${{ secrets.AWIN_API_KEY }}
           OUIPARIS_USER_ID: ${{ secrets.OUIPARIS_USER_ID }}
+          AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
+          AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
+          AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
           # Domínio próprio (CNAME) serve a partir da raiz, não de /repo-name/.
           VITE_BASE_PATH: /
           SITE_URL: https://comprar.blendibox.com.br

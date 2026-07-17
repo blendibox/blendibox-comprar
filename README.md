@@ -77,7 +77,9 @@ dado carregado.
 3. Em **Settings → Secrets and variables → Actions**, adicione o secret
    `AWIN_API_KEY` (só a chave, sem o resto da URL do feed) e, se for usar os
    catálogos de revenda do Grupo Boticário (ver seção própria abaixo),
-   `OUIPARIS_USER_ID`.
+   `OUIPARIS_USER_ID`. Pro catálogo de livros da Amazon (ver seção própria
+   abaixo), adicione também `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY` e
+   `AMAZON_PARTNER_TAG`.
 4. **Domínio próprio**: o arquivo `public/CNAME` já aponta pra
    `comprar.blendibox.com.br`. No provedor de DNS do domínio, configure um
    registro `CNAME` apontando pro `<usuario>.github.io` (ou os registros `A`
@@ -106,6 +108,37 @@ npm run preview   # serve a pasta dist/ de verdade (não o dev server)
 # Só o dev server (SPA, sem pré-renderização, usa os dados já em public/data):
 npm run dev
 ```
+
+## Catálogo de livros (Amazon BR)
+
+Fonte: Product Advertising API (PA-API 5.0) da Amazon Associates — ver
+`scripts/lib/amazon.mjs`. Diferente do feed da Awin, a PA-API não expõe um
+"feed de mais vendidos" pra baixar de uma vez; a aproximação usada é rodar
+buscas fixas por palavra-chave dentro de `SearchIndex=Books` (lista em
+`SEARCHES`, ajustável sem tocar no resto do pipeline).
+
+Credenciais necessárias (geradas em Associates Central → Tools → Product
+Advertising API): `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY` e
+`AMAZON_PARTNER_TAG` (o Associate Tag). Sem essas variáveis definidas, o
+build segue normalmente sem o catálogo da Amazon.
+
+```bash
+$env:AMAZON_ACCESS_KEY = "sua-access-key"     # PowerShell
+$env:AMAZON_SECRET_KEY = "sua-secret-key"
+$env:AMAZON_PARTNER_TAG = "seu-associate-tag"
+```
+
+**Importante sobre a periodicidade**: o termo de uso da Amazon Associates
+exige que conteúdo vindo da PA-API (preço, disponibilidade, imagem) não
+fique em cache por mais de 24h. Por isso o `deploy.yml` roda todo dia (não
+mais só às segundas) — como o GitHub Pages sempre republica o `dist/`
+inteiro, isso também rebusca Awin e Grupo Boticário com mais frequência,
+efeito colateral aceito por simplicidade.
+
+A PA-API também exige pelo menos 3 vendas qualificadas nos últimos 180 dias
+pra manter o acesso liberado — se ficar muito tempo sem vendas, vale
+conferir em Associates Central se o acesso à API continua ativo antes de
+assumir que as credenciais ainda funcionam.
 
 ## Adicionando mais lojas (feeds)
 

@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url'
 import { parse } from 'csv-parse/sync'
 import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
+import { fetchAmazonRows } from './lib/amazon.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -167,6 +168,7 @@ async function main() {
 
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
+  rawRows.push(...(await fetchAmazonRows()))
 
   // Monta cada produto com slug/vertical/merchant resolvidos, e um índice por
   // "vertical/categoria" pra depois calcular os produtos similares.
