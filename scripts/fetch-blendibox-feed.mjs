@@ -30,6 +30,14 @@ function extractField(block, tag) {
   return m ? decodeEntities(m[1].trim()) : null
 }
 
+// A Yampi serve variantes de tamanho pelo sufixo do nome do arquivo — a
+// "-large" (usada no feed) tem ~290KB, a "-small" ~4,5KB, mesma imagem. Pro
+// carrossel do rodapé (thumbnails pequenos) o tamanho pequeno é suficiente
+// e reduz bastante o tempo de download.
+function useSmallImage(url) {
+  return url.replace(/-large\.(jpe?g|png|webp)$/i, '-small.$1')
+}
+
 async function main() {
   const response = await fetch(FEED_URL)
   if (!response.ok) {
@@ -53,7 +61,7 @@ async function main() {
       title: extractField(item, 'title'),
       link,
       brand: extractField(item, 'g:brand') || 'Blendibox',
-      image,
+      image: useSmallImage(image),
     })
     if (products.length >= MAX_PRODUCTS) break
   }
