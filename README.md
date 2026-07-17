@@ -135,6 +135,31 @@ mais só às segundas) — como o GitHub Pages sempre republica o `dist/`
 inteiro, isso também rebusca Awin e Grupo Boticário com mais frequência,
 efeito colateral aceito por simplicidade.
 
+### Catálogo manual (sem depender da PA-API)
+
+A PA-API exige pelo menos 3 vendas qualificadas nos últimos 180 dias pra
+liberar acesso — enquanto isso não vale, ou pra qualquer livro que as
+buscas fixas (`SEARCHES` em `scripts/lib/amazon.mjs`) não cubram, dá pra
+adicionar produtos à mão em `data/amazon-books.csv` (mesmo espírito do
+`data/promotions.csv` dos cupons: pequeno, versionado no git, você edita e
+o próximo push já reprocessa).
+
+Colunas: `asin,title,price,image,description` (as duas últimas são
+opcionais). Só precisa do ASIN (o código do produto, visível na URL:
+`amazon.com.br/dp/{ASIN}`) — o link de afiliado com `tag=` é sempre gerado
+automaticamente a partir dele, não precisa colar o link do SiteStripe
+inteiro. Requer apenas `AMAZON_PARTNER_TAG` definida (não precisa das
+credenciais da API pra essa parte funcionar).
+
+```csv
+asin,title,price,image,description
+B0GKZ4CGQ1,Nome do livro,49.90,https://m.media-amazon.com/images/I/xxxx.jpg,
+```
+
+Livros vindos da API e do CSV manual nunca se duplicam (o mesmo ASIN só
+entra uma vez, priorizando o dado automático da API quando os dois
+existirem).
+
 A PA-API também exige pelo menos 3 vendas qualificadas nos últimos 180 dias
 pra manter o acesso liberado — se ficar muito tempo sem vendas, vale
 conferir em Associates Central se o acesso à API continua ativo antes de

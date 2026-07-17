@@ -11,6 +11,21 @@
 // Credenciais (AMAZON_ACCESS_KEY, AMAZON_SECRET_KEY, AMAZON_PARTNER_TAG) só
 // existem como secret — nunca hardcoded no repo.
 import crypto from 'node:crypto'
+import { readFile, access } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { parse } from 'csv-parse/sync'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.resolve(__dirname, '..', '..')
+// Catálogo mantido manualmente (mesmo espírito do data/promotions.csv dos
+// cupons): a PA-API exige 3 vendas qualificadas nos últimos 180 dias pra
+// liberar acesso, então enquanto isso não acontece (ou pros livros que as
+// buscas fixas não cobrem), esse CSV cobre os produtos escolhidos à mão.
+// Colunas: asin,title,price,image,description (as duas últimas são opcionais).
+// O link de afiliado é sempre gerado a partir do ASIN + AMAZON_PARTNER_TAG —
+// nunca precisa colar o link do SiteStripe inteiro, só o ASIN do produto.
+const MANUAL_CSV_PATH = path.join(ROOT, 'data', 'amazon-books.csv')
 
 const HOST = 'webservices.amazon.com.br'
 const REGION = 'us-east-1'
@@ -146,17 +161,25 @@ function mapItem(item) {
   }
 }
 
-export async function fetchAmazonRows() {
+async function fileExists(p) {
+  try {
+    await access(p)
+    return true
+  } catch {
+    return false
+  }
+}
+
+async function fetchApiRows(seenAsins) {
   const accessKey = process.env.AMAZON_ACCESS_KEY
   const secretKey = process.env.AMAZON_SECRET_KEY
   const partnerTag = process.env.AMAZON_PARTNER_TAG
 
   if (!accessKey || !secretKey || !partnerTag) {
-    console.log('[amazon] credenciais não definidas — build segue sem o catálogo da Amazon.')
+    console.log('[amazon] credenciais da PA-API não definidas — pulando busca automática.')
     return []
   }
 
-  const seenAsins = new Set()
   const rows = []
 
   for (const search of SEARCHES) {
@@ -172,10 +195,86 @@ export async function fetchAmazonRows() {
       }
       console.log(`[amazon] "${search.keywords}": ${added} livros novos (${items.length} retornados)`)
     } catch (err) {
+      // Cobre tanto credencial ausente/errada quanto a conta ficar inelegível
+      // pra API (exige 3 vendas qualificadas nos últimos 180 dias) — em
+      // qualquer caso, segue sem essa busca em vez de quebrar o build.
       console.error(`[amazon] erro na busca "${search.keywords}", seguindo sem ela: ${err.message}`)
     }
     await new Promise((resolve) => setTimeout(resolve, REQUEST_INTERVAL_MS))
   }
 
   return rows
+}
+
+function mapManualRow(row, partnerTag) {
+  const asin = row.asin?.trim()
+  const price = row.price ? Number(String(row.price).replace(',', '.')) : ''
+  const deepLink = `https://www.amazon.com.br/dp/${asin}?tag=${partnerTag}`
+
+  return {
+    aw_deep_link: deepLink,
+    product_name: row.title ?? '',
+    aw_product_id: asin,
+    merchant_product_id: asin,
+    merchant_image_url: row.image ?? '',
+    description: row.description ?? '',
+    merchant_category: 'Livros',
+    search_price: price,
+    merchant_name: 'Amazon BR',
+    merchant_id: 'amazon',
+    category_name: 'Livros',
+    category_id: 'livros',
+    aw_image_url: row.image ?? '',
+    currency: 'BRL',
+    store_price: price,
+    delivery_cost: '',
+    merchant_deep_link: deepLink,
+    language: 'pt',
+    last_updated: new Date().toISOString(),
+    display_price: price,
+    data_feed_id: 'amazon-books-manual',
+    alternate_image_two: '',
+    reviews: '',
+    rating: '',
+    average_rating: '',
+    number_available: '',
+    product_GTIN: '',
+  }
+}
+
+async function fetchManualRows(seenAsins, partnerTag) {
+  if (!(await fileExists(MANUAL_CSV_PATH))) return []
+
+  const raw = await readFile(MANUAL_CSV_PATH, 'utf-8')
+  const records = parse(raw, { columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true })
+
+  const rows = []
+  for (const row of records) {
+    const asin = row.asin?.trim()
+    if (!asin || seenAsins.has(asin)) continue
+    if (!row.title) {
+      console.error(`[amazon] linha sem "title" em data/amazon-books.csv (asin ${asin}), pulando.`)
+      continue
+    }
+    seenAsins.add(asin)
+    rows.push(mapManualRow(row, partnerTag))
+  }
+  console.log(`[amazon] ${rows.length} livros do catálogo manual (data/amazon-books.csv)`)
+  return rows
+}
+
+export async function fetchAmazonRows() {
+  const partnerTag = process.env.AMAZON_PARTNER_TAG
+  if (!partnerTag) {
+    console.log('[amazon] AMAZON_PARTNER_TAG não definida — build segue sem o catálogo da Amazon.')
+    return []
+  }
+
+  const seenAsins = new Set()
+  // API primeiro (dados mais completos/atualizados quando disponível),
+  // depois o catálogo manual completa com o que a API não cobrir — cada
+  // ASIN só entra uma vez, priorizando a fonte automática.
+  const apiRows = await fetchApiRows(seenAsins)
+  const manualRows = await fetchManualRows(seenAsins, partnerTag)
+  return [...apiRows, ...manualRows]
 }
