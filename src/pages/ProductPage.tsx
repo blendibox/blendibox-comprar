@@ -53,7 +53,12 @@ export function ProductPage() {
 
       <div className="product-detail">
         <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
-          <img className="product-detail__image" src={product.awImageUrl} alt={product.productName} />
+          <img
+            className="product-detail__image"
+            src={product.awImageUrl}
+            alt={product.productName}
+            fetchPriority="high"
+          />
         </a>
         <div className="product-detail__body">
           <span className="product-card__merchant">{product.merchantDisplayName}</span>

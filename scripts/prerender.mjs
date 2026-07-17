@@ -65,8 +65,30 @@ function productJsonLd(product, canonical) {
     '@type': 'Offer',
     url: canonical,
     priceCurrency: product.currency || 'BRL',
+    // Produto vem de um feed ativo do lojista — na ausência de sinal
+    // explícito em contrário, é razoável assumir que está disponível
+    // (diferente de inventar avaliação/nota, que não temos base nenhuma
+    // pra afirmar).
+    availability: product.numberAvailable === 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    // Data em que confirmamos esse preço — o lastUpdated do feed quando
+    // existe, senão a data desta atualização do site.
+    validFrom: product.lastUpdated || new Date().toISOString(),
   }
   if (product.searchPrice != null) offer.price = product.searchPrice
+
+  // Só inclui shippingDetails quando o feed realmente informa o custo de
+  // entrega — não dá pra inventar prazo/valor de frete por loja.
+  if (product.deliveryCost != null) {
+    offer.shippingDetails = {
+      '@type': 'OfferShippingDetails',
+      shippingRate: {
+        '@type': 'MonetaryAmount',
+        value: product.deliveryCost,
+        currency: product.currency || 'BRL',
+      },
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'BR' },
+    }
+  }
 
   const productLd = {
     '@context': 'https://schema.org',
@@ -77,6 +99,7 @@ function productJsonLd(product, canonical) {
     brand: { '@type': 'Brand', name: product.merchantDisplayName },
     offers: offer,
   }
+  if (product.description) productLd.description = product.description
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',

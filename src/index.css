@@ -144,6 +144,10 @@ a {
   padding: 0 16px 32px;
   border-top: 1px solid #1e293b;
   padding-top: 24px;
+  /* Reserva o espaço aproximado do carrossel carregado — evita o salto de
+     layout (CLS) quando o fetch client-side resolve e o conteúdo aparece
+     (o componente não existe no HTML pré-renderizado, só depois da hidratação). */
+  min-height: 260px;
 }
 
 .blendibox-carousel h3 {
@@ -326,7 +330,7 @@ a {
 
 .product-card__merchant {
   font-size: 12px;
-  color: #888;
+  color: #5f5f5f;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -405,7 +409,7 @@ a {
   gap: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--color-teal-dark);
+  color: #115e59;
   background: #ecfdf5;
   border-radius: 999px;
   padding: 4px 10px;
@@ -436,7 +440,7 @@ a {
 
 .disclaimer {
   font-size: 12px;
-  color: #888;
+  color: #5f5f5f;
   margin-top: 12px;
   border-top: 1px solid #eee;
   padding-top: 12px;
@@ -448,7 +452,7 @@ a {
 
 .product-detail__description h2 {
   font-size: 15px;
-  color: #888;
+  color: #5f5f5f;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -538,7 +542,7 @@ a {
 }
 
 .hub-chip span {
-  color: #999;
+  color: #5f5f5f;
 }
 
 /* Comparador */
@@ -709,7 +713,7 @@ a {
 
 .coupon-card__advertiser {
   font-size: 12px;
-  color: #888;
+  color: #5f5f5f;
   text-transform: uppercase;
   letter-spacing: 0.03em;
 }
@@ -818,7 +822,7 @@ a {
 
 .coupon-card__expiry {
   font-size: 12px;
-  color: #888;
+  color: #5f5f5f;
 }
 
 /* Newsletter (rodapé) */
@@ -906,7 +910,7 @@ a {
 
 .price-history h2 {
   font-size: 15px;
-  color: #888;
+  color: #5f5f5f;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   margin-bottom: 8px;
@@ -927,7 +931,7 @@ a {
 .legal-disclaimer {
   max-width: 720px;
   font-size: 12px;
-  color: #999;
+  color: #5f5f5f;
   border-top: 1px solid #eee;
   padding-top: 12px;
 }
