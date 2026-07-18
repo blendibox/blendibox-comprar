@@ -73,6 +73,12 @@ function productJsonLd(product, canonical) {
     // Data em que confirmamos esse preço — o lastUpdated do feed quando
     // existe, senão a data desta atualização do site.
     validFrom: product.lastUpdated || new Date().toISOString(),
+    // Search Console pede validThrough/priceValidUntil em toda oferta. Não
+    // temos essa data vinda do feed (nenhum lojista informa isso), mas o
+    // site se reconstrói e rebusca os preços todo dia — 30 dias é uma janela
+    // conservadora e verdadeira (o preço é revalidado bem antes disso),
+    // não um valor inventado sem lastro.
+    priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
   }
   if (product.searchPrice != null) offer.price = product.searchPrice
 
