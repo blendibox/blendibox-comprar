@@ -79,7 +79,8 @@ dado carregado.
    catálogos de revenda do Grupo Boticário (ver seção própria abaixo),
    `OUIPARIS_USER_ID`. Pro catálogo de livros da Amazon (ver seção própria
    abaixo), adicione também `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY` e
-   `AMAZON_PARTNER_TAG`.
+   `AMAZON_PARTNER_TAG`. Pro catálogo da Shopee (ver seção própria abaixo),
+   adicione `SHOPEE_FEED_URL`.
 4. **Domínio próprio**: o arquivo `public/CNAME` já aponta pra
    `comprar.blendibox.com.br`. No provedor de DNS do domínio, configure um
    registro `CNAME` apontando pro `<usuario>.github.io` (ou os registros `A`
@@ -164,6 +165,36 @@ A PA-API também exige pelo menos 3 vendas qualificadas nos últimos 180 dias
 pra manter o acesso liberado — se ficar muito tempo sem vendas, vale
 conferir em Associates Central se o acesso à API continua ativo antes de
 assumir que as credenciais ainda funcionam.
+
+## Catálogo Shopee (datafeed)
+
+Fonte: link de datafeed do painel de Afiliados da Shopee
+(`affiliate.shopee.com.br/creative/product_feed`) — ver
+`scripts/lib/shopee.mjs`. Diferente dos outros merchants (um lojista = um
+vertical fixo), esse único feed cobre categorias muito diferentes (beleza,
+eletrônicos, alimentos...) dentro do mesmo "merchant" Shopee — por isso o
+vertical é calculado por produto, a partir da coluna `global_category1` do
+feed, via a tabela `CATEGORY_TO_VERTICAL` em `scripts/lib/shopee.mjs`.
+Categorias que não estão nessa tabela são **ignoradas de propósito** (não
+importa o feed inteiro de cara) — o log do build mostra quais categorias
+foram puladas, é só adicionar na tabela conforme for revisando.
+
+O catálogo também começa limitado a `MAX_PER_VERTICAL` (300) produtos por
+vertical, ranqueados por avaliação/curtidas do próprio feed — ajustável na
+mesma constante.
+
+`SHOPEE_FEED_URL` é a URL completa copiada do painel (já inclui um token
+de autenticação — trate como secret, nunca cole no repo). Confirmado que
+essa URL é fixa e reutilizável: o conteúdo por trás dela é atualizado pela
+própria Shopee, o link não expira ao gerar de novo.
+
+```bash
+$env:SHOPEE_FEED_URL = "https://affiliate.shopee.com.br/api/v1/datafeed/download?id=..."   # PowerShell
+```
+
+O link de afiliado (coluna `product_short link` do feed) já vem pronto da
+própria Shopee — não construímos nenhum link aqui, só repassamos o que o
+feed fornece.
 
 ## Adicionando mais lojas (feeds)
 

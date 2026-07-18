@@ -12,6 +12,7 @@
     "boticario-revenda": { "slug": "boticario-revenda", "displayName": "O Boticário (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "qdb-revenda": { "slug": "qdb-revenda", "displayName": "Quem Disse, Berenice?", "vertical": "beleza", "active": true, "priority": true },
     "amazon": { "slug": "amazon", "displayName": "Amazon BR", "vertical": "livros", "active": true, "priority": true },
+    "shopee": { "slug": "shopee", "displayName": "Shopee Oficial BR", "vertical": "geral", "active": true },
 
     "17652": { "slug": "nike", "displayName": "Nike BR", "vertical": "esporte", "active": true, "priority": true },
     "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": false },

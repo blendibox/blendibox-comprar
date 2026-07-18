@@ -45,6 +45,7 @@ jobs:
           AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
           AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}
           AMAZON_PARTNER_TAG: ${{ secrets.AMAZON_PARTNER_TAG }}
+          SHOPEE_FEED_URL: ${{ secrets.SHOPEE_FEED_URL }}
           # Domínio próprio (CNAME) serve a partir da raiz, não de /repo-name/.
           VITE_BASE_PATH: /
           SITE_URL: https://comprar.blendibox.com.br

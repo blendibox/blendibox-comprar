@@ -14,6 +14,7 @@ import { parse } from 'csv-parse/sync'
 import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
+import { fetchShopeeRows } from './lib/shopee.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -169,6 +170,7 @@ async function main() {
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
   rawRows.push(...(await fetchAmazonRows()))
+  rawRows.push(...(await fetchShopeeRows()))
 
   // Monta cada produto com slug/vertical/merchant resolvidos, e um índice por
   // "vertical/categoria" pra depois calcular os produtos similares.
@@ -186,13 +188,18 @@ async function main() {
     // então produtos que já existiam lá tendem a cair no mesmo slug agora.
     const slugId = slugify(mapped.merchantProductId) || mapped.awProductId
     const slug = `${slugBase}-${slugId}`
+    // Normalmente um merchant inteiro tem um vertical fixo (definido no
+    // config), mas fontes como o feed da Shopee cobrem categorias muito
+    // diferentes dentro do mesmo "merchant" — nesses casos o vertical vem
+    // calculado por produto (ver scripts/lib/shopee.mjs) e tem prioridade.
+    const vertical = mapped.vertical || merchant.vertical
 
     const product = {
       ...mapped,
       slug,
       merchantSlug: merchant.slug,
       merchantDisplayName: merchant.displayName,
-      vertical: merchant.vertical,
+      vertical,
       categorySlug,
     }
 
@@ -204,7 +211,7 @@ async function main() {
       priority: Boolean(merchant.priority),
     })
 
-    const categoryKey = `${merchant.vertical}/${categorySlug}`
+    const categoryKey = `${vertical}/${categorySlug}`
     if (!byCategoryKey.has(categoryKey)) byCategoryKey.set(categoryKey, [])
     byCategoryKey.get(categoryKey).push(product)
   }
