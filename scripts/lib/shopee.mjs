@@ -44,6 +44,15 @@ const CATEGORY_TO_VERTICAL = {
   'Baby & Toys': 'brinquedos',
 }
 
+// Casos em que o vertical certo depende da subcategoria (global_category3),
+// não só da categoria 1 — ex: álbum/figurinha de copa do mundo entra como
+// "colecionável" na Shopee (Hobbies & Collections), não como livro, mas faz
+// sentido junto de "livros" no site (mesma prateleira de adesivos/figurinhas
+// que já existe em Books & Magazines > Sticker & Colouring Books).
+const CATEGORY3_OVERRIDES = {
+  'Hobbies & Collections>Sports Collectibles': 'livros',
+}
+
 // Catálogo começa limitado (não importa o feed inteiro de uma vez) — top N
 // produtos por vertical, ranqueados por avaliação/curtidas como sinal de
 // qualidade (não temos histórico de vendas próprio pra esses produtos).
@@ -122,17 +131,27 @@ export async function fetchShopeeRows() {
   })
   console.log(`[shopee] ${records.length} produtos no feed bruto`)
 
+  // Agrupa por vertical e, dentro de cada vertical, por subcategoria
+  // (global_category3) — necessário pra depois ranquear com diversidade em
+  // vez de um corte único por nota/curtidas, que espremia subgêneros
+  // pequenos (ex: bíblia/devocional, autoajuda, adesivos) pra fora do corte
+  // só porque outros subgêneros maiores (ex: literatura de forma geral)
+  // tinham nota média mais alta.
   const byVertical = new Map()
   const skipped = new Map()
 
   for (const row of records) {
-    const vertical = CATEGORY_TO_VERTICAL[row.global_category1]
+    const overrideKey = `${row.global_category1}>${row.global_category3}`
+    const vertical = CATEGORY3_OVERRIDES[overrideKey] || CATEGORY_TO_VERTICAL[row.global_category1]
     if (!vertical) {
       skipped.set(row.global_category1, (skipped.get(row.global_category1) ?? 0) + 1)
       continue
     }
-    if (!byVertical.has(vertical)) byVertical.set(vertical, [])
-    byVertical.get(vertical).push(row)
+    if (!byVertical.has(vertical)) byVertical.set(vertical, new Map())
+    const bySubcategory = byVertical.get(vertical)
+    const subcategory = row.global_category3 || row.global_category2 || '(geral)'
+    if (!bySubcategory.has(subcategory)) bySubcategory.set(subcategory, [])
+    bySubcategory.get(subcategory).push(row)
   }
 
   for (const [category, count] of skipped) {
@@ -140,17 +159,39 @@ export async function fetchShopeeRows() {
   }
 
   const rows = []
-  for (const [vertical, items] of byVertical) {
+  for (const [vertical, bySubcategory] of byVertical) {
     const cap = VERTICAL_CAPS[vertical] ?? DEFAULT_MAX_PER_VERTICAL
-    // Ranqueia por avaliação do item (peso maior) e curtidas (desempate) —
-    // sinal de qualidade disponível no próprio feed, já que não temos
-    // histórico de vendas pra esses produtos ainda.
-    const ranked = items
-      .map((row) => ({ row, score: (Number(row.item_rating) || 0) * 1000 + (Number(row.like) || 0) }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, cap)
-    console.log(`[shopee] vertical "${vertical}": ${ranked.length}/${items.length} produtos (limite ${cap})`)
-    for (const { row } of ranked) {
+    // Cada subcategoria é ranqueada internamente por avaliação+curtidas (sinal
+    // de qualidade disponível no feed, já que não temos histórico de vendas
+    // próprio ainda), mas a seleção final entre subcategorias é round-robin —
+    // garante espaço pras pequenas em vez de deixar as maiores dominarem tudo.
+    const queues = [...bySubcategory.entries()].map(([subcategory, items]) => ({
+      subcategory,
+      items: items
+        .map((row) => ({ row, score: (Number(row.item_rating) || 0) * 1000 + (Number(row.like) || 0) }))
+        .sort((a, b) => b.score - a.score),
+      cursor: 0,
+    }))
+
+    const selected = []
+    let progressed = true
+    while (selected.length < cap && progressed) {
+      progressed = false
+      for (const queue of queues) {
+        if (selected.length >= cap) break
+        if (queue.cursor < queue.items.length) {
+          selected.push(queue.items[queue.cursor].row)
+          queue.cursor++
+          progressed = true
+        }
+      }
+    }
+
+    const totalCandidates = queues.reduce((sum, q) => sum + q.items.length, 0)
+    console.log(
+      `[shopee] vertical "${vertical}": ${selected.length}/${totalCandidates} produtos (limite ${cap}, ${queues.length} subcategorias)`
+    )
+    for (const row of selected) {
       rows.push(mapRow(row, vertical))
     }
   }

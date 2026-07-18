@@ -117,6 +117,16 @@ function resolveMerchant(merchantsConfig, merchantId, merchantName) {
   }
 }
 
+// Alguns lojistas da Awin mandam um GIF placeholder em vez de deixar o campo
+// vazio quando não têm foto real do produto — pior que não ter imagem
+// nenhuma, porque passa despercebido nas checagens de "campo vazio".
+const NO_IMAGE_PATTERN = /noimage/i
+
+function hasRealImage(mapped) {
+  const image = mapped.awImageUrl || mapped.merchantImageUrl
+  return Boolean(image) && !NO_IMAGE_PATTERN.test(image)
+}
+
 function buildCategorySlug(product) {
   const raw = product.merchantCategory || product.categoryName
   if (!raw) return 'geral'
@@ -177,9 +187,16 @@ async function main() {
   const byCategoryKey = new Map()
   const products = []
   const merchantsUsed = new Map()
+  let skippedNoImage = 0
 
   for (const row of rawRows) {
     const mapped = mapRow(row)
+    // Produto sem foto real fica feio e pouco confiável na listagem — melhor
+    // não publicar do que mostrar um card quebrado/placeholder.
+    if (!hasRealImage(mapped)) {
+      skippedNoImage++
+      continue
+    }
     const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
     const categorySlug = buildCategorySlug(mapped)
     const slugBase = slugify(mapped.productName) || 'produto'
@@ -214,6 +231,10 @@ async function main() {
     const categoryKey = `${vertical}/${categorySlug}`
     if (!byCategoryKey.has(categoryKey)) byCategoryKey.set(categoryKey, [])
     byCategoryKey.get(categoryKey).push(product)
+  }
+
+  if (skippedNoImage > 0) {
+    console.log(`[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)`)
   }
 
   // Produtos similares: mesma categoria dentro do mesmo vertical, ordenados

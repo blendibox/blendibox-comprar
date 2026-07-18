@@ -177,15 +177,21 @@ vertical é calculado por produto, a partir da coluna `global_category1` do
 feed, via a tabela `CATEGORY_TO_VERTICAL` em `scripts/lib/shopee.mjs`.
 Categorias que não estão nessa tabela são **ignoradas de propósito** (não
 importa o feed inteiro de cara) — o log do build mostra quais categorias
-foram puladas, é só adicionar na tabela conforme for revisando.
+foram puladas, é só adicionar na tabela conforme for revisando. Alguns
+casos dependem da subcategoria (`global_category3`), não só da categoria
+1 — ex: álbum/figurinha de copa do mundo entra como "colecionável" na
+Shopee (`Hobbies & Collections`), não como livro, mas faz sentido junto
+de "livros" no site — esses casos ficam em `CATEGORY3_OVERRIDES`.
 
-O catálogo também começa limitado por vertical, ranqueado por
-avaliação/curtidas do próprio feed (não temos histórico de venda próprio
-pra esses produtos ainda) — ajustável em `VERTICAL_CAPS`/
-`DEFAULT_MAX_PER_VERTICAL` em `scripts/lib/shopee.mjs`. Moda, beleza,
-eletrônicos e casa (as categorias de maior venda na Shopee em geral) têm
-limite de 1000; o resto (joias, livros, esporte) fica em 300 até termos
-dado de conversão real pra reajustar.
+O catálogo também começa limitado por vertical, ajustável em
+`VERTICAL_CAPS`/`DEFAULT_MAX_PER_VERTICAL` em `scripts/lib/shopee.mjs`.
+Moda, beleza, eletrônicos e casa (as categorias de maior venda na Shopee
+em geral) têm limite de 1000; o resto (joias, livros, esporte) fica em
+300 até termos dado de conversão real pra reajustar. Dentro de cada
+vertical, a seleção é **round-robin por subcategoria** (não um corte
+único por avaliação/curtidas) — sem isso, subgêneros pequenos (ex:
+bíblia/devocional, autoajuda) ficavam de fora só porque outros subgêneros
+maiores tinham nota média mais alta.
 
 `SHOPEE_FEED_URL` é a URL completa copiada do painel (já inclui um token
 de autenticação — trate como secret, nunca cole no repo). Confirmado que
