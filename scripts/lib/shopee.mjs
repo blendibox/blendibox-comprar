@@ -101,6 +101,7 @@ function mapRow(row, vertical) {
     average_rating: row.item_rating || '',
     number_available: '',
     product_GTIN: '',
+    discount_percentage: row.discount_percentage || '',
     // Não existe coluna equivalente no FIELD_MAP do Awin — passa direto pelo
     // mapRow() genérico de fetch-feeds.mjs (chave desconhecida = mantida
     // como está) e tem prioridade sobre o vertical fixo do merchant.

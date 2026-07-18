@@ -11,6 +11,51 @@ export function formatPrice(value: number | null | undefined, currency: string) 
   }
 }
 
+// Só aparece quando a fonte realmente informa nota (hoje, só a Shopee) — não
+// inventamos avaliação pra loja que não manda esse dado.
+export function RatingBadge({ rating }: { rating: number | null | undefined }) {
+  if (rating == null || rating <= 0) return null
+  return (
+    <span className="rating-badge" aria-label={`Avaliação ${rating.toFixed(1)} de 5`}>
+      {'★ '}
+      {rating.toFixed(1)}
+    </span>
+  )
+}
+
+function discountPercent(storePrice: number | null | undefined, searchPrice: number | null | undefined, discountPercentage: number | null | undefined) {
+  if (storePrice == null || searchPrice == null || storePrice <= searchPrice) return null
+  const pct = discountPercentage && discountPercentage > 0 ? Math.round(discountPercentage) : Math.round((1 - searchPrice / storePrice) * 100)
+  return pct > 0 ? pct : null
+}
+
+export function DiscountBadge({
+  storePrice,
+  searchPrice,
+  discountPercentage,
+}: {
+  storePrice: number | null | undefined
+  searchPrice: number | null | undefined
+  discountPercentage: number | null | undefined
+}) {
+  const pct = discountPercent(storePrice, searchPrice, discountPercentage)
+  if (pct == null) return null
+  return <span className="discount-badge">{`-${pct}%`}</span>
+}
+
+export function OriginalPrice({
+  storePrice,
+  searchPrice,
+  currency,
+}: {
+  storePrice: number | null | undefined
+  searchPrice: number | null | undefined
+  currency: string
+}) {
+  if (storePrice == null || searchPrice == null || storePrice <= searchPrice) return null
+  return <span className="product-card__price-original">{formatPrice(storePrice, currency)}</span>
+}
+
 export function ProductCard({ product, caption }: { product: ProductIndexEntry; caption?: string }) {
   const href = `/${product.merchantSlug}/${product.slug}`
   const { isSelected, toggle, isFull } = useComparator()
@@ -19,6 +64,11 @@ export function ProductCard({ product, caption }: { product: ProductIndexEntry; 
   return (
     <Link className="product-card" to={href}>
       {caption && <span className="product-card__caption">{caption}</span>}
+      <DiscountBadge
+        storePrice={product.storePrice}
+        searchPrice={product.searchPrice}
+        discountPercentage={product.discountPercentage}
+      />
       <img
         className="product-card__image"
         src={product.awImageUrl}
@@ -45,9 +95,13 @@ export function ProductCard({ product, caption }: { product: ProductIndexEntry; 
         {selected ? '✓ Comparando' : '+ Comparar'}
       </button>
       <div className="product-card__body">
-        <span className="product-card__merchant">{product.merchantDisplayName}</span>
+        <div className="product-card__merchant-row">
+          <span className="product-card__merchant">{product.merchantDisplayName}</span>
+          <RatingBadge rating={product.rating} />
+        </div>
         <h3 className="product-card__name">{product.productName}</h3>
         <div className="product-card__prices">
+          <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
           <span className="product-card__price">{formatPrice(product.searchPrice, product.currency)}</span>
         </div>
       </div>

@@ -42,6 +42,7 @@ export interface Product {
   averageRating: number | null
   numberAvailable: number | null
   productGtin: string
+  discountPercentage: number | null
   slug: string
   merchantSlug: string
   merchantDisplayName: string
@@ -67,6 +68,11 @@ export interface ProductIndexEntry {
   currency: string
   awImageUrl: string
   eligibleForStaticPage: boolean
+  // Só vem preenchido pra fontes que realmente informam (ex: Shopee) — não
+  // inventamos nota/desconto pra quem não tem o dado.
+  rating: number | null
+  storePrice: number | null
+  discountPercentage: number | null
 }
 
 export interface MerchantMeta {

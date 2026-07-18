@@ -57,6 +57,7 @@ const NUMERIC_FIELDS = new Set([
   'rating',
   'averageRating',
   'numberAvailable',
+  'discountPercentage',
 ])
 
 const FIELD_MAP = {
@@ -87,6 +88,7 @@ const FIELD_MAP = {
   average_rating: 'averageRating',
   number_available: 'numberAvailable',
   product_GTIN: 'productGtin',
+  discount_percentage: 'discountPercentage',
 }
 
 function mapRow(row) {
@@ -321,6 +323,11 @@ async function main() {
     currency: p.currency,
     awImageUrl: p.awImageUrl || p.merchantImageUrl,
     eligibleForStaticPage: p.eligibleForStaticPage,
+    // Só vem preenchido pra fontes que realmente têm o dado (ex: Shopee) —
+    // não inventamos nota/desconto pra quem não informa.
+    rating: p.rating ?? p.averageRating ?? null,
+    storePrice: p.storePrice,
+    discountPercentage: p.discountPercentage,
   }))
 
   await writeFile(path.join(OUTPUT_DIR, 'index.json'), JSON.stringify(index))

@@ -433,6 +433,48 @@ a {
   letter-spacing: 0.03em;
 }
 
+.product-card__merchant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+/* Só aparece quando a fonte informa nota real (hoje, só a Shopee). */
+.rating-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #b45309;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Pill simples por padrão (usado inline no preço da página de produto); no
+   card da listagem vira selo sobre a imagem via o seletor abaixo. */
+.discount-badge {
+  display: inline-flex;
+  background: var(--color-pink);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.product-card > .discount-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 1;
+}
+
+.product-card__price-original {
+  font-size: 12px;
+  color: #5f5f5f;
+  text-decoration: line-through;
+}
+
 .product-card__name {
   margin: 0;
   font-size: 14px;
@@ -495,10 +537,18 @@ a {
 }
 
 .product-detail__price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
   font-size: 34px;
   font-weight: 800;
   color: var(--color-green);
   margin-bottom: 6px;
+}
+
+.product-detail__price .product-card__price-original {
+  font-size: 16px;
 }
 
 .freshness-badge {

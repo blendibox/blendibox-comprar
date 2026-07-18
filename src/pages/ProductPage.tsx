@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { Product } from '../types/product'
-import { formatPrice } from '../components/ProductCard'
+import { DiscountBadge, OriginalPrice, RatingBadge, formatPrice } from '../components/ProductCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { formatIsoDateBr } from '../lib/date'
 
@@ -61,10 +61,19 @@ export function ProductPage() {
           />
         </a>
         <div className="product-detail__body">
-          <span className="product-card__merchant">{product.merchantDisplayName}</span>
+          <div className="product-card__merchant-row">
+            <span className="product-card__merchant">{product.merchantDisplayName}</span>
+            <RatingBadge rating={product.rating ?? product.averageRating} />
+          </div>
           <h1>{product.productName}</h1>
           <div className="product-detail__price">
+            <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
             {formatPrice(product.searchPrice, product.currency)}
+            <DiscountBadge
+              storePrice={product.storePrice}
+              searchPrice={product.searchPrice}
+              discountPercentage={product.discountPercentage}
+            />
           </div>
           <div className="freshness-badge">✓ Preço atualizado toda semana</div>
           <a
