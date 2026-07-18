@@ -179,9 +179,13 @@ Categorias que não estão nessa tabela são **ignoradas de propósito** (não
 importa o feed inteiro de cara) — o log do build mostra quais categorias
 foram puladas, é só adicionar na tabela conforme for revisando.
 
-O catálogo também começa limitado a `MAX_PER_VERTICAL` (300) produtos por
-vertical, ranqueados por avaliação/curtidas do próprio feed — ajustável na
-mesma constante.
+O catálogo também começa limitado por vertical, ranqueado por
+avaliação/curtidas do próprio feed (não temos histórico de venda próprio
+pra esses produtos ainda) — ajustável em `VERTICAL_CAPS`/
+`DEFAULT_MAX_PER_VERTICAL` em `scripts/lib/shopee.mjs`. Moda, beleza,
+eletrônicos e casa (as categorias de maior venda na Shopee em geral) têm
+limite de 1000; o resto (joias, livros, esporte) fica em 300 até termos
+dado de conversão real pra reajustar.
 
 `SHOPEE_FEED_URL` é a URL completa copiada do painel (já inclui um token
 de autenticação — trate como secret, nunca cole no repo). Confirmado que

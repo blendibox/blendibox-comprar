@@ -35,10 +35,10 @@ const CATEGORY_TO_VERTICAL = {
   'Home & Living': 'casa',
   'Home Appliances': 'casa',
   'Home Improvement': 'casa',
-  'Mobile & Gadgets': 'casa',
-  Audio: 'casa',
-  'Cameras & Drones': 'casa',
-  'Computers & Accessories': 'casa',
+  'Mobile & Gadgets': 'eletronicos',
+  Audio: 'eletronicos',
+  'Cameras & Drones': 'eletronicos',
+  'Computers & Accessories': 'eletronicos',
   'Books & Magazines': 'livros',
   'Toys, Kids & Babies': 'brinquedos',
   'Baby & Toys': 'brinquedos',
@@ -47,7 +47,16 @@ const CATEGORY_TO_VERTICAL = {
 // Catálogo começa limitado (não importa o feed inteiro de uma vez) — top N
 // produtos por vertical, ranqueados por avaliação/curtidas como sinal de
 // qualidade (não temos histórico de vendas próprio pra esses produtos).
-const MAX_PER_VERTICAL = 300
+// Moda, beleza, eletrônicos e casa são as categorias de maior venda na
+// Shopee em geral — limite maior pra elas; o resto segue mais conservador
+// até termos dado real de conversão pra reajustar.
+const DEFAULT_MAX_PER_VERTICAL = 300
+const VERTICAL_CAPS = {
+  moda: 1000,
+  beleza: 1000,
+  eletronicos: 1000,
+  casa: 1000,
+}
 
 function mapRow(row, vertical) {
   const price = row.sale_price || row.price || ''
@@ -132,14 +141,15 @@ export async function fetchShopeeRows() {
 
   const rows = []
   for (const [vertical, items] of byVertical) {
+    const cap = VERTICAL_CAPS[vertical] ?? DEFAULT_MAX_PER_VERTICAL
     // Ranqueia por avaliação do item (peso maior) e curtidas (desempate) —
     // sinal de qualidade disponível no próprio feed, já que não temos
     // histórico de vendas pra esses produtos ainda.
     const ranked = items
       .map((row) => ({ row, score: (Number(row.item_rating) || 0) * 1000 + (Number(row.like) || 0) }))
       .sort((a, b) => b.score - a.score)
-      .slice(0, MAX_PER_VERTICAL)
-    console.log(`[shopee] vertical "${vertical}": ${ranked.length}/${items.length} produtos (limite ${MAX_PER_VERTICAL})`)
+      .slice(0, cap)
+    console.log(`[shopee] vertical "${vertical}": ${ranked.length}/${items.length} produtos (limite ${cap})`)
     for (const { row } of ranked) {
       rows.push(mapRow(row, vertical))
     }
