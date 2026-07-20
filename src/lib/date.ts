@@ -14,9 +14,16 @@ export function formatBrDate(value: string | null | undefined): string | null {
 
 // Formata uma data ISO (ex: lastUpdated do feed) num formato amigável em
 // português, sem hora — só interessa o dia da última atualização de preço.
+//
+// timeZone fixo é essencial aqui: sem ele, toLocaleDateString usa o fuso
+// local de quem está rodando o código — e o servidor (build no GitHub
+// Actions, UTC) e o navegador do visitante (Brasil, UTC-3) podem cair em
+// dias civis diferentes pra um mesmo instante perto da meia-noite UTC. Isso
+// faz o HTML gerado no servidor não bater com a primeira renderização do
+// cliente, disparando erro de hidratação do React (#418).
 export function formatIsoDateBr(value: string | null | undefined): string | null {
   if (!value) return null
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return null
-  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })
 }

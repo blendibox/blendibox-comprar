@@ -10,7 +10,12 @@ type Status = 'idle' | 'sending' | 'done' | 'error'
 // invasiva que popup. Some sozinha se o usuário já assinou ou já fechou
 // antes (guardado em localStorage, não precisa fechar de novo a cada visita).
 export function TopBar() {
-  const [visible, setVisible] = useState(false)
+  // Começa visível (igual no servidor e no primeiro render do cliente, antes
+  // do efeito rodar) — sem isso, a maioria dos visitantes (primeira visita,
+  // sem nada salvo ainda) via a barra "pular" pra dentro depois da hidratação
+  // e empurrar a página inteira pra baixo (CLS). Só quem já dispensou ou já
+  // assinou (minoria) sente o ajuste, escondendo a barra depois de montado.
+  const [visible, setVisible] = useState(true)
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
   const [status, setStatus] = useState<Status>('idle')
@@ -19,9 +24,9 @@ export function TopBar() {
     try {
       const dismissed = localStorage.getItem(DISMISSED_KEY)
       const subscribed = localStorage.getItem(NEWSLETTER_SUBSCRIBED_KEY)
-      if (!dismissed && !subscribed) setVisible(true)
+      if (dismissed || subscribed) setVisible(false)
     } catch {
-      setVisible(true)
+      // localStorage indisponível — mantém visível
     }
   }, [])
 
