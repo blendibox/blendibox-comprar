@@ -22,6 +22,23 @@ function weekNumber(date) {
   return Math.floor((date - start) / (7 * 24 * 60 * 60 * 1000))
 }
 
+// index.json já filtra o placeholder "sem foto" que alguns lojistas mandam
+// (ver hasRealImage em fetch-feeds.mjs), mas isso não garante que a URL
+// ainda resolve — imagem pode ter sumido do CDN do lojista depois. Como o
+// digest só escolhe uns 6 itens no total (não o catálogo inteiro), dá pra
+// conferir de verdade em tempo de build em vez de só confiar no campo.
+async function hasReachableImage(url) {
+  if (!url) return false
+  try {
+    const res = await fetch(url, { method: 'HEAD' })
+    if (!res.ok) return false
+    const contentType = res.headers.get('content-type') || ''
+    return contentType.startsWith('image/')
+  } catch {
+    return false
+  }
+}
+
 async function main() {
   const index = JSON.parse(await readFile(path.join(OUTPUT_DIR, 'index.json'), 'utf-8'))
   const merchants = JSON.parse(await readFile(path.join(OUTPUT_DIR, 'merchants.json'), 'utf-8'))
@@ -59,7 +76,23 @@ async function main() {
       Math.ceil(candidates.length * 0.8)
     )
     const pool = mid.length > 0 ? mid : candidates
-    const product = pool[week % pool.length]
+    // Tenta o candidato "da semana" primeiro; se a imagem não resolver,
+    // percorre o resto do pool (poucas dezenas de itens, não o catálogo
+    // inteiro) até achar um com foto de verdade, em vez de forçar um
+    // produto sem imagem só pra manter a rotação semanal.
+    const maxAttempts = Math.min(pool.length, 20)
+    let product = null
+    for (let i = 0; i < maxAttempts; i++) {
+      const candidate = pool[(week + i) % pool.length]
+      if (await hasReachableImage(candidate.awImageUrl)) {
+        product = candidate
+        break
+      }
+    }
+    if (!product) {
+      console.log(`[digest] "${slug}": nenhum candidato com imagem válida em ${maxAttempts} tentativas, pulando merchant`)
+      continue
+    }
     items.push({
       merchantDisplayName: product.merchantDisplayName,
       productName: product.productName,
