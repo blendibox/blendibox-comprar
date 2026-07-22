@@ -58,6 +58,8 @@
     "30615": { "slug": "spicy", "displayName": "Spicy BR", "vertical": "casa", "active": false },
     "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": false },
 
-    "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false }
+    "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false },
+
+    "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true }
   }
 }
