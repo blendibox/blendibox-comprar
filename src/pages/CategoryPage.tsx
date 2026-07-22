@@ -65,8 +65,8 @@ export function CategoryPage() {
       {(ready || initial) && (
         <>
           <div className="product-grid">
-            {visible.map((product) => (
-              <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} />
+            {visible.map((product, i) => (
+              <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0} />
             ))}
           </div>
           {ready && visibleCount < filtered.length && (

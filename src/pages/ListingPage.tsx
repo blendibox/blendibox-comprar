@@ -5,6 +5,7 @@ import type { MerchantMeta, ProductIndexEntry, SalesHighlight } from '../types/p
 import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { formatIsoDateTimeBr } from '../lib/date'
 
 const PAGE_SIZE = 60
 const MAX_RECENT_SALES = 8
@@ -113,7 +114,7 @@ export function ListingPage() {
         {meta && (
           <p className="page__meta">
             {meta.totalProducts.toLocaleString('pt-BR')} produtos · atualizado em{' '}
-            {new Date(meta.generatedAt).toLocaleString('pt-BR')}
+            {formatIsoDateTimeBr(meta.generatedAt)}
           </p>
         )}
       </header>
@@ -150,8 +151,8 @@ export function ListingPage() {
         <section className="featured-section">
           <h2>Destaques</h2>
           <Carousel>
-            {featured.map((product) => (
-              <ProductCard key={`featured-${product.merchantSlug}-${product.slug}`} product={product} />
+            {featured.map((product, i) => (
+              <ProductCard key={`featured-${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0} />
             ))}
           </Carousel>
         </section>
@@ -180,8 +181,8 @@ export function ListingPage() {
       {state === 'ready' && (
         <>
           <div className="product-grid">
-            {visible.map((product) => (
-              <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} />
+            {visible.map((product, i) => (
+              <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0 && !showFeatured} />
             ))}
           </div>
           {visibleCount < filtered.length && (

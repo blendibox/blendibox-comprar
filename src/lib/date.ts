@@ -27,3 +27,14 @@ export function formatIsoDateBr(value: string | null | undefined): string | null
   if (Number.isNaN(date.getTime())) return null
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })
 }
+
+// Mesmo motivo do timeZone fixo acima, só que pra data+hora — sem pinar,
+// a HORA renderizada diverge do servidor (UTC) pro cliente (Brasil, UTC-3)
+// em toda carga de página, não só perto da meia-noite, já que o offset de
+// 3h desloca o horário exibido o tempo inteiro.
+export function formatIsoDateTimeBr(value: string | null | undefined): string | null {
+  if (!value) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+}

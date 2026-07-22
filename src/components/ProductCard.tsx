@@ -56,7 +56,20 @@ export function OriginalPrice({
   return <span className="product-card__price-original">{formatPrice(storePrice, currency)}</span>
 }
 
-export function ProductCard({ product, caption }: { product: ProductIndexEntry; caption?: string }) {
+export function ProductCard({
+  product,
+  caption,
+  priority,
+}: {
+  product: ProductIndexEntry
+  caption?: string
+  // Card que provavelmente é o LCP da página (ex: primeiro item de uma
+  // grade/carrossel acima da dobra) — carrega eager + fetchPriority alta em
+  // vez do lazy padrão, senão o Lighthouse acusa a imagem de LCP não
+  // detectável/lazy (mesmo ajuste já feito na imagem principal da página de
+  // produto).
+  priority?: boolean
+}) {
   const href = `/${product.merchantSlug}/${product.slug}`
   const { isSelected, toggle, isFull } = useComparator()
   const selected = isSelected(product.merchantSlug, product.slug)
@@ -73,7 +86,8 @@ export function ProductCard({ product, caption }: { product: ProductIndexEntry; 
         className="product-card__image"
         src={product.awImageUrl}
         alt={product.productName}
-        loading="lazy"
+        loading={priority ? 'eager' : 'lazy'}
+        fetchPriority={priority ? 'high' : undefined}
       />
       <button
         className={`product-card__compare${selected ? ' product-card__compare--active' : ''}`}
