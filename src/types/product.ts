@@ -121,7 +121,7 @@ export interface BlendiboxProduct {
 export interface SalesHighlight {
   merchantSlug: string
   productName: string
-  skuSlug: string
+  slug: string
   label: string
 }
 

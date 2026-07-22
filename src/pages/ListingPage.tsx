@@ -9,24 +9,23 @@ import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 const PAGE_SIZE = 60
 const MAX_RECENT_SALES = 8
 
+// O match com o catálogo já foi resolvido no build (scripts/parse-sales-highlights.mjs,
+// contra o mesmo index.json) — aqui é só um lookup direto por slug, não mais
+// uma adivinhação por sufixo de SKU (que falhava sempre que o SKU do export
+// de transações não batia com o merchant_product_id do feed, ex: Vivara).
 function pickRecentSales(
   highlights: SalesHighlight[],
   products: ProductIndexEntry[]
 ): { product: ProductIndexEntry; label: string }[] {
-  const byMerchant = new Map<string, ProductIndexEntry[]>()
+  const bySlugKey = new Map<string, ProductIndexEntry>()
   for (const p of products) {
-    const list = byMerchant.get(p.merchantSlug)
-    if (list) list.push(p)
-    else byMerchant.set(p.merchantSlug, [p])
+    bySlugKey.set(`${p.merchantSlug}:${p.slug}`, p)
   }
 
   const matches: { product: ProductIndexEntry; label: string }[] = []
-  const seenSlugs = new Set<string>()
   for (const h of highlights) {
-    const candidates = byMerchant.get(h.merchantSlug)
-    const product = candidates?.find((p) => p.slug.endsWith(`-${h.skuSlug}`) || p.slug === h.skuSlug)
-    if (!product || seenSlugs.has(product.slug)) continue
-    seenSlugs.add(product.slug)
+    const product = bySlugKey.get(`${h.merchantSlug}:${h.slug}`)
+    if (!product) continue
     matches.push({ product, label: h.label })
     if (matches.length >= MAX_RECENT_SALES) break
   }
