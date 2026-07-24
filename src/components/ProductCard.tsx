@@ -120,6 +120,9 @@ export function ProductCard({
           <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
           <span className="product-card__price">{formatPrice(product.searchPrice, product.currency)}</span>
         </div>
+        {/* Só reforço visual — o card inteiro já é o link (<Link> acima),
+            isso não é um <button> separado nem muda o destino do clique. */}
+        <span className="product-card__cta">Ver oferta</span>
       </div>
     </Link>
   )
