@@ -465,11 +465,19 @@ a {
   white-space: nowrap;
 }
 
-.product-card > .discount-badge {
+/* Selos do canto superior esquerdo (venda recente + desconto) empilham num
+   contêiner só, em vez de cada um se posicionar absoluto no mesmo lugar —
+   sem isso, um card com os dois ao mesmo tempo ficaria com um por cima do
+   outro, ilegível. */
+.product-card__badges {
   position: absolute;
   top: 8px;
   left: 8px;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
 }
 
 .product-card__price-original {
@@ -727,16 +735,13 @@ a {
 }
 
 .product-card__caption {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 1;
-  background: var(--color-pink);
+  background: var(--color-green);
   color: #fff;
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .comparator-tray {

@@ -76,12 +76,14 @@ export function ProductCard({
 
   return (
     <Link className="product-card" to={href}>
-      {caption && <span className="product-card__caption">{caption}</span>}
-      <DiscountBadge
-        storePrice={product.storePrice}
-        searchPrice={product.searchPrice}
-        discountPercentage={product.discountPercentage}
-      />
+      <div className="product-card__badges">
+        {caption && <span className="product-card__caption">{caption}</span>}
+        <DiscountBadge
+          storePrice={product.storePrice}
+          searchPrice={product.searchPrice}
+          discountPercentage={product.discountPercentage}
+        />
+      </div>
       <img
         className="product-card__image"
         src={product.awImageUrl}
