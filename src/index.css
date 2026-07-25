@@ -509,6 +509,21 @@ a {
   color: var(--color-green);
 }
 
+/* Só reforço visual de que o card inteiro é clicável — não é um <button>
+   separado, não muda destino nenhum, só deixa a intenção de clique mais
+   óbvia (padrão de widgets de oferta patrocinada). */
+.product-card__cta {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--color-green);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+}
+
 .load-more {
   text-align: center;
   margin-top: 24px;
