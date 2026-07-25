@@ -307,21 +307,38 @@ async function main() {
   }
 
   // --- Páginas institucionais (estáticas, sem dado de produto) ---
+  const faqItems = JSON.parse(await readFile(path.join(ROOT, 'src', 'data', 'faq.json'), 'utf-8'))
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqItems.map((item) => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  }
+
   const staticPages = [
     { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },
+    {
+      routePath: '/perguntas-frequentes',
+      title: 'Perguntas frequentes | Compare Ofertas',
+      description: 'Como funciona o Compare Ofertas: preços, cupons, comparador e links de afiliado.',
+      jsonLd: [faqJsonLd],
+    },
     { routePath: '/termos', title: 'Termos de Uso | Compare Ofertas', description: 'Termos de uso do Compare Ofertas.' },
     { routePath: '/privacidade', title: 'Política de Privacidade | Compare Ofertas', description: 'Política de privacidade e proteção de dados do Compare Ofertas.' },
     { routePath: '/cupons', title: 'Cupons | Compare Ofertas', description: 'Cupons e promoções ativas das lojas parceiras do Compare Ofertas.' },
     { routePath: '/comparar', title: 'Comparar ofertas | Compare Ofertas', description: 'Compare lado a lado até 3 ofertas selecionadas.' },
   ]
-  for (const { routePath, title, description } of staticPages) {
+  for (const { routePath, title, description, jsonLd } of staticPages) {
     const canonical = `${SITE_URL}${routePath}/`
     const url = await renderPage({
       template,
       renderRoute,
       routePath,
       initialData: undefined,
-      head: { title, description, canonical },
+      head: { title, description, canonical, jsonLd },
     })
     generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
   }

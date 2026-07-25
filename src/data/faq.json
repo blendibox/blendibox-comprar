@@ -1,0 +1,34 @@
+[
+  {
+    "question": "O que é o Compare Ofertas?",
+    "answer": "O Compare Ofertas é um comparador de preços que reúne, em um só lugar, ofertas de marcas conhecidas vendidas em lojas parceiras (como Vivara, Nike, Centauro, Mizuno, Olympikus, MAC, Eudora, Amazon, Shopee, entre outras). A ideia é economizar o tempo de pesquisar preço loja por loja."
+  },
+  {
+    "question": "Com que frequência os preços são atualizados?",
+    "answer": "O catálogo é reconstruído todo dia a partir dos feeds oficiais dos parceiros. O preço mostrado reflete a última atualização — a data exata aparece na própria página do produto."
+  },
+  {
+    "question": "O Compare Ofertas vende os produtos diretamente?",
+    "answer": "Não. O Compare Ofertas é um comparador — ao clicar em \"Ver oferta\" ou \"Comprar\", você é direcionado para o site da loja parceira (via link de afiliado) ou, em alguns casos, para o WhatsApp de uma representante de vendas autorizada. A compra em si é sempre feita diretamente com a loja ou representante, nunca com o Compare Ofertas."
+  },
+  {
+    "question": "Por que alguns produtos abrem o WhatsApp em vez do site da loja?",
+    "answer": "Marcas do Grupo Boticário revendidas em catálogo próprio (O.U.i Paris, Eudora, O Boticário e Quem Disse, Berenice?) são comercializadas por uma representante de vendas autorizada. Nesses casos, o botão abre uma conversa no WhatsApp já com o produto e o valor preenchidos, e a compra é combinada diretamente com a representante."
+  },
+  {
+    "question": "Os cupons de desconto são reais?",
+    "answer": "Sim — os cupons vêm direto do painel oficial dos programas de afiliados das lojas parceiras. Cupons com data de validade vencida são removidos automaticamente a cada atualização, para evitar mostrar cupom expirado."
+  },
+  {
+    "question": "Como funciona o comparador lado a lado?",
+    "answer": "Em qualquer card de produto, clicando em \"+ Comparar\" você adiciona o item a uma bandeja (até 3 produtos por vez). A página \"Comparar\" mostra os itens escolhidos lado a lado — imagem, preço, loja e categoria — pra facilitar a decisão."
+  },
+  {
+    "question": "O Compare Ofertas recebe comissão pelas compras?",
+    "answer": "Sim. A maioria dos links do site é de afiliado — se você compra algo depois de clicar, o Compare Ofertas pode receber uma comissão da loja parceira, sem nenhum custo extra pra você. É assim que o serviço se mantém gratuito."
+  },
+  {
+    "question": "Como paro de receber e-mails da newsletter?",
+    "answer": "Todo e-mail enviado tem um link de cancelamento de inscrição no rodapé — é só clicar para sair da lista a qualquer momento, sem precisar entrar em contato."
+  }
+]

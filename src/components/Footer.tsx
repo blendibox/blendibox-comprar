@@ -21,6 +21,7 @@ export function Footer() {
         <div>
           <h3>Institucional</h3>
           <Link to="/sobre">Sobre nós</Link>
+          <Link to="/perguntas-frequentes">Perguntas frequentes</Link>
           <Link to="/termos">Termos de Uso</Link>
           <Link to="/privacidade">Privacidade</Link>
         </div>

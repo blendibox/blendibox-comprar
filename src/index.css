@@ -1112,6 +1112,22 @@ a {
   line-height: 1.6;
 }
 
+.faq-list {
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.faq-item {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.faq-item:last-child {
+  border-bottom: none;
+}
+
 /* Histórico de preço */
 .price-history {
   margin-top: 20px;

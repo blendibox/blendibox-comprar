@@ -9,6 +9,7 @@ import { CouponsPage } from './pages/CouponsPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
 import { AboutPage } from './pages/AboutPage'
+import { FaqPage } from './pages/FaqPage'
 
 export function AppRoutes() {
   return (
@@ -18,6 +19,7 @@ export function AppRoutes() {
         <Route path="comparar" element={<ComparePage />} />
         <Route path="cupons" element={<CouponsPage />} />
         <Route path="sobre" element={<AboutPage />} />
+        <Route path="perguntas-frequentes" element={<FaqPage />} />
         <Route path="termos" element={<TermsPage />} />
         <Route path="privacidade" element={<PrivacyPage />} />
         <Route path=":vertical/categoria/:categorySlug" element={<CategoryPage />} />

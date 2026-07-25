@@ -49,7 +49,28 @@ async function main() {
   const indexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexBody}\n</sitemapindex>\n`
   await writeFile(path.join(DIST_DIR, 'sitemap.xml'), indexXml)
 
-  const robotsTxt = `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`
+  // Allow explícito pra cada bot de IA conhecido, além do wildcard geral —
+  // o wildcard já libera todo mundo, mas listar nominalmente deixa a intenção
+  // inequívoca (e blinda contra alguém adicionar sem querer uma regra mais
+  // restritiva só pro wildcard no futuro, sem perceber que bloquearia IAs).
+  const aiCrawlers = [
+    'GPTBot',
+    'ChatGPT-User',
+    'OAI-SearchBot',
+    'ClaudeBot',
+    'Claude-Web',
+    'anthropic-ai',
+    'Google-Extended',
+    'PerplexityBot',
+    'Perplexity-User',
+    'CCBot',
+    'Applebot-Extended',
+    'Amazonbot',
+    'Meta-ExternalAgent',
+    'Bytespider',
+  ]
+  const aiRules = aiCrawlers.map((ua) => `User-agent: ${ua}\nAllow: /\n`).join('\n')
+  const robotsTxt = `User-agent: *\nAllow: /\n\n${aiRules}\nSitemap: ${SITE_URL}/sitemap.xml\n`
   await writeFile(path.join(DIST_DIR, 'robots.txt'), robotsTxt)
 
   // O manifesto só serve pra esse script montar o sitemap — não faz sentido

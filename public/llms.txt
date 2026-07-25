@@ -1,0 +1,29 @@
+# Compare Ofertas
+
+> Comparador de preços que reúne ofertas de marcas conhecidas (Vivara, Nike, Centauro, Mizuno, Olympikus, MAC, Eudora, Amazon, Shopee e outras) vendidas por lojas parceiras, atualizado diariamente. Não é uma loja — cada oferta redireciona para a loja parceira (link de afiliado) ou, em alguns casos, para o WhatsApp de uma representante de vendas autorizada.
+
+## Como o site funciona
+
+- Preços são coletados diariamente dos feeds oficiais dos parceiros (Awin, Shopee, Amazon e catálogos de revenda do Grupo Boticário) e podem ficar desatualizados até a próxima atualização.
+- O Compare Ofertas não vende nem processa pagamentos diretamente; a compra final acontece sempre no site da loja parceira ou com a representante de vendas.
+- Links de produto são majoritariamente links de afiliado — cliques que resultam em compra podem gerar comissão para o Compare Ofertas, sem custo extra para quem compra.
+- Nem todo produto tem nota de avaliação ou desconto exibido — esses campos só aparecem quando a loja parceira realmente informa esse dado; nada é inventado.
+
+## Páginas principais
+
+- [Perguntas frequentes](https://comprar.blendibox.com.br/perguntas-frequentes/): explicação detalhada de como o comparador, os cupons e os links de afiliado funcionam.
+- [Sobre nós](https://comprar.blendibox.com.br/sobre/): o que é o Compare Ofertas.
+- [Cupons](https://comprar.blendibox.com.br/cupons/): cupons de desconto ativos das lojas parceiras.
+- [Comparar](https://comprar.blendibox.com.br/comparar/): comparação lado a lado de até 3 produtos.
+- [Termos de Uso](https://comprar.blendibox.com.br/termos/)
+- [Política de Privacidade](https://comprar.blendibox.com.br/privacidade/)
+
+## Estrutura de navegação
+
+Produtos são organizados por vertical (ex: `/beleza/`, `/esporte/`, `/joias/`, `/casa/`, `/moda/`, `/livros/`, `/eletronicos/`, `/automotivo/`) e por loja (ex: `/vivara/`, `/nike/`). Cada produto tem sua própria página em `/{loja}/{produto}/`, com preço, imagem, descrição do fabricante e produtos similares.
+
+## Dados
+
+- [Sitemap XML completo](https://comprar.blendibox.com.br/sitemap.xml) — lista todas as páginas de produto, loja, vertical e categoria.
+- Páginas de produto incluem dados estruturados Schema.org (`Product`, `Offer`, `BreadcrumbList`).
+- A página de Perguntas Frequentes inclui dados estruturados `FAQPage`.
