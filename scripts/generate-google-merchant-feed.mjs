@@ -48,9 +48,10 @@ function formatPrice(value, currency) {
 
 function buildItemXml(product) {
   const price = formatPrice(product.searchPrice, product.currency)
-  // large_image é maior resolução que aw_image_url (que reprovava no Merchant
-  // por ser menor que os 500x500px exigidos) — usa ela como principal quando
-  // o feed traz, com aw_image_url como fallback pros lojistas que não têm.
+  // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
+  // images2.productserve.com (ver scripts/lib/images.mjs) — aqui só resta
+  // escolher large_image como principal quando o feed traz, com
+  // aw_image_url como fallback pros lojistas que não têm.
   const mainImage = product.largeImage || product.awImageUrl
   if (!price || !product.productName || !mainImage) return null
 

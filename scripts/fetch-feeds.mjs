@@ -15,6 +15,7 @@ import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
+import { upsizeProductServeImage } from './lib/images.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -92,6 +93,11 @@ const FIELD_MAP = {
   large_image: 'largeImage',
 }
 
+// Aplica em toda imagem servida pela proxy images2.productserve.com (não só
+// no feed do Google Merchant) — mesma foto em resolução maior, tanto pro
+// site quanto pro Merchant, sem duplicar essa lógica em dois lugares.
+const IMAGE_FIELDS = ['awImageUrl', 'merchantImageUrl', 'alternateImageTwo', 'largeImage']
+
 function mapRow(row) {
   const mapped = {}
   for (const [csvKey, value] of Object.entries(row)) {
@@ -99,6 +105,8 @@ function mapRow(row) {
     if (NUMERIC_FIELDS.has(key)) {
       const num = parseFloat(String(value).replace(',', '.'))
       mapped[key] = Number.isNaN(num) ? null : num
+    } else if (IMAGE_FIELDS.includes(key)) {
+      mapped[key] = upsizeProductServeImage(value)
     } else {
       mapped[key] = value
     }
