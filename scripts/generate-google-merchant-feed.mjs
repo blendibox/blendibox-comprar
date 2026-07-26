@@ -48,7 +48,11 @@ function formatPrice(value, currency) {
 
 function buildItemXml(product) {
   const price = formatPrice(product.searchPrice, product.currency)
-  if (!price || !product.productName || !product.awImageUrl) return null
+  // large_image é maior resolução que aw_image_url (que reprovava no Merchant
+  // por ser menor que os 500x500px exigidos) — usa ela como principal quando
+  // o feed traz, com aw_image_url como fallback pros lojistas que não têm.
+  const mainImage = product.largeImage || product.awImageUrl
+  if (!price || !product.productName || !mainImage) return null
 
   const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
   const link = `${SITE_URL}/${product.merchantSlug}/${product.slug}/`
@@ -60,11 +64,16 @@ function buildItemXml(product) {
     `<title>${cdata(product.productName)}</title>`,
     `<description>${cdata(product.description || product.productName)}</description>`,
     `<link>${escapeXml(link)}</link>`,
-    `<g:image_link>${escapeXml(product.awImageUrl)}</g:image_link>`,
+    `<g:image_link>${escapeXml(mainImage)}</g:image_link>`,
   ]
 
-  if (product.alternateImageTwo && product.alternateImageTwo !== product.awImageUrl) {
-    fields.push(`<g:additional_image_link>${escapeXml(product.alternateImageTwo)}</g:additional_image_link>`)
+  // Imagens adicionais: a original (se diferente da principal, ex: quando
+  // large_image virou a principal) e a segunda alternativa do feed.
+  const additionalImages = [product.awImageUrl, product.alternateImageTwo].filter(
+    (img, i, arr) => img && img !== mainImage && arr.indexOf(img) === i
+  )
+  for (const img of additionalImages) {
+    fields.push(`<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
   }
 
   fields.push(

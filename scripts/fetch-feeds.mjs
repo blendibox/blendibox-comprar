@@ -89,6 +89,7 @@ const FIELD_MAP = {
   number_available: 'numberAvailable',
   product_GTIN: 'productGtin',
   discount_percentage: 'discountPercentage',
+  large_image: 'largeImage',
 }
 
 function mapRow(row) {

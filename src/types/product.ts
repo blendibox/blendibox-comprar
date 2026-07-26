@@ -43,6 +43,10 @@ export interface Product {
   numberAvailable: number | null
   productGtin: string
   discountPercentage: number | null
+  // Versão em resolução maior da imagem — a Awin não garante em todo feed, só
+  // usada como preferência no feed do Google Merchant (exige ≥500x500px);
+  // o site em si continua usando awImageUrl.
+  largeImage: string
   slug: string
   merchantSlug: string
   merchantDisplayName: string
