@@ -46,6 +46,25 @@ function formatPrice(value, currency) {
   return `${num.toFixed(2)} ${currency || 'BRL'}`
 }
 
+// O feed da Awin não tem coluna própria de cor pra joias, mas o material/cor
+// quase sempre aparece no nome ou na descrição ("Anel Daily em Ouro Amarelo
+// 18k") — extrai isso em vez de cair direto no default genérico.
+const JEWELRY_COLOR_PATTERNS = [
+  { re: /ouro\s+amarelo/i, label: 'Ouro Amarelo' },
+  { re: /ouro\s+branco/i, label: 'Ouro Branco' },
+  { re: /ouro\s+ros[eé]/i, label: 'Ouro Rosé' },
+  { re: /liga\s+ros[eé]/i, label: 'Rosé' },
+  { re: /r[oó]dio\s+negro/i, label: 'Ródio Negro' },
+  { re: /r[oó]dio/i, label: 'Ródio' },
+  { re: /prata/i, label: 'Prata' },
+]
+
+function extractJewelryColor(product) {
+  const text = `${product.productName || ''} ${product.description || ''}`
+  const match = JEWELRY_COLOR_PATTERNS.find(({ re }) => re.test(text))
+  return match?.label ?? null
+}
+
 function buildItemXml(product) {
   const price = formatPrice(product.searchPrice, product.currency)
   // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
@@ -104,11 +123,19 @@ function buildItemXml(product) {
   // valor em português aqui reprovaria de novo, só que por "valor inválido"
   // em vez de "atributo ausente".
   fields.push(
-    `<g:color>${cdata(product.color || 'Branco')}</g:color>`,
+    `<g:color>${cdata(product.color || extractJewelryColor(product) || 'Branco')}</g:color>`,
     `<g:size>${cdata(product.size || 'Único')}</g:size>`,
     `<g:gender>${product.gender || 'unisex'}</g:gender>`,
     `<g:age_group>${product.ageGroup || 'adult'}</g:age_group>`
   )
+
+  // "Silhueta" (formato/estilo do anel — solitário, aliança, trio etc.) não
+  // vem em nenhum campo do feed da Awin pras joias — sem dado real pra
+  // extrair (ao contrário da cor, que costuma aparecer no nome), usa um
+  // custom label com valor default só pra não deixar o atributo vazio.
+  if (product.vertical === 'joias') {
+    fields.push(`<g:custom_label_0>${cdata('Silhueta')}</g:custom_label_0>`)
+  }
 
   return `  <item>\n    ${fields.join('\n    ')}\n  </item>`
 }
