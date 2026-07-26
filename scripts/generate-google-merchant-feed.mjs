@@ -84,6 +84,22 @@ function buildItemXml(product) {
   const productType = product.merchantCategory || product.categoryName
   if (productType) fields.push(`<g:product_type>${cdata(productType)}</g:product_type>`)
 
+  // O feed da Awin não traz cor/tamanho/gênero/faixa etária — pra produtos
+  // que o Google classifica como "Roupas e acessórios", esses atributos são
+  // obrigatórios e a ausência reprova o item. Sem esse dado real, usamos um
+  // valor default neutro em vez de deixar o campo de fora (nunca reprova por
+  // falta do atributo; só não é tão específico quanto um dado real seria).
+  // gender/age_group usam os valores em inglês exigidos pelo Google
+  // (https://support.google.com/merchants/answer/6324479 e 6324463) — um
+  // valor em português aqui reprovaria de novo, só que por "valor inválido"
+  // em vez de "atributo ausente".
+  fields.push(
+    `<g:color>${cdata(product.color || 'Branco')}</g:color>`,
+    `<g:size>${cdata(product.size || 'Único')}</g:size>`,
+    `<g:gender>${product.gender || 'unisex'}</g:gender>`,
+    `<g:age_group>${product.ageGroup || 'adult'}</g:age_group>`
+  )
+
   return `  <item>\n    ${fields.join('\n    ')}\n  </item>`
 }
 
