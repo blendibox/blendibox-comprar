@@ -9,6 +9,7 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { isRealImageUrl } from './lib/images.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -68,10 +69,10 @@ function extractJewelryColor(product) {
 function buildItemXml(product) {
   const price = formatPrice(product.searchPrice, product.currency)
   // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
-  // images2.productserve.com (ver scripts/lib/images.mjs) — aqui só resta
-  // escolher large_image como principal quando o feed traz, com
-  // aw_image_url como fallback pros lojistas que não têm.
-  const mainImage = product.largeImage || product.awImageUrl
+  // images2.productserve.com (ver scripts/lib/images.mjs) e já garante que
+  // awImageUrl não é placeholder (pickRealImage) — mas large_image é uma
+  // coluna separada, então valida ela aqui antes de preferi-la.
+  const mainImage = isRealImageUrl(product.largeImage) ? product.largeImage : product.awImageUrl
   if (!price || !product.productName || !mainImage) return null
 
   const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
@@ -88,10 +89,15 @@ function buildItemXml(product) {
   ]
 
   // Imagens adicionais: a original (se diferente da principal, ex: quando
-  // large_image virou a principal) e a segunda alternativa do feed.
-  const additionalImages = [product.awImageUrl, product.alternateImageTwo].filter(
-    (img, i, arr) => img && img !== mainImage && arr.indexOf(img) === i
-  )
+  // large_image virou a principal) e as alternativas do feed — só as que
+  // forem reais (não placeholder) e diferentes da principal.
+  const additionalImages = [
+    product.awImageUrl,
+    product.alternateImage,
+    product.alternateImageTwo,
+    product.alternateImageThree,
+    product.alternateImageFour,
+  ].filter((img, i, arr) => isRealImageUrl(img) && img !== mainImage && arr.indexOf(img) === i)
   for (const img of additionalImages) {
     fields.push(`<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
   }

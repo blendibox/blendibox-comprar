@@ -15,7 +15,7 @@ import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
-import { upsizeProductServeImage } from './lib/images.mjs'
+import { upsizeProductServeImage, pickRealImage } from './lib/images.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -91,12 +91,25 @@ const FIELD_MAP = {
   product_GTIN: 'productGtin',
   discount_percentage: 'discountPercentage',
   large_image: 'largeImage',
+  alternate_image: 'alternateImage',
+  alternate_image_three: 'alternateImageThree',
+  alternate_image_four: 'alternateImageFour',
+  aw_thumb_url: 'awThumbUrl',
 }
 
 // Aplica em toda imagem servida pela proxy images2.productserve.com (não só
 // no feed do Google Merchant) — mesma foto em resolução maior, tanto pro
 // site quanto pro Merchant, sem duplicar essa lógica em dois lugares.
-const IMAGE_FIELDS = ['awImageUrl', 'merchantImageUrl', 'alternateImageTwo', 'largeImage']
+const IMAGE_FIELDS = [
+  'awImageUrl',
+  'merchantImageUrl',
+  'alternateImageTwo',
+  'largeImage',
+  'alternateImage',
+  'alternateImageThree',
+  'alternateImageFour',
+  'awThumbUrl',
+]
 
 function mapRow(row) {
   const mapped = {}
@@ -126,16 +139,6 @@ function resolveMerchant(merchantsConfig, merchantId, merchantName) {
     active: true,
     merchantId,
   }
-}
-
-// Alguns lojistas da Awin mandam um GIF placeholder em vez de deixar o campo
-// vazio quando não têm foto real do produto — pior que não ter imagem
-// nenhuma, porque passa despercebido nas checagens de "campo vazio".
-const NO_IMAGE_PATTERN = /noimage/i
-
-function hasRealImage(mapped) {
-  const image = mapped.awImageUrl || mapped.merchantImageUrl
-  return Boolean(image) && !NO_IMAGE_PATTERN.test(image)
 }
 
 function buildCategorySlug(product) {
@@ -202,12 +205,16 @@ async function main() {
 
   for (const row of rawRows) {
     const mapped = mapRow(row)
-    // Produto sem foto real fica feio e pouco confiável na listagem — melhor
-    // não publicar do que mostrar um card quebrado/placeholder.
-    if (!hasRealImage(mapped)) {
+    // aw_image_url/merchant_image_url às vezes é um GIF placeholder
+    // (noimage.gif) mesmo quando o lojista manda foto real em outro campo do
+    // feed (alternate_image, large_image etc.) — tenta essas alternativas
+    // antes de descartar o produto por falta de imagem.
+    const realImage = pickRealImage(mapped)
+    if (!realImage) {
       skippedNoImage++
       continue
     }
+    mapped.awImageUrl = realImage
     const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
     const categorySlug = buildCategorySlug(mapped)
     const slugBase = slugify(mapped.productName) || 'produto'

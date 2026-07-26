@@ -37,6 +37,13 @@ export interface Product {
   displayPrice: number | null
   dataFeedId: string
   alternateImageTwo: string
+  // Campos de imagem alternativa do feed Awin — usados só como fallback em
+  // scripts/lib/images.mjs (pickRealImage) quando awImageUrl/merchantImageUrl
+  // vem como placeholder (ex: noimage.gif); não são lidos diretamente pela UI.
+  alternateImage: string
+  alternateImageThree: string
+  alternateImageFour: string
+  awThumbUrl: string
   reviews: number | null
   rating: number | null
   averageRating: number | null
