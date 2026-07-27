@@ -43,6 +43,14 @@ export function DiscountBadge({
   return <span className="discount-badge">{`-${pct}%`}</span>
 }
 
+// Preenchido só quando scripts/update-price-history.mjs confirma uma queda
+// real de ≥5% em relação ao preço de ~7 dias atrás — não é o mesmo dado do
+// DiscountBadge (que compara contra o preço "de loja" informado no feed).
+export function PriceDropBadge({ priceDropPercent }: { priceDropPercent: number | null | undefined }) {
+  if (priceDropPercent == null) return null
+  return <span className="price-drop-badge">{`↓ ${priceDropPercent}% essa semana`}</span>
+}
+
 export function OriginalPrice({
   storePrice,
   searchPrice,
@@ -78,6 +86,7 @@ export function ProductCard({
     <Link className="product-card" to={href}>
       <div className="product-card__badges">
         {caption && <span className="product-card__caption">{caption}</span>}
+        <PriceDropBadge priceDropPercent={product.priceDropPercent} />
         <DiscountBadge
           storePrice={product.storePrice}
           searchPrice={product.searchPrice}

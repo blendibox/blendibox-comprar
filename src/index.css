@@ -452,6 +452,20 @@ a {
   flex-shrink: 0;
 }
 
+/* Queda de preço confirmada (scripts/update-price-history.mjs) — cor
+   diferente do discount-badge de propósito, pra não confundir com desconto
+   "de loja" (preços diferentes, fontes diferentes). */
+.price-drop-badge {
+  display: inline-flex;
+  background: var(--color-green);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 /* Pill simples por padrão (usado inline no preço da página de produto); no
    card da listagem vira selo sobre a imagem via o seletor abaixo. */
 .discount-badge {
@@ -1013,6 +1027,20 @@ a {
 }
 
 .recent-sales-section__hint {
+  margin: 0 0 16px;
+  color: #666;
+  font-size: 13px;
+}
+
+.price-drop-section {
+  margin-bottom: 32px;
+}
+
+.price-drop-section h2 {
+  margin: 0 0 4px;
+}
+
+.price-drop-section__hint {
   margin: 0 0 16px;
   color: #666;
   font-size: 13px;

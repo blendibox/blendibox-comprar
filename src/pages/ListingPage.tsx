@@ -9,6 +9,16 @@ import { formatIsoDateTimeBr } from '../lib/date'
 
 const PAGE_SIZE = 60
 const MAX_RECENT_SALES = 8
+const MAX_PRICE_DROPS = 10
+
+// scripts/update-price-history.mjs já calcula e resolve isso no build — aqui
+// é só filtrar quem tem o campo preenchido e ordenar pela maior queda.
+function pickPriceDrops(products: ProductIndexEntry[]): ProductIndexEntry[] {
+  return products
+    .filter((p) => p.priceDropPercent != null)
+    .sort((a, b) => (b.priceDropPercent ?? 0) - (a.priceDropPercent ?? 0))
+    .slice(0, MAX_PRICE_DROPS)
+}
 
 // O match com o catálogo já foi resolvido no build (scripts/parse-sales-highlights.mjs,
 // contra o mesmo index.json) — aqui é só um lookup direto por slug, não mais
@@ -79,6 +89,7 @@ export function ListingPage() {
 
   const featured = useMemo(() => pickFeatured(products, merchants), [products, merchants])
   const recentSales = useMemo(() => pickRecentSales(salesHighlights, products), [salesHighlights, products])
+  const priceDrops = useMemo(() => pickPriceDrops(products), [products])
 
   const verticals = useMemo(() => {
     const set = new Set(products.map((p) => p.vertical))
@@ -105,6 +116,7 @@ export function ListingPage() {
 
   const visible = filtered.slice(0, visibleCount)
   const showFeatured = state === 'ready' && !search && vertical === 'todos' && featured.length > 0
+  const showPriceDrops = state === 'ready' && !search && vertical === 'todos' && priceDrops.length > 0
   const showRecentSales = state === 'ready' && !search && vertical === 'todos' && recentSales.length > 0
 
   return (
@@ -158,6 +170,22 @@ export function ListingPage() {
         </section>
       )}
 
+      {showPriceDrops && (
+        <section className="price-drop-section">
+          <h2>Baixou de preço</h2>
+          <p className="price-drop-section__hint">Ofertas que ficaram mais baratas na última semana.</p>
+          <Carousel>
+            {priceDrops.map((product, i) => (
+              <ProductCard
+                key={`price-drop-${product.merchantSlug}-${product.slug}`}
+                product={product}
+                priority={i === 0 && !showFeatured}
+              />
+            ))}
+          </Carousel>
+        </section>
+      )}
+
       {showRecentSales && (
         <section className="recent-sales-section">
           <h2>Comprado recentemente</h2>
@@ -182,7 +210,11 @@ export function ListingPage() {
         <>
           <div className="product-grid">
             {visible.map((product, i) => (
-              <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0 && !showFeatured} />
+              <ProductCard
+                key={`${product.merchantSlug}-${product.slug}`}
+                product={product}
+                priority={i === 0 && !showFeatured && !showPriceDrops}
+              />
             ))}
           </div>
           {visibleCount < filtered.length && (

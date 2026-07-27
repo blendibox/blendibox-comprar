@@ -62,6 +62,11 @@ export interface Product {
   similar: SimilarRef[]
   eligibleForStaticPage: boolean
   priceHistory?: PricePoint[]
+  // Preenchido só quando o preço de hoje é uma queda real de ≥5% em relação
+  // ao preço de ~7 dias atrás no priceHistory (scripts/update-price-history.mjs)
+  // — null quando não há dado de uma semana atrás ainda ou o preço não caiu.
+  previousPrice: number | null
+  priceDropPercent: number | null
   // Mesmo produto vendido num canal diferente da mesma marca (ex: Eudora via
   // Awin x Eudora via revenda direta) — casamento por nome, ver
   // scripts/fetch-feeds.mjs (CROSS_CHANNEL_PAIRS).
@@ -84,6 +89,12 @@ export interface ProductIndexEntry {
   rating: number | null
   storePrice: number | null
   discountPercentage: number | null
+  // Mesma checagem de queda de preço semanal do Product — ver
+  // scripts/update-price-history.mjs. Presente aqui (não só no detalhe
+  // completo) pra dar pra montar a seção "Baixou de preço" na home sem
+  // precisar buscar o JSON de cada produto individualmente.
+  previousPrice: number | null
+  priceDropPercent: number | null
 }
 
 export interface MerchantMeta {
