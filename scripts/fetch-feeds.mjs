@@ -15,7 +15,7 @@ import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
-import { upsizeProductServeImage, pickRealImage } from './lib/images.mjs'
+import { upsizeProductServeImage, pickRealImage, getRealImageCandidates, verifyImageUrl, mapWithConcurrency } from './lib/images.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -202,20 +202,10 @@ async function main() {
   const products = []
   const merchantsUsed = new Map()
   let skippedNoImage = 0
+  let skippedBrokenLiveImage = 0
 
-  for (const row of rawRows) {
-    const mapped = mapRow(row)
-    // aw_image_url/merchant_image_url às vezes é um GIF placeholder
-    // (noimage.gif) mesmo quando o lojista manda foto real em outro campo do
-    // feed (alternate_image, large_image etc.) — tenta essas alternativas
-    // antes de descartar o produto por falta de imagem.
-    const realImage = pickRealImage(mapped)
-    if (!realImage) {
-      skippedNoImage++
-      continue
-    }
+  function finalizeProduct(mapped, merchant, realImage) {
     mapped.awImageUrl = realImage
-    const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
     const categorySlug = buildCategorySlug(mapped)
     const slugBase = slugify(mapped.productName) || 'produto'
     // Usa o merchant_product_id (SKU da loja) como sufixo quando existe — é o
@@ -251,8 +241,71 @@ async function main() {
     byCategoryKey.get(categoryKey).push(product)
   }
 
+  // Merchants marcados com "verifyImages" (ver merchants.config.json) passam
+  // por uma checagem ao vivo antes de fechar a imagem principal — a proxy
+  // images2.productserve.com responde 200 mesmo com a URL de origem quebrada
+  // (redireciona pra /noimage.gif), então a checagem por string sozinha
+  // deixa passar imagem quebrada. Fica pra uma segunda fase porque é
+  // assíncrono e caro demais pra rodar em todo o catálogo.
+  const pendingVerification = []
+
+  for (const row of rawRows) {
+    const mapped = mapRow(row)
+    const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
+    const candidates = getRealImageCandidates(mapped)
+    if (!candidates.length) {
+      skippedNoImage++
+      continue
+    }
+    if (merchant.verifyImages) {
+      pendingVerification.push({ mapped, merchant, candidates })
+      continue
+    }
+    finalizeProduct(mapped, merchant, candidates[0])
+  }
+
+  if (pendingVerification.length) {
+    console.log(`[imagens] verificando ao vivo ${pendingVerification.length} produtos de merchants marcados com verifyImages...`)
+    const startedAt = Date.now()
+    let verifiedCount = 0
+    // Conta os motivos de cada checagem — sem isso, um timeout (que "passa"
+    // por segurança) fica indistinguível de uma imagem de verdade confirmada,
+    // escondendo se a checagem ao vivo está funcionando ou só falhando aberto
+    // sob a carga de 20 requisições em paralelo.
+    const reasonCounts = {}
+    function logProgress() {
+      verifiedCount++
+      if (verifiedCount % 200 === 0 || verifiedCount === pendingVerification.length) {
+        const elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(0)
+        console.log(`[imagens] ${verifiedCount}/${pendingVerification.length} verificados (${elapsedSec}s decorridos)`)
+      }
+    }
+    // Por produto: para no primeiro candidato que passar (early exit), em vez
+    // de checar todos os campos de imagem — evita requisição desnecessária
+    // quando o primeiro já funciona. Concorrência é por produto, não por URL.
+    await mapWithConcurrency(pendingVerification, 20, async ({ mapped, merchant, candidates }) => {
+      for (const url of candidates) {
+        const { ok, reason } = await verifyImageUrl(url)
+        reasonCounts[reason] = (reasonCounts[reason] || 0) + 1
+        if (ok) {
+          finalizeProduct(mapped, merchant, url)
+          logProgress()
+          return
+        }
+      }
+      skippedNoImage++
+      skippedBrokenLiveImage++
+      logProgress()
+    })
+    const elapsedSec = ((Date.now() - startedAt) / 1000).toFixed(0)
+    console.log(`[imagens] verificação ao vivo concluída em ${elapsedSec}s — motivos: ${JSON.stringify(reasonCounts)}`)
+  }
+
   if (skippedNoImage > 0) {
-    console.log(`[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)`)
+    console.log(
+      `[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)` +
+        (skippedBrokenLiveImage > 0 ? `, ${skippedBrokenLiveImage} deles confirmados via checagem ao vivo` : '')
+    )
   }
 
   // Produtos similares: mesma categoria dentro do mesmo vertical, ordenados
