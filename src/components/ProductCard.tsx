@@ -98,7 +98,11 @@ export function ProductCard({
         src={product.awImageUrl}
         alt={product.productName}
         loading={priority ? 'eager' : 'lazy'}
-        fetchPriority={priority ? 'high' : undefined}
+        // React 18 (só reconhece fetchPriority em camelCase a partir do 19) —
+        // minúsculo é o jeito que o próprio React recomenda pra ele passar
+        // direto como atributo customizado do DOM nessa versão.
+        // @ts-expect-error -- ver comentário acima
+        fetchpriority={priority ? 'high' : undefined}
       />
       <button
         className={`product-card__compare${selected ? ' product-card__compare--active' : ''}`}

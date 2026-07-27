@@ -57,7 +57,11 @@ export function ProductPage() {
             className="product-detail__image"
             src={product.awImageUrl}
             alt={product.productName}
-            fetchPriority="high"
+            // React 18 só reconhece fetchPriority em camelCase a partir do
+            // 19 — minúsculo é o jeito que o próprio React recomenda pra
+            // ele passar direto como atributo customizado do DOM.
+            // @ts-expect-error -- ver comentário acima
+            fetchpriority="high"
           />
         </a>
         <div className="product-detail__body">
