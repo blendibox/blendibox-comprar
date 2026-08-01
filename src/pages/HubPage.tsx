@@ -35,6 +35,7 @@ export function HubPage() {
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')
+  const [search, setSearch] = useState('')
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
 
   useEffect(() => {
@@ -59,7 +60,7 @@ export function HubPage() {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [slug, sort])
+  }, [slug, sort, search])
 
   const merchants = useMemo(() => {
     if (!ready || !isVertical) return []
@@ -80,12 +81,30 @@ export function HubPage() {
   }, [ready, filtered])
 
   const sortedFiltered = useMemo(() => sortProducts(filtered, sort), [filtered, sort])
-  const items = ready ? sortedFiltered : initial?.items ?? []
+  // Busca é só mais um filtro em cima do que já pertence a essa loja/vertical
+  // (não afeta a contagem total do cabeçalho nem os chips de loja/categoria,
+  // que continuam refletindo o catálogo inteiro daqui).
+  const searched = useMemo(() => {
+    const term = search.trim().toLowerCase()
+    if (!term) return sortedFiltered
+    return sortedFiltered.filter(
+      (p) =>
+        p.productName.toLowerCase().includes(term) ||
+        p.merchantDisplayName.toLowerCase().includes(term) ||
+        p.categorySlug.toLowerCase().includes(term)
+    )
+  }, [sortedFiltered, search])
+  const items = ready ? searched : initial?.items ?? []
+  // Nome/vertical de exibição usam a lista completa (sem o filtro de busca)
+  // pra não quebrar o cabeçalho quando a busca não encontra nada — e caem
+  // pro dado pré-renderizado antes da hidratação, já que sortedFiltered só
+  // existe depois que o índice completo carrega no cliente.
+  const fullItems = ready ? sortedFiltered : initial?.items ?? []
   const totalCount = ready ? filtered.length : initial?.totalCount ?? 0
   const displayMerchants = ready ? merchants : initial?.merchants ?? []
   const displayCategories = ready ? categories : initial?.categories ?? []
-  const displayName = isVertical ? slug : items[0]?.merchantDisplayName ?? slug
-  const vertical = isVertical ? slug : items[0]?.vertical
+  const displayName = isVertical ? slug : fullItems[0]?.merchantDisplayName ?? slug
+  const vertical = isVertical ? slug : fullItems[0]?.vertical
   const visible = items.slice(0, visibleCount)
 
   if (ready && filtered.length === 0) {
@@ -151,8 +170,15 @@ export function HubPage() {
 
       {!ready && !initial && <p className="status">Carregando...</p>}
 
-      {(ready || initial) && items.length > 0 && (
+      {(ready ? filtered.length > 0 : Boolean(initial)) && (
         <div className="filters">
+          <input
+            type="search"
+            placeholder={isVertical ? 'Buscar produto ou loja...' : `Buscar em ${displayName}...`}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            aria-label={isVertical ? 'Buscar produto ou loja' : `Buscar em ${displayName}`}
+          />
           <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} aria-label="Ordenar por">
             {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
               <option key={key} value={key}>
@@ -163,17 +189,21 @@ export function HubPage() {
         </div>
       )}
 
-      {(ready || initial) && (
+      {ready && filtered.length > 0 && items.length === 0 && (
+        <p className="status">Nenhum produto encontrado para "{search}".</p>
+      )}
+
+      {(ready || initial) && items.length > 0 && (
         <>
           <div className="product-grid">
             {visible.map((product, i) => (
               <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0} />
             ))}
           </div>
-          {ready && visibleCount < filtered.length && (
+          {ready && visibleCount < items.length && (
             <div className="load-more">
               <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                {`Carregar mais (${filtered.length - visibleCount} restantes)`}
+                {`Carregar mais (${items.length - visibleCount} restantes)`}
               </button>
             </div>
           )}
