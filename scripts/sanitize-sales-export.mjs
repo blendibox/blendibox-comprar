@@ -13,7 +13,37 @@ import { parse } from 'csv-parse/sync'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 
-const KEEP_STATUS = new Set(['Aprovado', 'Pendente'])
+// O painel da Awin exporta em português OU inglês dependendo do idioma
+// configurado na conta no momento — já vimos os dois formatos vindo do
+// mesmo relatório em datas diferentes (ex: "Aprovado"/"Pendente" com `;`
+// como delimitador vs "Approved"/"Pending" com `,`). Sem isso, uma troca de
+// idioma na conta faz o script silenciosamente não reconhecer nenhuma linha
+// (nem status nem coluna de produtos batem) e gravar um sales-highlights.csv
+// vazio, sem erro nenhum avisando o motivo.
+const KEEP_STATUS = new Set(['Aprovado', 'Approved', 'Pendente', 'Pending'])
+const PRODUCTS_FIELD_ALIASES = ['produtos', 'products']
+const DATE_FIELD_ALIASES = ['data', 'date']
+
+function firstDefined(row, keys) {
+  for (const key of keys) {
+    if (row[key] !== undefined) return row[key]
+  }
+  return undefined
+}
+
+// Conta separadores fora de aspas na linha de cabeçalho pra decidir o
+// delimitador real do arquivo, em vez de assumir um fixo.
+function detectDelimiter(firstLine) {
+  let inQuotes = false
+  let commas = 0
+  let semicolons = 0
+  for (const ch of firstLine) {
+    if (ch === '"') inQuotes = !inQuotes
+    else if (!inQuotes && ch === ',') commas++
+    else if (!inQuotes && ch === ';') semicolons++
+  }
+  return semicolons > commas ? ';' : ','
+}
 
 async function main() {
   const inputPath = process.argv[2]
@@ -23,7 +53,8 @@ async function main() {
   }
 
   const raw = await readFile(inputPath, 'utf-8')
-  const rows = parse(raw, { columns: true, delimiter: ';', skip_empty_lines: true, relax_quotes: true, relax_column_count: true })
+  const delimiter = detectDelimiter(raw.slice(0, raw.indexOf('\n')))
+  const rows = parse(raw, { columns: true, delimiter, skip_empty_lines: true, relax_quotes: true, relax_column_count: true })
 
   const out = []
   let skippedStatus = 0
@@ -38,7 +69,7 @@ async function main() {
 
     let items
     try {
-      items = JSON.parse(row['produtos'] || '[]')
+      items = JSON.parse(firstDefined(row, PRODUCTS_FIELD_ALIASES) || '[]')
     } catch {
       items = []
     }
@@ -48,7 +79,7 @@ async function main() {
       continue
     }
 
-    const date = String(row['data'] || '').slice(0, 10)
+    const date = String(firstDefined(row, DATE_FIELD_ALIASES) || '').slice(0, 10)
     const merchant = row['site_name']
 
     for (const item of items) {

@@ -14,3 +14,8 @@ public/data/
 
 # Config/estado local do Claude Code, não é parte do projeto.
 .claude/
+
+# Export bruto de transações da Awin (scripts/sanitize-sales-export.mjs) —
+# dado comercial sensível (valor de venda, comissão, país do cliente, IDs de
+# pagamento). Nunca deve ir pro repo, mesmo que baixado/colado aqui por engano.
+/transa*.csv
