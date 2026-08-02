@@ -341,12 +341,13 @@ a {
 }
 
 .page__header-logo {
-  width: 48px;
-  height: 48px;
+  width: 88px;
+  height: 88px;
   object-fit: contain;
   border-radius: 8px;
   border: 1px solid #e5e5e5;
   padding: 4px;
+  flex-shrink: 0;
 }
 
 .page__header h1 {
@@ -933,8 +934,8 @@ a {
 }
 
 .coupon-card__logo {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   border-radius: 4px;
   flex-shrink: 0;
