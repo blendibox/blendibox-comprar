@@ -16,7 +16,7 @@
     "shopee": { "slug": "shopee", "displayName": "Shopee Oficial BR", "vertical": "geral", "active": true },
 
     "17652": { "slug": "nike", "displayName": "Nike BR", "vertical": "esporte", "active": true, "priority": true },
-    "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": false },
+    "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": true },
     "17806": { "slug": "centauro", "displayName": "Centauro BR", "vertical": "esporte", "active": true, "priority": true },
     "107702": { "slug": "cloviscalcados", "displayName": "Clovis Calçados BR", "vertical": "moda", "active": true, "priority": true, "verifyImages": true },
     "30511": { "slug": "lego", "displayName": "Lego BR", "vertical": "brinquedos", "active": true },
@@ -38,7 +38,7 @@
     "17590": { "slug": "fastshop", "displayName": "Fastshop BR", "vertical": "casa", "active": true },
     "115463": { "slug": "gigantec", "displayName": "Gigantec BR", "vertical": "casa", "active": false },
     "105615": { "slug": "leveros", "displayName": "Leveros BR", "vertical": "casa", "active": false },
-    "78382": { "slug": "panasonic", "displayName": "Panasonic BR", "vertical": "casa", "active": false },
+    "78382": { "slug": "panasonic", "displayName": "Panasonic BR", "vertical": "casa", "active": true },
     "106763": { "slug": "sharkninja", "displayName": "Shark-Ninja BR", "vertical": "casa", "active": false },
     "78292": { "slug": "webfones", "displayName": "Webfones BR", "vertical": "casa", "active": false },
     "19675": { "slug": "continental", "displayName": "Continental BR", "vertical": "casa", "active": true },
@@ -59,7 +59,7 @@
     "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": false },
     "17824": { "slug": "compracerta", "displayName": "Compra Certa BR", "vertical": "casa", "active": false },
     "30615": { "slug": "spicy", "displayName": "Spicy BR", "vertical": "casa", "active": true },
-    "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": true },
+    "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": true, "verifyImages": true  },
 
     "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false },
 
