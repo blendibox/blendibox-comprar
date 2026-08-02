@@ -79,11 +79,23 @@ function buildItemXml(product) {
   const link = `${SITE_URL}/${product.merchantSlug}/${product.slug}/`
   const available = product.numberAvailable === 0 ? 'out of stock' : 'in stock'
   const hasGtin = Boolean(product.productGtin)
+  const color = product.color || extractJewelryColor(product) || 'Branco'
+  const size = product.size || 'Único'
+
+  // O Merchant Center sinaliza "adicione detalhes que os clientes procuram"
+  // quando cor/tamanho não aparecem como TEXTO na descrição — os campos
+  // estruturados g:color/g:size abaixo não contam pra essa recomendação
+  // específica, então repete a mesma informação em texto legível. Só pra
+  // joias, onde a cor é dado real extraído do nome (não o "Branco" genérico
+  // que os outros verticais recebem por falta de coluna própria no feed).
+  const baseDescription = product.description || product.productName
+  const description =
+    product.vertical === 'joias' ? `${baseDescription} Cor: ${color}. Tamanho: ${size}.` : baseDescription
 
   const fields = [
     `<g:id>${escapeXml(id)}</g:id>`,
     `<title>${cdata(product.productName)}</title>`,
-    `<description>${cdata(product.description || product.productName)}</description>`,
+    `<description>${cdata(description)}</description>`,
     `<link>${escapeXml(link)}</link>`,
     `<g:image_link>${escapeXml(mainImage)}</g:image_link>`,
   ]
@@ -129,8 +141,8 @@ function buildItemXml(product) {
   // valor em português aqui reprovaria de novo, só que por "valor inválido"
   // em vez de "atributo ausente".
   fields.push(
-    `<g:color>${cdata(product.color || extractJewelryColor(product) || 'Branco')}</g:color>`,
-    `<g:size>${cdata(product.size || 'Único')}</g:size>`,
+    `<g:color>${cdata(color)}</g:color>`,
+    `<g:size>${cdata(size)}</g:size>`,
     `<g:gender>${product.gender || 'unisex'}</g:gender>`,
     `<g:age_group>${product.ageGroup || 'adult'}</g:age_group>`
   )
