@@ -341,8 +341,8 @@ a {
 }
 
 .page__header-logo {
-  width: auto;
-  height: 88px;
+  width: 88px;
+  height: auto;
   border-radius: 8px;
   border: 1px solid #e5e5e5;
   padding: 4px;
@@ -748,8 +748,8 @@ a {
 }
 
 .hub-chip__logo {
-  width: auto;
-  height: 88px;
+  width: 88px;
+  height: auto;
   border-radius: 3px;
 }
 
@@ -932,8 +932,8 @@ a {
 }
 
 .coupon-card__logo {
-  width: auto;
-  height: 88px;
+  width: 88px;
+  height: auto;
   border-radius: 4px;
   flex-shrink: 0;
 }
@@ -1201,8 +1201,8 @@ a {
 }
 
 .partners-grid__logo {
-  width: auto;
-  height: 88px;
+  width: 88px;
+  height: auto;
   border-radius: 8px;
   border: 1px solid #e5e5e5;
   padding: 6px;
