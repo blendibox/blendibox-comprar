@@ -341,9 +341,8 @@ a {
 }
 
 .page__header-logo {
-  width: 88px;
+  width: auto;
   height: 88px;
-  object-fit: contain;
   border-radius: 8px;
   border: 1px solid #e5e5e5;
   padding: 4px;
@@ -749,9 +748,8 @@ a {
 }
 
 .hub-chip__logo {
-  width: 18px;
-  height: 18px;
-  object-fit: contain;
+  width: auto;
+  height: 88px;
   border-radius: 3px;
 }
 
@@ -934,9 +932,8 @@ a {
 }
 
 .coupon-card__logo {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
+  width: auto;
+  height: 88px;
   border-radius: 4px;
   flex-shrink: 0;
 }
@@ -1196,7 +1193,7 @@ a {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  width: 96px;
+  min-width: 96px;
   text-decoration: none;
   color: #444;
   font-size: 12px;
@@ -1204,9 +1201,8 @@ a {
 }
 
 .partners-grid__logo {
-  width: 56px;
-  height: 56px;
-  object-fit: contain;
+  width: auto;
+  height: 88px;
   border-radius: 8px;
   border: 1px solid #e5e5e5;
   padding: 6px;
