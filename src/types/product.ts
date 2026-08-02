@@ -102,6 +102,12 @@ export interface MerchantMeta {
   displayName: string
   vertical: string
   priority: boolean
+  // ID do anunciante na Awin — usado pra montar a URL do logo em
+  // ui.awin.com/images/upload/merchant/profile/{merchantId}.png. Fontes que
+  // não são merchants Awin de verdade (Amazon, Shopee, revenda direta) têm
+  // um slug em vez de ID numérico aqui, ou o campo vem null — ver
+  // isAwinMerchantId em src/components/MerchantLogo.tsx.
+  merchantId: string | null
 }
 
 export interface ListInitialData {
@@ -122,6 +128,7 @@ export interface CouponEntry {
   id: string
   advertiser: string
   merchantSlug: string | null
+  merchantId: string | null
   vertical: string | null
   type: string
   isVoucher: boolean

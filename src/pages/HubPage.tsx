@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useIndex } from '../hooks/useIndex'
-import { fetchCoupons } from '../lib/api'
+import { fetchCoupons, fetchMerchants } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { parseBrDate } from '../lib/date'
-import type { CouponEntry, HubInitialData } from '../types/product'
+import type { CouponEntry, HubInitialData, MerchantMeta } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
+import { MerchantLogo } from '../components/MerchantLogo'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 
 const PAGE_SIZE = 60
@@ -37,10 +38,24 @@ export function HubPage() {
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [search, setSearch] = useState('')
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
+  const [merchantsMeta, setMerchantsMeta] = useState<MerchantMeta[]>([])
 
   useEffect(() => {
     clearInitialData(path)
   }, [path])
+
+  useEffect(() => {
+    fetchMerchants().then(setMerchantsMeta).catch(() => setMerchantsMeta([]))
+  }, [])
+
+  // Só pro logo (ui.awin.com/images/upload/merchant/profile/{id}.png) —
+  // merchants.json é o único lugar com o merchant_id numérico da Awin;
+  // ProductIndexEntry só tem slug/nome, não o ID.
+  const merchantIdBySlug = useMemo(() => {
+    const map = new Map<string, string | null>()
+    for (const m of merchantsMeta) map.set(m.slug, m.merchantId)
+    return map
+  }, [merchantsMeta])
 
   useEffect(() => {
     if (isVertical) return
@@ -127,7 +142,16 @@ export function HubPage() {
         )}
       </nav>
       <header className="page__header">
-        <h1 style={{ textTransform: 'capitalize' }}>{isVertical ? displayName : `Ofertas ${displayName}`}</h1>
+        <div className="page__header-row">
+          {!isVertical && (
+            <MerchantLogo
+              merchantId={merchantIdBySlug.get(slug)}
+              displayName={displayName}
+              className="page__header-logo"
+            />
+          )}
+          <h1 style={{ textTransform: 'capitalize' }}>{isVertical ? displayName : `Ofertas ${displayName}`}</h1>
+        </div>
         <p className="page__meta">{totalCount.toLocaleString('pt-BR')} produtos</p>
       </header>
 
@@ -148,6 +172,7 @@ export function HubPage() {
           <div className="hub-links__list">
             {displayMerchants.map((m) => (
               <Link key={m.slug} to={`/${m.slug}`} className="hub-chip">
+                <MerchantLogo merchantId={merchantIdBySlug.get(m.slug)} displayName={m.displayName} className="hub-chip__logo" />
                 {m.displayName} <span>({m.count})</span>
               </Link>
             ))}

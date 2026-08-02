@@ -334,6 +334,21 @@ a {
   padding: 24px 16px 48px;
 }
 
+.page__header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page__header-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  padding: 4px;
+}
+
 .page__header h1 {
   margin: 0 0 4px;
   font-size: 28px;
@@ -727,6 +742,16 @@ a {
   font-size: 13px;
   text-decoration: none;
   text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hub-chip__logo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  border-radius: 3px;
 }
 
 .hub-chip span {
@@ -894,6 +919,25 @@ a {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.merchant-logo {
+  display: block;
+  background: #fff;
+}
+
+.coupon-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coupon-card__logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+  flex-shrink: 0;
 }
 
 .coupon-card__advertiser {
@@ -1138,6 +1182,33 @@ a {
 .legal-page li {
   color: #444;
   line-height: 1.6;
+}
+
+.partners-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.partners-grid__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 96px;
+  text-decoration: none;
+  color: #444;
+  font-size: 12px;
+  text-align: center;
+}
+
+.partners-grid__logo {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid #e5e5e5;
+  padding: 6px;
 }
 
 .faq-list {

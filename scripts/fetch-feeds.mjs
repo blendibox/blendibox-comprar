@@ -234,6 +234,7 @@ async function main() {
       displayName: merchant.displayName,
       vertical: merchant.vertical,
       priority: Boolean(merchant.priority),
+      merchantId: merchant.merchantId ?? null,
     })
 
     const categoryKey = `${vertical}/${categorySlug}`

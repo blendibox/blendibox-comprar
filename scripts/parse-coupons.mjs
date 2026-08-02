@@ -62,6 +62,7 @@ async function main() {
       id: row['Promotion ID'],
       advertiser: row['Advertiser'],
       merchantSlug: merchant?.slug ?? null,
+      merchantId: advertiserId ?? null,
       vertical: merchant?.vertical ?? null,
       type: row['Type'],
       isVoucher: Boolean(row['Code']?.trim()),

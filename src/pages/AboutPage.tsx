@@ -1,6 +1,18 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { fetchMerchants } from '../lib/api'
+import type { MerchantMeta } from '../types/product'
+import { MerchantLogo } from '../components/MerchantLogo'
 
 export function AboutPage() {
+  const [merchants, setMerchants] = useState<MerchantMeta[]>([])
+
+  useEffect(() => {
+    fetchMerchants()
+      .then((data) => setMerchants([...data].sort((a, b) => a.displayName.localeCompare(b.displayName))))
+      .catch(() => setMerchants([]))
+  }, [])
+
   return (
     <div className="page legal-page">
       <header className="page__header">
@@ -24,6 +36,20 @@ export function AboutPage() {
         </p>
         <p>Um projeto Blendibox.</p>
       </section>
+
+      {merchants.length > 0 && (
+        <section>
+          <h2>Nossas lojas parceiras</h2>
+          <div className="partners-grid">
+            {merchants.map((m) => (
+              <Link key={m.slug} to={`/${m.slug}`} className="partners-grid__item">
+                <MerchantLogo merchantId={m.merchantId} displayName={m.displayName} className="partners-grid__logo" />
+                <span>{m.displayName}</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
