@@ -176,6 +176,32 @@ async function main() {
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
 
+  // --- Home: só as seções curadas (Destaques/Baixou de preço/Comprado
+  // recentemente), pré-calculadas em scripts/generate-home-highlights.mjs —
+  // arquivo pequeno, bem diferente do index.json completo usado pelos hubs
+  // abaixo. Antes a home não era pré-renderizada (dependia só do index.json
+  // gigante no cliente, o que não valia o custo); agora que os dados dela
+  // são pequenos, dá pra gerar o HTML estático de verdade — resolve o maior
+  // gargalo de LCP apontado pelo Lighthouse (a imagem do primeiro card só
+  // era descoberta pelo navegador depois do fetch client-side terminar).
+  const [homeMerchants, homeMeta, homeHighlights] = await Promise.all([
+    readFile(path.join(DATA_DIR, 'merchants.json'), 'utf-8').then(JSON.parse),
+    readFile(path.join(DATA_DIR, 'meta.json'), 'utf-8').then(JSON.parse),
+    readFile(path.join(DATA_DIR, 'home-highlights.json'), 'utf-8').then(JSON.parse),
+  ])
+  const homeUrl = await renderPage({
+    template,
+    renderRoute,
+    routePath: '',
+    initialData: { meta: homeMeta, merchants: homeMerchants, highlights: homeHighlights },
+    head: {
+      title: 'Compare Ofertas — compare preços de várias lojas em um só lugar',
+      description: 'Compare preços de milhares de produtos de marcas famosas em um só lugar, atualizados semanalmente.',
+      canonical: `${SITE_URL}/`,
+    },
+  })
+  generatedUrls.push({ url: homeUrl, changefreq: 'daily', priority: 1.0 })
+
   // DEBUG_LIMIT=N: processa só N produtos e pula os hubs — só pra iterar
   // rápido em debug local (o gargalo real do build é o volume de arquivos).
   const debugLimit = process.env.DEBUG_LIMIT ? Number(process.env.DEBUG_LIMIT) : null
@@ -342,8 +368,6 @@ async function main() {
     })
     generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
   }
-
-  generatedUrls.push({ url: `${SITE_URL}/`, changefreq: 'daily', priority: 1.0 })
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))
 

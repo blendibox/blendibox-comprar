@@ -1,25 +1,33 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchHomeHighlights, fetchIndex, fetchMerchants, fetchMeta } from '../lib/api'
-import type { FeedMeta, HomeHighlights, MerchantMeta, ProductIndexEntry } from '../types/product'
+import { clearInitialData, peekInitialData } from '../lib/initialData'
+import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIndexEntry } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { formatIsoDateTimeBr } from '../lib/date'
 
 const PAGE_SIZE = 60
+const HOME_PATH = '/'
 
 type IndexState = 'idle' | 'loading' | 'ready' | 'error'
 
 export function ListingPage() {
-  const [meta, setMeta] = useState<FeedMeta | null>(null)
-  const [merchants, setMerchants] = useState<MerchantMeta[]>([])
+  // scripts/prerender.mjs injeta meta/merchants/highlights (mesmos dados do
+  // build) na home estática — usar isso como estado inicial faz a primeira
+  // renderização do cliente bater com o HTML do servidor (evita o erro de
+  // hidratação #418 já visto neste projeto) e deixa a imagem do primeiro
+  // card dos Destaques já presente no HTML, sem esperar nenhum fetch.
+  const [initial] = useState<HomeInitialData | null>(() => peekInitialData<HomeInitialData>(HOME_PATH))
+  const [meta, setMeta] = useState<FeedMeta | null>(initial?.meta ?? null)
+  const [merchants, setMerchants] = useState<MerchantMeta[]>(initial?.merchants ?? [])
   // As 3 seções curadas (Destaques/Baixou de preço/Comprado recentemente) já
   // vêm prontas do build (scripts/generate-home-highlights.mjs) — um arquivo
   // de poucos KB, bem diferente do index.json completo (>45MB hoje), que só
   // é buscado se o usuário realmente pesquisar ou filtrar por departamento
   // (ver efeito abaixo). Isso elimina o maior gargalo de LCP apontado pelo
   // Lighthouse: a home não depende mais desse arquivo gigante pra pintar.
-  const [highlights, setHighlights] = useState<HomeHighlights | null>(null)
+  const [highlights, setHighlights] = useState<HomeHighlights | null>(initial?.highlights ?? null)
   const [products, setProducts] = useState<ProductIndexEntry[]>([])
   const [indexState, setIndexState] = useState<IndexState>('idle')
 
@@ -27,6 +35,10 @@ export function ListingPage() {
   const [vertical, setVertical] = useState('todos')
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+
+  useEffect(() => {
+    clearInitialData(HOME_PATH)
+  }, [])
 
   useEffect(() => {
     fetchMeta().then(setMeta).catch(() => setMeta(null))

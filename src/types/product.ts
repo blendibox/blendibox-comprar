@@ -170,3 +170,12 @@ export interface HomeHighlights {
   priceDrops: ProductIndexEntry[]
   recentSales: { product: ProductIndexEntry; label: string }[]
 }
+
+// Dado injetado por scripts/prerender.mjs pra a home renderizar as seções
+// curadas já no HTML estático (sem esperar os fetches no cliente) — mesma
+// fonte que o home-highlights.json/merchants.json/meta.json do build.
+export interface HomeInitialData {
+  meta: FeedMeta
+  merchants: MerchantMeta[]
+  highlights: HomeHighlights
+}
