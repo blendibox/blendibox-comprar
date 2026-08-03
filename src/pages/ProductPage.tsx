@@ -2,12 +2,31 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
-import type { Product } from '../types/product'
-import { DiscountBadge, OriginalPrice, PriceDropBadge, RatingBadge, formatPrice } from '../components/ProductCard'
+import type { Product, ProductIndexEntry, SimilarRef } from '../types/product'
+import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { formatIsoDateBr } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
+
+// SimilarRef só tem o subconjunto de campos gravado em `similar[]` (ver
+// scripts/fetch-feeds.mjs) — completa com os campos que só existem no
+// índice completo (nota, desconto, queda de preço) como null/vazio, já que
+// não foram calculados pra essa referência resumida. Permite reusar o
+// ProductCard de verdade (com botão de comparar) em vez de duplicar o
+// card à mão.
+function similarToIndexEntry(s: SimilarRef): ProductIndexEntry {
+  return {
+    ...s,
+    categorySlug: '',
+    eligibleForStaticPage: false,
+    rating: null,
+    storePrice: null,
+    discountPercentage: null,
+    previousPrice: null,
+    priceDropPercent: null,
+  }
+}
 
 export function ProductPage() {
   const { merchant = '', slug = '' } = useParams()
@@ -155,20 +174,7 @@ export function ProductPage() {
           <h2>Produtos similares</h2>
           <div className="product-grid">
             {product.similar.map((s) => (
-              <Link
-                key={`${s.merchantSlug}-${s.slug}`}
-                className="product-card"
-                to={`/${s.merchantSlug}/${s.slug}`}
-              >
-                <img className="product-card__image" src={s.awImageUrl} alt={s.productName} loading="lazy" />
-                <div className="product-card__body">
-                  <span className="product-card__merchant">{s.merchantDisplayName}</span>
-                  <h3 className="product-card__name">{s.productName}</h3>
-                  <div className="product-card__prices">
-                    <span className="product-card__price">{formatPrice(s.searchPrice, s.currency)}</span>
-                  </div>
-                </div>
-              </Link>
+              <ProductCard key={`${s.merchantSlug}-${s.slug}`} product={similarToIndexEntry(s)} />
             ))}
           </div>
         </section>
