@@ -114,10 +114,17 @@ export function ListingPage() {
     setVisibleCount(PAGE_SIZE)
   }, [search, vertical, sort])
 
+  const ready = state === 'ready'
+  // A listagem geral paginada só faz sentido quando o usuário está realmente
+  // procurando algo específico — sem filtro, a home mostra só as seções
+  // curadas (evita carregar/exibir milhares de cards que ninguém rolaria até
+  // o fim, e também evita o layout shift de uma grade enorme aparecendo de
+  // repente depois que o índice carrega).
+  const hasActiveFilter = Boolean(search.trim()) || vertical !== 'todos'
   const visible = filtered.slice(0, visibleCount)
-  const showFeatured = state === 'ready' && !search && vertical === 'todos' && featured.length > 0
-  const showPriceDrops = state === 'ready' && !search && vertical === 'todos' && priceDrops.length > 0
-  const showRecentSales = state === 'ready' && !search && vertical === 'todos' && recentSales.length > 0
+  const showFeatured = ready && !hasActiveFilter && featured.length > 0
+  const showPriceDrops = ready && !hasActiveFilter && priceDrops.length > 0
+  const showRecentSales = ready && !hasActiveFilter && recentSales.length > 0
 
   return (
     <div className="page">
@@ -159,70 +166,103 @@ export function ListingPage() {
         </select>
       </div>
 
-      {showFeatured && (
-        <section className="featured-section">
-          <h2>Destaques</h2>
-          <Carousel>
-            {featured.map((product, i) => (
-              <ProductCard key={`featured-${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0} />
-            ))}
-          </Carousel>
-        </section>
-      )}
-
-      {showPriceDrops && (
-        <section className="price-drop-section">
-          <h2>Baixou de preço</h2>
-          <p className="price-drop-section__hint">Ofertas que ficaram mais baratas na última semana.</p>
-          <Carousel>
-            {priceDrops.map((product, i) => (
-              <ProductCard
-                key={`price-drop-${product.merchantSlug}-${product.slug}`}
-                product={product}
-                priority={i === 0 && !showFeatured}
-              />
-            ))}
-          </Carousel>
-        </section>
-      )}
-
-      {showRecentSales && (
-        <section className="recent-sales-section">
-          <h2>Comprado recentemente</h2>
-          <p className="recent-sales-section__hint">Produtos que outros clientes compraram através do Compare Ofertas.</p>
-          <Carousel>
-            {recentSales.map(({ product, label }) => (
-              <ProductCard
-                key={`recent-${product.merchantSlug}-${product.slug}`}
-                product={product}
-                caption={`Vendido ${label}`}
-              />
-            ))}
-          </Carousel>
-        </section>
-      )}
-
-      {state === 'loading' && <p className="status">Carregando ofertas...</p>}
-      {state === 'error' && <p className="status status--error">Não foi possível carregar as ofertas.</p>}
-      {state === 'ready' && filtered.length === 0 && <p className="status">Nenhum produto encontrado.</p>}
-
-      {state === 'ready' && (
+      {!hasActiveFilter && (
         <>
-          <div className="product-grid">
-            {visible.map((product, i) => (
-              <ProductCard
-                key={`${product.merchantSlug}-${product.slug}`}
-                product={product}
-                priority={i === 0 && !showFeatured && !showPriceDrops}
-              />
-            ))}
-          </div>
-          {visibleCount < filtered.length && (
-            <div className="load-more">
-              <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
-                {`Carregar mais (${filtered.length - visibleCount} restantes)`}
-              </button>
-            </div>
+          {/* A altura mínima de cada seção (via CSS) é reservada desde o
+              primeiro paint, antes mesmo do índice carregar — sem isso, o
+              carrossel "pipocando" depois que os fetches terminam é a maior
+              causa de layout shift na home (CLS do Lighthouse mobile). */}
+          {(!ready || showFeatured) && (
+            <section className="featured-section">
+              {showFeatured ? (
+                <>
+                  <h2>Destaques</h2>
+                  <Carousel>
+                    {featured.map((product, i) => (
+                      <ProductCard
+                        key={`featured-${product.merchantSlug}-${product.slug}`}
+                        product={product}
+                        priority={i === 0}
+                      />
+                    ))}
+                  </Carousel>
+                </>
+              ) : (
+                state === 'loading' && <p className="section-skeleton__hint">Carregando destaques...</p>
+              )}
+            </section>
+          )}
+
+          {(!ready || showPriceDrops) && (
+            <section className="price-drop-section">
+              {showPriceDrops ? (
+                <>
+                  <h2>Baixou de preço</h2>
+                  <p className="price-drop-section__hint">Ofertas que ficaram mais baratas na última semana.</p>
+                  <Carousel>
+                    {priceDrops.map((product, i) => (
+                      <ProductCard
+                        key={`price-drop-${product.merchantSlug}-${product.slug}`}
+                        product={product}
+                        priority={i === 0 && !showFeatured}
+                      />
+                    ))}
+                  </Carousel>
+                </>
+              ) : (
+                state === 'loading' && <p className="section-skeleton__hint">Carregando ofertas...</p>
+              )}
+            </section>
+          )}
+
+          {(!ready || showRecentSales) && (
+            <section className="recent-sales-section">
+              {showRecentSales ? (
+                <>
+                  <h2>Comprado recentemente</h2>
+                  <p className="recent-sales-section__hint">
+                    Produtos que outros clientes compraram através do Compare Ofertas.
+                  </p>
+                  <Carousel>
+                    {recentSales.map(({ product, label }) => (
+                      <ProductCard
+                        key={`recent-${product.merchantSlug}-${product.slug}`}
+                        product={product}
+                        caption={`Vendido ${label}`}
+                      />
+                    ))}
+                  </Carousel>
+                </>
+              ) : (
+                state === 'loading' && <p className="section-skeleton__hint">Carregando vendas recentes...</p>
+              )}
+            </section>
+          )}
+        </>
+      )}
+
+      {state === 'error' && <p className="status status--error">Não foi possível carregar as ofertas.</p>}
+
+      {hasActiveFilter && (
+        <>
+          {state === 'loading' && <p className="status">Carregando ofertas...</p>}
+          {ready && filtered.length === 0 && <p className="status">Nenhum produto encontrado.</p>}
+
+          {ready && filtered.length > 0 && (
+            <>
+              <div className="product-grid">
+                {visible.map((product, i) => (
+                  <ProductCard key={`${product.merchantSlug}-${product.slug}`} product={product} priority={i === 0} />
+                ))}
+              </div>
+              {visibleCount < filtered.length && (
+                <div className="load-more">
+                  <button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>
+                    {`Carregar mais (${filtered.length - visibleCount} restantes)`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </>
       )}

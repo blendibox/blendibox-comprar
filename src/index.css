@@ -956,6 +956,13 @@ a {
   padding: 20px;
   border-radius: 12px;
   background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%);
+  /* Reserva o espaço do carrossel (medido: ~450px com um card de 200px de
+     largura) antes mesmo do índice carregar — sem isso, a seção "pipoca" na
+     tela assim que o fetch termina, empurrando tudo abaixo (CLS). */
+  min-height: 452px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .featured-section h2 {
@@ -1062,6 +1069,21 @@ a {
 
 .recent-sales-section {
   margin-bottom: 32px;
+  min-height: 448px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.section-skeleton__hint {
+  margin: 0;
+  text-align: center;
+  color: #888;
+  font-size: 13px;
+}
+
+.featured-section .section-skeleton__hint {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .recent-sales-section h2 {
@@ -1076,6 +1098,10 @@ a {
 
 .price-drop-section {
   margin-bottom: 32px;
+  min-height: 432px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .price-drop-section h2 {
