@@ -2,6 +2,7 @@ import type {
   BlendiboxProduct,
   CouponEntry,
   FeedMeta,
+  HomeHighlights,
   MerchantMeta,
   Product,
   ProductIndexEntry,
@@ -44,4 +45,8 @@ export function fetchBlendiboxProducts() {
 
 export function fetchSalesHighlights() {
   return getJson<SalesHighlight[]>('social-proof.json')
+}
+
+export function fetchHomeHighlights() {
+  return getJson<HomeHighlights>('home-highlights.json')
 }

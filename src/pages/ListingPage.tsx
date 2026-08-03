@@ -1,100 +1,61 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useIndex } from '../hooks/useIndex'
-import { fetchMerchants, fetchSalesHighlights } from '../lib/api'
-import type { MerchantMeta, ProductIndexEntry, SalesHighlight } from '../types/product'
+import { fetchHomeHighlights, fetchIndex, fetchMerchants, fetchMeta } from '../lib/api'
+import type { FeedMeta, HomeHighlights, MerchantMeta, ProductIndexEntry } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { formatIsoDateTimeBr } from '../lib/date'
 
 const PAGE_SIZE = 60
-const MAX_RECENT_SALES = 8
-const MAX_PRICE_DROPS = 10
 
-// scripts/update-price-history.mjs já calcula e resolve isso no build — aqui
-// é só filtrar quem tem o campo preenchido e ordenar pela maior queda.
-function pickPriceDrops(products: ProductIndexEntry[]): ProductIndexEntry[] {
-  return products
-    .filter((p) => p.priceDropPercent != null)
-    .sort((a, b) => (b.priceDropPercent ?? 0) - (a.priceDropPercent ?? 0))
-    .slice(0, MAX_PRICE_DROPS)
-}
-
-// O match com o catálogo já foi resolvido no build (scripts/parse-sales-highlights.mjs,
-// contra o mesmo index.json) — aqui é só um lookup direto por slug, não mais
-// uma adivinhação por sufixo de SKU (que falhava sempre que o SKU do export
-// de transações não batia com o merchant_product_id do feed, ex: Vivara).
-function pickRecentSales(
-  highlights: SalesHighlight[],
-  products: ProductIndexEntry[]
-): { product: ProductIndexEntry; label: string }[] {
-  const bySlugKey = new Map<string, ProductIndexEntry>()
-  for (const p of products) {
-    bySlugKey.set(`${p.merchantSlug}:${p.slug}`, p)
-  }
-
-  const matches: { product: ProductIndexEntry; label: string }[] = []
-  for (const h of highlights) {
-    const product = bySlugKey.get(`${h.merchantSlug}:${h.slug}`)
-    if (!product) continue
-    matches.push({ product, label: h.label })
-    if (matches.length >= MAX_RECENT_SALES) break
-  }
-  return matches
-}
-
-// Vivara, Centauro e Nike são, na prática, os merchants com melhor histórico
-// real de vendas — sempre aparecem primeiro nos Destaques, antes dos outros
-// merchants "priority".
-const FEATURED_ORDER = ['vivara', 'centauro', 'nike']
-
-function pickFeatured(products: ProductIndexEntry[], merchants: MerchantMeta[]): ProductIndexEntry[] {
-  const prioritySlugs = merchants
-    .filter((m) => m.priority)
-    .map((m) => m.slug)
-    .sort((a, b) => {
-      const ia = FEATURED_ORDER.indexOf(a)
-      const ib = FEATURED_ORDER.indexOf(b)
-      if (ia === -1 && ib === -1) return 0
-      if (ia === -1) return 1
-      if (ib === -1) return -1
-      return ia - ib
-    })
-  const featured: ProductIndexEntry[] = []
-  for (const slug of prioritySlugs) {
-    const items = products
-      .filter((p) => p.merchantSlug === slug && p.searchPrice != null)
-      .sort((a, b) => a.searchPrice! - b.searchPrice!)
-    if (items.length === 0) continue
-    // Pega o item "do meio" (mediana de preço) — evita mostrar sempre o mais
-    // barato/mais caro, dá uma sensação de curadoria em vez de extremo aleatório.
-    featured.push(items[Math.floor(items.length / 2)])
-  }
-  return featured
-}
+type IndexState = 'idle' | 'loading' | 'ready' | 'error'
 
 export function ListingPage() {
-  const { products, meta, state } = useIndex()
+  const [meta, setMeta] = useState<FeedMeta | null>(null)
   const [merchants, setMerchants] = useState<MerchantMeta[]>([])
-  const [salesHighlights, setSalesHighlights] = useState<SalesHighlight[]>([])
+  // As 3 seções curadas (Destaques/Baixou de preço/Comprado recentemente) já
+  // vêm prontas do build (scripts/generate-home-highlights.mjs) — um arquivo
+  // de poucos KB, bem diferente do index.json completo (>45MB hoje), que só
+  // é buscado se o usuário realmente pesquisar ou filtrar por departamento
+  // (ver efeito abaixo). Isso elimina o maior gargalo de LCP apontado pelo
+  // Lighthouse: a home não depende mais desse arquivo gigante pra pintar.
+  const [highlights, setHighlights] = useState<HomeHighlights | null>(null)
+  const [products, setProducts] = useState<ProductIndexEntry[]>([])
+  const [indexState, setIndexState] = useState<IndexState>('idle')
+
   const [search, setSearch] = useState('')
   const [vertical, setVertical] = useState('todos')
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => {
+    fetchMeta().then(setMeta).catch(() => setMeta(null))
     fetchMerchants().then(setMerchants).catch(() => setMerchants([]))
-    fetchSalesHighlights().then(setSalesHighlights).catch(() => setSalesHighlights([]))
+    fetchHomeHighlights().then(setHighlights).catch(() => setHighlights(null))
   }, [])
 
-  const featured = useMemo(() => pickFeatured(products, merchants), [products, merchants])
-  const recentSales = useMemo(() => pickRecentSales(salesHighlights, products), [salesHighlights, products])
-  const priceDrops = useMemo(() => pickPriceDrops(products), [products])
+  const hasActiveFilter = Boolean(search.trim()) || vertical !== 'todos'
 
+  // Só busca o índice completo quando vira preciso de verdade (busca ou
+  // filtro de departamento ativos) — na home "limpa" (a maioria das visitas)
+  // esse fetch nunca acontece.
+  useEffect(() => {
+    if (!hasActiveFilter || indexState !== 'idle') return
+    setIndexState('loading')
+    fetchIndex()
+      .then((data) => {
+        setProducts(data)
+        setIndexState('ready')
+      })
+      .catch(() => setIndexState('error'))
+  }, [hasActiveFilter, indexState])
+
+  // Lista de departamentos vem do merchants.json (pequeno) — não do índice
+  // completo, que só carrega depois que o usuário já escolheu filtrar.
   const verticals = useMemo(() => {
-    const set = new Set(products.map((p) => p.vertical))
+    const set = new Set(merchants.map((m) => m.vertical))
     return ['todos', ...Array.from(set).sort()]
-  }, [products])
+  }, [merchants])
 
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -114,17 +75,16 @@ export function ListingPage() {
     setVisibleCount(PAGE_SIZE)
   }, [search, vertical, sort])
 
-  const ready = state === 'ready'
-  // A listagem geral paginada só faz sentido quando o usuário está realmente
-  // procurando algo específico — sem filtro, a home mostra só as seções
-  // curadas (evita carregar/exibir milhares de cards que ninguém rolaria até
-  // o fim, e também evita o layout shift de uma grade enorme aparecendo de
-  // repente depois que o índice carrega).
-  const hasActiveFilter = Boolean(search.trim()) || vertical !== 'todos'
+  const indexReady = indexState === 'ready'
   const visible = filtered.slice(0, visibleCount)
-  const showFeatured = ready && !hasActiveFilter && featured.length > 0
-  const showPriceDrops = ready && !hasActiveFilter && priceDrops.length > 0
-  const showRecentSales = ready && !hasActiveFilter && recentSales.length > 0
+
+  const highlightsReady = highlights !== null
+  const featured = highlights?.featured ?? []
+  const priceDrops = highlights?.priceDrops ?? []
+  const recentSales = highlights?.recentSales ?? []
+  const showFeatured = highlightsReady && !hasActiveFilter && featured.length > 0
+  const showPriceDrops = highlightsReady && !hasActiveFilter && priceDrops.length > 0
+  const showRecentSales = highlightsReady && !hasActiveFilter && recentSales.length > 0
 
   return (
     <div className="page">
@@ -169,10 +129,10 @@ export function ListingPage() {
       {!hasActiveFilter && (
         <>
           {/* A altura mínima de cada seção (via CSS) é reservada desde o
-              primeiro paint, antes mesmo do índice carregar — sem isso, o
-              carrossel "pipocando" depois que os fetches terminam é a maior
-              causa de layout shift na home (CLS do Lighthouse mobile). */}
-          {(!ready || showFeatured) && (
+              primeiro paint, antes mesmo do home-highlights.json carregar —
+              sem isso, o carrossel "pipocando" depois que o fetch termina é
+              uma causa de layout shift (CLS do Lighthouse mobile). */}
+          {(!highlightsReady || showFeatured) && (
             <section className="featured-section">
               {showFeatured ? (
                 <>
@@ -188,12 +148,12 @@ export function ListingPage() {
                   </Carousel>
                 </>
               ) : (
-                state === 'loading' && <p className="section-skeleton__hint">Carregando destaques...</p>
+                <p className="section-skeleton__hint">Carregando destaques...</p>
               )}
             </section>
           )}
 
-          {(!ready || showPriceDrops) && (
+          {(!highlightsReady || showPriceDrops) && (
             <section className="price-drop-section">
               {showPriceDrops ? (
                 <>
@@ -210,12 +170,12 @@ export function ListingPage() {
                   </Carousel>
                 </>
               ) : (
-                state === 'loading' && <p className="section-skeleton__hint">Carregando ofertas...</p>
+                <p className="section-skeleton__hint">Carregando ofertas...</p>
               )}
             </section>
           )}
 
-          {(!ready || showRecentSales) && (
+          {(!highlightsReady || showRecentSales) && (
             <section className="recent-sales-section">
               {showRecentSales ? (
                 <>
@@ -234,21 +194,21 @@ export function ListingPage() {
                   </Carousel>
                 </>
               ) : (
-                state === 'loading' && <p className="section-skeleton__hint">Carregando vendas recentes...</p>
+                <p className="section-skeleton__hint">Carregando vendas recentes...</p>
               )}
             </section>
           )}
         </>
       )}
 
-      {state === 'error' && <p className="status status--error">Não foi possível carregar as ofertas.</p>}
+      {indexState === 'error' && <p className="status status--error">Não foi possível carregar as ofertas.</p>}
 
       {hasActiveFilter && (
         <>
-          {state === 'loading' && <p className="status">Carregando ofertas...</p>}
-          {ready && filtered.length === 0 && <p className="status">Nenhum produto encontrado.</p>}
+          {indexState === 'loading' && <p className="status">Carregando ofertas...</p>}
+          {indexReady && filtered.length === 0 && <p className="status">Nenhum produto encontrado.</p>}
 
-          {ready && filtered.length > 0 && (
+          {indexReady && filtered.length > 0 && (
             <>
               <div className="product-grid">
                 {visible.map((product, i) => (

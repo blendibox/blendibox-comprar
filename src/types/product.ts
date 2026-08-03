@@ -161,3 +161,12 @@ export interface FeedMeta {
   feeds: string[]
   merchants: string[]
 }
+
+// Pré-calculado no build (scripts/generate-home-highlights.mjs) — as 3
+// seções curadas da home já vêm prontas pro ProductCard, sem precisar do
+// index.json inteiro (que passa de 45MB) só pra montar uma dúzia de cards.
+export interface HomeHighlights {
+  featured: ProductIndexEntry[]
+  priceDrops: ProductIndexEntry[]
+  recentSales: { product: ProductIndexEntry; label: string }[]
+}
