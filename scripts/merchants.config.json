@@ -2,7 +2,7 @@
   "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais.",
   "merchants": {
     "17780": { "slug": "mac", "displayName": "MAC Cosmeticos BR", "vertical": "beleza", "active": true },
-    "17619": { "slug": "foreverliss", "displayName": "Forever Liss BR", "vertical": "beleza", "active": true },
+    "17619": { "slug": "foreverliss", "displayName": "Forever Liss BR", "vertical": "beleza", "active": true, "verifyImages": true },
     "17837": { "slug": "eudora", "displayName": "Eudora BR", "vertical": "beleza", "active": true },
     "21055": { "slug": "vult", "displayName": "Vult BR", "vertical": "beleza", "active": true },
     "100869": { "slug": "amobeleza", "displayName": "AMOBELEZA BR", "vertical": "beleza", "active": true, "verifyImages": true },
