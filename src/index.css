@@ -669,6 +669,16 @@ a {
   margin-top: 32px;
 }
 
+.product-coupons-section {
+  margin-top: 32px;
+}
+
+/* Cupom tem mais texto que um card de produto — largura maior no carrossel
+   pra caber o título da promoção sem espremer demais. */
+.product-coupons-section .carousel__track > * {
+  flex-basis: 260px;
+}
+
 .cross-channel-section {
   margin-top: 32px;
 }
@@ -918,6 +928,24 @@ a {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.coupon-card--more {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  color: var(--color-navy);
+  background: #f5f5f7;
+  border: 1px dashed #ccc;
+  box-shadow: none;
+  min-height: 140px;
+}
+
+.coupon-card__more-count {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--color-teal-dark);
 }
 
 .merchant-logo {

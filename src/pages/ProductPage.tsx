@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { fetchProduct } from '../lib/api'
+import { fetchCoupons, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
-import type { Product, ProductIndexEntry, SimilarRef } from '../types/product'
+import type { CouponEntry, Product, ProductIndexEntry, SimilarRef } from '../types/product'
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
+import { CouponCard } from '../components/CouponCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
-import { formatIsoDateBr } from '../lib/date'
+import { Carousel } from '../components/Carousel'
+import { formatIsoDateBr, parseBrDate } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
+
+// Cupons ficam num carrossel (não quebra linha), mas ainda vale limitar o
+// total exibido — acima disso, o último item vira um link "ver mais" em
+// vez de mais um cupom, pra não deixar um carrossel enorme de rolar.
+const MAX_COUPONS_SHOWN = 5
 
 // SimilarRef só tem o subconjunto de campos gravado em `similar[]` (ver
 // scripts/fetch-feeds.mjs) — completa com os campos que só existem no
@@ -39,6 +46,7 @@ export function ProductPage() {
   // se o usuário navegar (client-side) pra outro produto sem desmontar este
   // componente, o efeito abaixo detecta a mudança de path e busca de novo.
   const consumedPathRef = useRef<string | null>(initialProduct ? path : null)
+  const [coupons, setCoupons] = useState<CouponEntry[]>([])
 
   useEffect(() => {
     clearInitialData(path)
@@ -55,10 +63,25 @@ export function ProductPage() {
       .catch(() => setState('error'))
   }, [path, merchant, slug])
 
+  useEffect(() => {
+    fetchCoupons().then(setCoupons).catch(() => setCoupons([]))
+  }, [])
+
   if (state === 'loading') return <p className="status">Carregando produto...</p>
   if (state === 'error' || !product) return <p className="status status--error">Produto não encontrado.</p>
 
   const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
+
+  const now = new Date()
+  const merchantCoupons = coupons.filter((c) => {
+    if (c.merchantSlug !== product.merchantSlug) return false
+    const ends = parseBrDate(c.ends)
+    return !ends || ends >= now
+  })
+  const hasMoreCoupons = merchantCoupons.length > MAX_COUPONS_SHOWN
+  const visibleCoupons = hasMoreCoupons
+    ? merchantCoupons.slice(0, MAX_COUPONS_SHOWN - 1)
+    : merchantCoupons.slice(0, MAX_COUPONS_SHOWN)
 
   return (
     <div className="page product-page">
@@ -172,11 +195,28 @@ export function ProductPage() {
       {product.similar.length > 0 && (
         <section className="similar-section">
           <h2>Produtos similares</h2>
-          <div className="product-grid">
+          <Carousel>
             {product.similar.map((s) => (
               <ProductCard key={`${s.merchantSlug}-${s.slug}`} product={similarToIndexEntry(s)} />
             ))}
-          </div>
+          </Carousel>
+        </section>
+      )}
+
+      {merchantCoupons.length > 0 && (
+        <section className="product-coupons-section">
+          <h2>Cupons {product.merchantDisplayName}</h2>
+          <Carousel>
+            {visibleCoupons.map((coupon) => (
+              <CouponCard key={coupon.id} coupon={coupon} />
+            ))}
+            {hasMoreCoupons && (
+              <Link to={`/cupons?loja=${product.merchantSlug}`} className="coupon-card coupon-card--more">
+                <span className="coupon-card__more-count">{`+${merchantCoupons.length - visibleCoupons.length}`}</span>
+                <span>Ver mais cupons {product.merchantDisplayName}</span>
+              </Link>
+            )}
+          </Carousel>
         </section>
       )}
     </div>

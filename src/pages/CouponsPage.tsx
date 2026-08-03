@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { CouponCard } from '../components/CouponCard'
@@ -7,6 +8,7 @@ import { parseBrDate } from '../lib/date'
 type LoadState = 'loading' | 'ready' | 'error'
 
 export function CouponsPage() {
+  const [searchParams] = useSearchParams()
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
   const [state, setState] = useState<LoadState>('loading')
   const [merchant, setMerchant] = useState('todas')
@@ -24,9 +26,18 @@ export function CouponsPage() {
         })
         setCoupons(stillValid)
         setState('ready')
+
+        // Link "ver mais cupons" na página de produto manda ?loja=<merchantSlug>
+        // — o filtro em si é por nome do anunciante (advertiser), não por
+        // slug, então resolve o nome a partir do primeiro cupom daquela loja.
+        const merchantSlug = searchParams.get('loja')
+        if (merchantSlug) {
+          const match = stillValid.find((c) => c.merchantSlug === merchantSlug)
+          if (match) setMerchant(match.advertiser)
+        }
       })
       .catch(() => setState('error'))
-  }, [])
+  }, [searchParams])
 
   const merchants = useMemo(() => {
     const set = new Set(coupons.map((c) => c.advertiser))
