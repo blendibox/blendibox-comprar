@@ -5,18 +5,21 @@ import { ComparatorTray } from './components/ComparatorTray'
 import { TopBar } from './components/TopBar'
 import { CouponWheelButton } from './components/CouponWheel'
 import { ComparatorProvider } from './context/ComparatorContext'
+import { FavoritesProvider } from './context/FavoritesContext'
 
 export function Layout() {
   return (
     <ComparatorProvider>
-      <TopBar />
-      <Header />
-      <main>
-        <Outlet />
-      </main>
-      <Footer />
-      <ComparatorTray />
-      <CouponWheelButton />
+      <FavoritesProvider>
+        <TopBar />
+        <Header />
+        <main>
+          <Outlet />
+        </main>
+        <Footer />
+        <ComparatorTray />
+        <CouponWheelButton />
+      </FavoritesProvider>
     </ComparatorProvider>
   )
 }

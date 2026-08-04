@@ -5,6 +5,7 @@ import { HubPage } from './pages/HubPage'
 import { CategoryPage } from './pages/CategoryPage'
 import { ProductPage } from './pages/ProductPage'
 import { ComparePage } from './pages/ComparePage'
+import { FavoritesPage } from './pages/FavoritesPage'
 import { CouponsPage } from './pages/CouponsPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
@@ -17,6 +18,7 @@ export function AppRoutes() {
       <Route element={<Layout />}>
         <Route index element={<ListingPage />} />
         <Route path="comparar" element={<ComparePage />} />
+        <Route path="favoritos" element={<FavoritesPage />} />
         <Route path="cupons" element={<CouponsPage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="perguntas-frequentes" element={<FaqPage />} />

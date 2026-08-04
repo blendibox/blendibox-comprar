@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import type { ProductIndexEntry } from '../types/product'
 import { useComparator } from '../context/ComparatorContext'
+import { useFavorites } from '../context/FavoritesContext'
 
 export function formatPrice(value: number | null | undefined, currency: string) {
   if (value === null || value === undefined) return '—'
@@ -81,48 +82,74 @@ export function ProductCard({
   const href = `/${product.merchantSlug}/${product.slug}`
   const { isSelected, toggle, isFull } = useComparator()
   const selected = isSelected(product.merchantSlug, product.slug)
+  const { isFavorite, toggle: toggleFavorite } = useFavorites()
+  const favorited = isFavorite(product.merchantSlug, product.slug)
+
+  const itemPayload = {
+    merchantSlug: product.merchantSlug,
+    slug: product.slug,
+    productName: product.productName,
+    merchantDisplayName: product.merchantDisplayName,
+    awImageUrl: product.awImageUrl,
+    searchPrice: product.searchPrice,
+    currency: product.currency,
+  }
 
   return (
     <Link className="product-card" to={href}>
       <div className="product-card__badges">
-        {caption && <span className="product-card__caption">{caption}</span>}
-        <PriceDropBadge priceDropPercent={product.priceDropPercent} />
         <DiscountBadge
           storePrice={product.storePrice}
           searchPrice={product.searchPrice}
           discountPercentage={product.discountPercentage}
         />
       </div>
-      <img
-        className="product-card__image"
-        src={product.awImageUrl}
-        alt={product.productName}
-        loading={priority ? 'eager' : 'lazy'}
-        // React 18 (só reconhece fetchPriority em camelCase a partir do 19) —
-        // minúsculo é o jeito que o próprio React recomenda pra ele passar
-        // direto como atributo customizado do DOM nessa versão.
-        // @ts-expect-error -- ver comentário acima
-        fetchpriority={priority ? 'high' : undefined}
-      />
-      <button
-        className={`product-card__compare${selected ? ' product-card__compare--active' : ''}`}
-        disabled={!selected && isFull}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          toggle({
-            merchantSlug: product.merchantSlug,
-            slug: product.slug,
-            productName: product.productName,
-            merchantDisplayName: product.merchantDisplayName,
-            awImageUrl: product.awImageUrl,
-            searchPrice: product.searchPrice,
-            currency: product.currency,
-          })
-        }}
-      >
-        {selected ? '✓ Comparando' : '+ Comparar'}
-      </button>
+      <div className="product-card__image-wrap">
+        <img
+          className="product-card__image"
+          src={product.awImageUrl}
+          alt={product.productName}
+          loading={priority ? 'eager' : 'lazy'}
+          // React 18 (só reconhece fetchPriority em camelCase a partir do 19) —
+          // minúsculo é o jeito que o próprio React recomenda pra ele passar
+          // direto como atributo customizado do DOM nessa versão.
+          // @ts-expect-error -- ver comentário acima
+          fetchpriority={priority ? 'high' : undefined}
+        />
+        {/* Canto inferior esquerdo da imagem, não do card inteiro — de
+            propósito longe do canto superior (badge de desconto) e do canto
+            oposto (comparar/favoritar), pra não sobrepor nenhum. Texto longo
+            (legenda de venda, queda de preço) fica melhor embaixo do que
+            espremido em cima ao lado dos botões. */}
+        <div className="product-card__bottom-badges">
+          {caption && <span className="product-card__caption">{caption}</span>}
+          <PriceDropBadge priceDropPercent={product.priceDropPercent} />
+        </div>
+      </div>
+      <div className="product-card__actions">
+        <button
+          className={`product-card__favorite${favorited ? ' product-card__favorite--active' : ''}`}
+          aria-label={favorited ? `Remover ${product.productName} dos favoritos` : `Favoritar ${product.productName}`}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggleFavorite(itemPayload)
+          }}
+        >
+          {favorited ? '♥' : '♡'}
+        </button>
+        <button
+          className={`product-card__compare${selected ? ' product-card__compare--active' : ''}`}
+          disabled={!selected && isFull}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            toggle(itemPayload)
+          }}
+        >
+          {selected ? '✓ Comparando' : '+ Comparar'}
+        </button>
+      </div>
       <div className="product-card__body">
         <div className="product-card__merchant-row">
           <span className="product-card__merchant">{product.merchantDisplayName}</span>

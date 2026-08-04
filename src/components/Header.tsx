@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 const NAV_LINKS = [
   { to: '/', label: 'Início' },
   { to: '/cupons', label: 'Cupons' },
+  { to: '/favoritos', label: 'Favoritos' },
   { to: '/comparar', label: 'Comparar' },
 ]
 
