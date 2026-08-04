@@ -28,6 +28,15 @@ export function formatIsoDateBr(value: string | null | undefined): string | null
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' })
 }
 
+// Datas simples "YYYY-MM-DD" sem hora (ex: pontos do histórico de preço,
+// scripts/update-price-history.mjs) — reformata direto por string, sem
+// passar por Date(), pra não correr risco de fuso horário deslocar o dia
+// (mesmo motivo do timeZone fixo acima, mas aqui nem precisa de Date()).
+export function formatSimpleDateBr(iso: string): string {
+  const [year, month, day] = iso.split('-')
+  return `${day}/${month}/${year}`
+}
+
 // Mesmo motivo do timeZone fixo acima, só que pra data+hora — sem pinar,
 // a HORA renderizada diverge do servidor (UTC) pro cliente (Brasil, UTC-3)
 // em toda carga de página, não só perto da meia-noite, já que o offset de

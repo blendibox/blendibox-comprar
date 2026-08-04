@@ -481,6 +481,61 @@ a {
   white-space: nowrap;
 }
 
+/* Na página de produto (não nos cards da listagem) o selo de queda de preço
+   ganha destaque extra: maior, com glow e um brilho passando periodicamente
+   — é o selo mais "vendedor" da página, vale chamar mais atenção aqui. */
+.product-detail__price .price-drop-badge {
+  position: relative;
+  overflow: hidden;
+  font-size: 13px;
+  padding: 5px 10px;
+  box-shadow: 0 0 0 3px rgba(10, 125, 63, 0.15);
+}
+
+.product-detail__price .price-drop-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  animation: price-drop-shine 3.5s ease-in-out infinite;
+}
+
+@keyframes price-drop-shine {
+  0% {
+    left: -60%;
+  }
+  35% {
+    left: 130%;
+  }
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-detail__price .price-drop-badge::after {
+    animation: none;
+  }
+}
+
+.product-detail__coupon-badge {
+  display: inline-flex;
+  background: var(--color-teal);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 999px;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.product-detail__coupon-badge:hover {
+  background: var(--color-teal-dark);
+}
+
 /* Pill simples por padrão (usado inline no preço da página de produto); no
    card da listagem vira selo sobre a imagem via o seletor abaixo. */
 .discount-badge {

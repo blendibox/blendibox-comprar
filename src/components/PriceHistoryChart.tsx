@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { PricePoint } from '../types/product'
 import { formatPrice } from './ProductCard'
+import { formatSimpleDateBr } from '../lib/date'
 
 const WIDTH = 280
 const HEIGHT = 90
@@ -22,15 +23,6 @@ type PeriodKey = (typeof PERIODS)[number]['key']
 function formatShortDate(iso: string) {
   const [, month, day] = iso.split('-')
   return `${day}/${month}`
-}
-
-// Datas do histórico são strings simples "YYYY-MM-DD" (ver
-// scripts/update-price-history.mjs) — reformata por string mesmo, sem passar
-// por Date(), pra não correr risco de fuso horário deslocar o dia (mesmo
-// cuidado de src/lib/date.ts).
-function formatFullDate(iso: string) {
-  const [year, month, day] = iso.split('-')
-  return `${day}/${month}/${year}`
 }
 
 // Escolhe no máximo MAX_X_LABELS índices espalhados uniformemente (incluindo
@@ -107,8 +99,8 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
       </div>
       <p className="price-history__caption">
         {changed
-          ? `${trendDown ? 'Caiu' : 'Subiu'} de ${formatPrice(first.price, currency)} (${formatFullDate(first.date)}) para ${formatPrice(last.price, currency)} (${formatFullDate(last.date)}).`
-          : `Estável em ${formatPrice(last.price, currency)} desde ${formatFullDate(first.date)}.`}
+          ? `${trendDown ? 'Caiu' : 'Subiu'} de ${formatPrice(first.price, currency)} (${formatSimpleDateBr(first.date)}) para ${formatPrice(last.price, currency)} (${formatSimpleDateBr(last.date)}).`
+          : `Estável em ${formatPrice(last.price, currency)} desde ${formatSimpleDateBr(first.date)}.`}
       </p>
     </div>
   )

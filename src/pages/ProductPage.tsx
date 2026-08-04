@@ -10,7 +10,7 @@ import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { Carousel } from '../components/Carousel'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
-import { formatIsoDateBr, parseBrDate } from '../lib/date'
+import { formatIsoDateBr, formatSimpleDateBr, parseBrDate } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -83,6 +83,10 @@ export function ProductPage() {
   const favorited = isFavorite(product.merchantSlug, product.slug)
   const galleryImages = getGalleryImages(product)
   const mainImage = (activeImage && galleryImages.includes(activeImage) ? activeImage : galleryImages[0]) || product.awImageUrl
+  // Data real da última checagem de preço (último ponto gravado por
+  // scripts/update-price-history.mjs, que roda a cada build) — reflete a
+  // realidade (build diário) em vez de uma alegação genérica de frequência.
+  const lastPriceCheck = product.priceHistory?.length ? product.priceHistory[product.priceHistory.length - 1].date : null
 
   const now = new Date()
   const merchantCoupons = coupons.filter((c) => {
@@ -175,8 +179,15 @@ export function ProductPage() {
               discountPercentage={product.discountPercentage}
             />
             <PriceDropBadge priceDropPercent={product.priceDropPercent} />
+            {merchantCoupons.length > 0 && (
+              <Link to={`/cupons?loja=${product.merchantSlug}`} className="product-detail__coupon-badge">
+                🎟 Cupom {product.merchantDisplayName}
+              </Link>
+            )}
           </div>
-          <div className="freshness-badge">✓ Preço atualizado toda semana</div>
+          <div className="freshness-badge">
+            {lastPriceCheck ? `✓ Preço verificado em ${formatSimpleDateBr(lastPriceCheck)}` : '✓ Preço verificado diariamente'}
+          </div>
           <div className="product-detail__actions">
             <a
               className="cta-button"
