@@ -11,8 +11,13 @@ compatibility_date = "2026-01-01"
 # nunca foi revertido pra essa expressão recorrente — motivo pelo qual o
 # broadcast parou de sair depois daquele disparo único. Corrigido em
 # 2026-07-22.
+#
+# Segundo cron (09:00 UTC, todo dia) roda a checagem de aviso de queda de
+# preço — 3h depois do build diário (deploy.yml, 06h UTC), tempo suficiente
+# pro price-drops.json mais recente já estar publicado no GitHub Pages. O
+# handler `scheduled` do Worker distingue as duas rotinas por `event.cron`.
 [triggers]
-crons = ["0 8 * * 1"]
+crons = ["0 8 * * 1", "0 9 * * *"]
 
 [vars]
 ALLOWED_ORIGIN = "https://comprar.blendibox.com.br"
@@ -23,3 +28,11 @@ DIGEST_FROM_EMAIL = "Compare Ofertas <ofertas@blendibox.com.br>"
 # RESEND_API_KEY e RESEND_AUDIENCE_ID são secrets — configure com:
 #   wrangler secret put RESEND_API_KEY
 #   wrangler secret put RESEND_AUDIENCE_ID
+
+# KV pra guardar quem pediu aviso de queda de preço de qual produto (ver
+# handleWatch/checkPriceDropsAndNotify em newsletter-worker.js). Crie o
+# namespace primeiro (`wrangler kv namespace create PRICE_WATCH`) e cole o id
+# retornado abaixo antes do deploy.
+[[kv_namespaces]]
+binding = "PRICE_WATCH"
+id = "8461f3dc2b4246d0a0e89625c45b6a42"

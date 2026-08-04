@@ -1344,6 +1344,47 @@ a {
   cursor: pointer;
 }
 
+/* Aviso de queda de preço (FavoritesPage) — mesma estrutura de formulário da
+   newsletter do rodapé, mas em tema claro (página normal, não o footer escuro). */
+.price-drop-watch {
+  margin-top: 32px;
+  padding: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  max-width: 420px;
+}
+
+.price-drop-watch h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.price-drop-watch__hint {
+  font-size: 13px;
+  color: #5f5f5f;
+  margin: 0 0 12px;
+}
+
+.price-drop-watch .newsletter__form input[type='email'] {
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  color: #0f172a;
+}
+
+.price-drop-watch .newsletter__consent {
+  color: #5f5f5f;
+}
+
+.price-drop-watch .newsletter__consent a {
+  color: var(--color-teal-dark);
+}
+
+.price-drop-watch .newsletter__error {
+  color: #dc2626;
+}
+
 /* Páginas institucionais (sobre/termos/privacidade) */
 .legal-page section {
   max-width: 720px;

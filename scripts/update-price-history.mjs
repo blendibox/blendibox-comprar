@@ -13,6 +13,10 @@ const ROOT = path.resolve(__dirname, '..')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 const INDEX_PATH = path.join(DATA_DIR, 'index.json')
 const HISTORY_PATH = path.join(ROOT, 'data', 'price-history.json')
+// Lista enxuta de todo produto com queda de preço confirmada nesta rodada —
+// pequena o suficiente pro Worker de e-mail (ver worker/newsletter-worker.js)
+// buscar direto, sem precisar do index.json inteiro (dezenas de MB).
+const PRICE_DROPS_PATH = path.join(DATA_DIR, 'price-drops.json')
 
 // Quantos pontos de histórico guardar por produto. O build roda todo dia
 // (deploy.yml, cron diário) e grava ~1 ponto por dia, então 180 pontos cobre
@@ -98,6 +102,7 @@ async function main() {
 
   let updated = 0
   let priceDrops = 0
+  const droppedProducts = []
   for (const file of productFiles) {
     const product = JSON.parse(await readFile(file, 'utf-8'))
     if (product.searchPrice == null) continue
@@ -117,7 +122,20 @@ async function main() {
     const { previousPrice, priceDropPercent } = computePriceDrop(history[key], product.searchPrice, todayMs)
     product.previousPrice = previousPrice
     product.priceDropPercent = priceDropPercent
-    if (priceDropPercent != null) priceDrops++
+    if (priceDropPercent != null) {
+      priceDrops++
+      droppedProducts.push({
+        merchantSlug: product.merchantSlug,
+        slug: product.slug,
+        productName: product.productName,
+        merchantDisplayName: product.merchantDisplayName,
+        awImageUrl: product.awImageUrl,
+        searchPrice: product.searchPrice,
+        previousPrice,
+        priceDropPercent,
+        currency: product.currency,
+      })
+    }
 
     const indexEntry = indexByKey.get(key)
     if (indexEntry) {
@@ -131,6 +149,7 @@ async function main() {
 
   await writeFile(HISTORY_PATH, JSON.stringify(history))
   if (index.length) await writeFile(INDEX_PATH, JSON.stringify(index))
+  await writeFile(PRICE_DROPS_PATH, JSON.stringify(droppedProducts))
   console.log(
     `Histórico de preço: ${updated} produtos atualizados, ${Object.keys(history).length} chaves no total, ${priceDrops} com queda de preço na última semana.`
   )

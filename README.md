@@ -271,6 +271,34 @@ O cadastro exige aceite explícito da Política de Privacidade
 (`/privacidade`, `src/pages/PrivacyPage.tsx`) — os textos de política e termos
 são um modelo geral, vale revisão jurídica antes de publicar oficialmente.
 
+### Aviso de queda de preço (favoritos)
+
+Na página `/favoritos`, quem já tem algum produto salvo pode deixar o e-mail
+pra ser avisado quando ele baixar de preço (`src/components/PriceDropWatchForm.tsx`).
+É uma finalidade separada da newsletter geral — o cadastro só entra na
+Audience do Resend se a pessoa marcar o checkbox opcional "também quero o
+resumo semanal", nunca por padrão.
+
+Esse recurso precisa de um KV namespace novo no mesmo Worker (guarda, por
+produto, a lista de e-mails que pediram aviso). Antes do primeiro deploy
+depois de puxar essa mudança:
+
+```bash
+cd worker
+npx wrangler kv namespace create PRICE_WATCH
+```
+
+O comando imprime um `id` — cole ele em `worker/wrangler.toml`, no lugar de
+`COLE_AQUI_O_ID_DO_NAMESPACE`, e rode `npx wrangler deploy` de novo.
+
+Todo dia (`scripts/update-price-history.mjs`, que já roda no build) gera
+`public/data/price-drops.json` com todo produto que caiu de preço nessa
+rodada. O Worker tem um segundo Cron Trigger (09h UTC, `wrangler.toml`) que
+lê esse arquivo, cruza com o KV `PRICE_WATCH` e manda um e-mail avulso (não é
+Broadcast — conteúdo por destinatário) pra quem estava de olho. O aviso é
+único: assim que enviado, a entrada é apagada do KV, então não fica repetindo
+todo dia enquanto o preço continuar baixo.
+
 ## Tamanho dos dados
 
 `public/data/*.json` nunca é commitado versionado como "definitivo" no

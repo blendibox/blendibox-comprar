@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useFavorites } from '../context/FavoritesContext'
 import { formatPrice } from '../components/ProductCard'
+import { PriceDropWatchForm } from '../components/PriceDropWatchForm'
 
 export function FavoritesPage() {
   const { items, remove, clear } = useFavorites()
@@ -45,6 +46,7 @@ export function FavoritesPage() {
           <div className="load-more">
             <button onClick={clear}>Limpar favoritos</button>
           </div>
+          <PriceDropWatchForm items={items.map((item) => ({ merchantSlug: item.merchantSlug, slug: item.slug }))} />
         </>
       )}
     </div>
