@@ -5,6 +5,7 @@ import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIn
 import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { matchesSearch } from '../lib/search'
 import { formatIsoDateTimeBr } from '../lib/date'
 
 const PAGE_SIZE = 60
@@ -70,15 +71,9 @@ export function ListingPage() {
   }, [merchants])
 
   const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase()
     const base = products.filter((p) => {
       const matchesVertical = vertical === 'todos' || p.vertical === vertical
-      const matchesSearch =
-        !term ||
-        p.productName.toLowerCase().includes(term) ||
-        p.merchantDisplayName.toLowerCase().includes(term) ||
-        p.categorySlug.toLowerCase().includes(term)
-      return matchesVertical && matchesSearch
+      return matchesVertical && matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search)
     })
     return sortProducts(base, sort)
   }, [products, search, vertical, sort])

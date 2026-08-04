@@ -9,6 +9,7 @@ import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { MerchantLogo } from '../components/MerchantLogo'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { matchesSearch } from '../lib/search'
 
 const PAGE_SIZE = 60
 
@@ -100,14 +101,8 @@ export function HubPage() {
   // (não afeta a contagem total do cabeçalho nem os chips de loja/categoria,
   // que continuam refletindo o catálogo inteiro daqui).
   const searched = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    if (!term) return sortedFiltered
-    return sortedFiltered.filter(
-      (p) =>
-        p.productName.toLowerCase().includes(term) ||
-        p.merchantDisplayName.toLowerCase().includes(term) ||
-        p.categorySlug.toLowerCase().includes(term)
-    )
+    if (!search.trim()) return sortedFiltered
+    return sortedFiltered.filter((p) => matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search))
   }, [sortedFiltered, search])
   const items = ready ? searched : initial?.items ?? []
   // Nome/vertical de exibição usam a lista completa (sem o filtro de busca)
