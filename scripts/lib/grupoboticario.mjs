@@ -17,6 +17,11 @@ const PAGE_SIZE = 50
 // produtos com pageSize 50 = ~79 páginas).
 const MAX_PAGES = 200
 
+// Itens muito baratos do catálogo de revenda do O Boticário (amostras,
+// embalagens avulsas etc.) não valem o esforço de venda pelo WhatsApp — a
+// pedido, só esse merchant específico (não os outros 3 do Grupo Boticário).
+const MIN_PRICE_BOTICARIO_REVENDA = 20
+
 // Cada marca usa um x-business-unit diferente na mesma API — descoberto
 // inspecionando as chamadas de rede de cada portal (não documentado
 // publicamente pelo Grupo Boticário).
@@ -81,6 +86,9 @@ async function fetchBrandRows(brand, userId) {
 
   return all
     .filter((p) => p.availability?.available)
+    .filter(
+      (p) => brand.merchantId !== 'boticario-revenda' || (p.salePrice ?? p.price ?? 0) >= MIN_PRICE_BOTICARIO_REVENDA
+    )
     .map((p) => ({
       aw_deep_link: buildWhatsappLink(brand.displayName, p),
       product_name: p.name,
