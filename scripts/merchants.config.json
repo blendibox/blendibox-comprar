@@ -49,7 +49,7 @@
     "124920": { "slug": "lojaybera", "displayName": "Loja Ybera BR", "vertical": "beleza", "active": true },
     "17846": { "slug": "diesel", "displayName": "Diesel BR", "vertical": "moda", "active": true },
     "17631": { "slug": "loccitane", "displayName": "L'Occitane au Brésil BR", "vertical": "beleza", "active": true },
-    "17612": { "slug": "elens", "displayName": "eLens BR", "vertical": "moda", "active": true },
+    "17612": { "slug": "elens", "displayName": "eLens BR", "vertical": "moda", "active": true, "verifyImages": true  },
     "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": false },
     "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": false },
     "118895": { "slug": "lojadomecanico", "displayName": "Loja do Mecanico BR", "vertical": "moda", "active": false },
