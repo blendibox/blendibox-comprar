@@ -107,18 +107,42 @@ export function ProductPage() {
 
       <div className="product-detail">
         <div className="product-detail__gallery">
-          <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
-            <img
-              className="product-detail__image"
-              src={mainImage}
-              alt={product.productName}
-              // React 18 só reconhece fetchPriority em camelCase a partir do
-              // 19 — minúsculo é o jeito que o próprio React recomenda pra
-              // ele passar direto como atributo customizado do DOM.
-              // @ts-expect-error -- ver comentário acima
-              fetchpriority="high"
-            />
-          </a>
+          <div className="product-detail__image-wrap">
+            <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
+              <img
+                className="product-detail__image"
+                src={mainImage}
+                alt={product.productName}
+                // React 18 só reconhece fetchPriority em camelCase a partir do
+                // 19 — minúsculo é o jeito que o próprio React recomenda pra
+                // ele passar direto como atributo customizado do DOM.
+                // @ts-expect-error -- ver comentário acima
+                fetchpriority="high"
+              />
+            </a>
+            <span className="product-detail__merchant-badge">
+              <span className="product-detail__merchant-badge-check">✓</span> {product.merchantDisplayName}
+            </span>
+            <button
+              type="button"
+              className={`product-detail__favorite-icon${favorited ? ' product-detail__favorite-icon--active' : ''}`}
+              aria-label={favorited ? `Remover ${product.productName} dos favoritos` : `Favoritar ${product.productName}`}
+              aria-pressed={favorited}
+              onClick={() =>
+                toggleFavorite({
+                  merchantSlug: product.merchantSlug,
+                  slug: product.slug,
+                  productName: product.productName,
+                  merchantDisplayName: product.merchantDisplayName,
+                  awImageUrl: product.awImageUrl,
+                  searchPrice: product.searchPrice,
+                  currency: product.currency,
+                })
+              }
+            >
+              {favorited ? '♥' : '♡'}
+            </button>
+          </div>
           {galleryImages.length > 1 && (
             <div className="product-detail__thumbs">
               {galleryImages.map((url) => (
@@ -153,50 +177,35 @@ export function ProductPage() {
             <PriceDropBadge priceDropPercent={product.priceDropPercent} />
           </div>
           <div className="freshness-badge">✓ Preço atualizado toda semana</div>
-          <a
-            className="cta-button"
-            href={product.awDeepLink}
-            target="_blank"
-            rel="noopener noreferrer sponsored"
-          >
-            {isWhatsappReseller ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
-            {!isWhatsappReseller && product.merchantDisplayName}
-          </a>
-          <button
-            type="button"
-            className={`product-detail__compare${selected ? ' product-detail__compare--active' : ''}`}
-            disabled={!selected && isFull}
-            onClick={() =>
-              toggle({
-                merchantSlug: product.merchantSlug,
-                slug: product.slug,
-                productName: product.productName,
-                merchantDisplayName: product.merchantDisplayName,
-                awImageUrl: product.awImageUrl,
-                searchPrice: product.searchPrice,
-                currency: product.currency,
-              })
-            }
-          >
-            {selected ? '✓ Comparando' : '+ Comparar'}
-          </button>
-          <button
-            type="button"
-            className={`product-detail__favorite${favorited ? ' product-detail__favorite--active' : ''}`}
-            onClick={() =>
-              toggleFavorite({
-                merchantSlug: product.merchantSlug,
-                slug: product.slug,
-                productName: product.productName,
-                merchantDisplayName: product.merchantDisplayName,
-                awImageUrl: product.awImageUrl,
-                searchPrice: product.searchPrice,
-                currency: product.currency,
-              })
-            }
-          >
-            {favorited ? '♥ Favoritado' : '♡ Favoritar'}
-          </button>
+          <div className="product-detail__actions">
+            <a
+              className="cta-button"
+              href={product.awDeepLink}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+            >
+              {isWhatsappReseller ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
+              {!isWhatsappReseller && product.merchantDisplayName}
+            </a>
+            <button
+              type="button"
+              className={`product-detail__compare${selected ? ' product-detail__compare--active' : ''}`}
+              disabled={!selected && isFull}
+              onClick={() =>
+                toggle({
+                  merchantSlug: product.merchantSlug,
+                  slug: product.slug,
+                  productName: product.productName,
+                  merchantDisplayName: product.merchantDisplayName,
+                  awImageUrl: product.awImageUrl,
+                  searchPrice: product.searchPrice,
+                  currency: product.currency,
+                })
+              }
+            >
+              {selected ? '✓ Comparando' : '+ Comparar'}
+            </button>
+          </div>
           {isWhatsappReseller && (
             <p className="reseller-notice">
               {'💬 A compra é feita direto com uma representante de vendas autorizada '}
