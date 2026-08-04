@@ -7,6 +7,7 @@ import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge,
 import { CouponCard } from '../components/CouponCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { Carousel } from '../components/Carousel'
+import { useComparator } from '../context/ComparatorContext'
 import { formatIsoDateBr, parseBrDate } from '../lib/date'
 
 type LoadState = 'loading' | 'ready' | 'error'
@@ -67,10 +68,13 @@ export function ProductPage() {
     fetchCoupons().then(setCoupons).catch(() => setCoupons([]))
   }, [])
 
+  const { isSelected, toggle, isFull } = useComparator()
+
   if (state === 'loading') return <p className="status">Carregando produto...</p>
   if (state === 'error' || !product) return <p className="status status--error">Produto não encontrado.</p>
 
   const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
+  const selected = isSelected(product.merchantSlug, product.slug)
 
   const now = new Date()
   const merchantCoupons = coupons.filter((c) => {
@@ -132,6 +136,24 @@ export function ProductPage() {
             {isWhatsappReseller ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
             {!isWhatsappReseller && product.merchantDisplayName}
           </a>
+          <button
+            type="button"
+            className={`product-detail__compare${selected ? ' product-detail__compare--active' : ''}`}
+            disabled={!selected && isFull}
+            onClick={() =>
+              toggle({
+                merchantSlug: product.merchantSlug,
+                slug: product.slug,
+                productName: product.productName,
+                merchantDisplayName: product.merchantDisplayName,
+                awImageUrl: product.awImageUrl,
+                searchPrice: product.searchPrice,
+                currency: product.currency,
+              })
+            }
+          >
+            {selected ? '✓ Comparando' : '+ Comparar'}
+          </button>
           {isWhatsappReseller && (
             <p className="reseller-notice">
               {'💬 A compra é feita direto com uma representante de vendas autorizada '}

@@ -630,6 +630,38 @@ a {
   border-radius: 8px;
 }
 
+.product-detail__compare {
+  display: inline-block;
+  margin-left: 12px;
+  background: #fff;
+  color: var(--color-teal-dark);
+  border: 1px solid var(--color-teal);
+  font-weight: 700;
+  padding: 13px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.product-detail__compare--active {
+  background: var(--color-teal);
+  border-color: var(--color-teal-dark);
+  color: #fff;
+}
+
+.product-detail__compare:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (max-width: 500px) {
+  .product-detail__compare {
+    display: block;
+    margin-left: 0;
+    margin-top: 10px;
+    text-align: center;
+  }
+}
+
 .reseller-notice {
   font-size: 13px;
   color: #444;
