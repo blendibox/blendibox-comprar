@@ -71,6 +71,14 @@ export interface Product {
   // Awin x Eudora via revenda direta) — casamento por nome, ver
   // scripts/fetch-feeds.mjs (CROSS_CHANNEL_PAIRS).
   crossChannel?: SimilarRef
+  // Campos opcionais da Awin — preenchimento varia por anunciante (ver log
+  // "[campos opcionais]" do fetch-feeds.mjs). Ainda sem UI: só exibir quando
+  // uma checagem real confirmar taxa de preenchimento que valha a pena.
+  deliveryRestrictions?: string
+  deliveryWeight?: string
+  warranty?: string
+  termsOfContract?: string
+  deliveryTime?: string
 }
 
 export interface ProductIndexEntry {

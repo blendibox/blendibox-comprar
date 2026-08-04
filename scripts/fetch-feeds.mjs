@@ -95,6 +95,22 @@ const FIELD_MAP = {
   alternate_image_three: 'alternateImageThree',
   alternate_image_four: 'alternateImageFour',
   aw_thumb_url: 'awThumbUrl',
+  delivery_restrictions: 'deliveryRestrictions',
+  delivery_weight: 'deliveryWeight',
+  warranty: 'warranty',
+  terms_of_contract: 'termsOfContract',
+  delivery_time: 'deliveryTime',
+}
+
+// Campos "opcionais" da Awin — nem todo anunciante preenche. Contados aqui
+// (log no fim do fetch) pra saber, com dado real do próprio feed, se vale a
+// pena construir alguma UI em cima deles antes de gastar esse esforço.
+const OPTIONAL_FIELD_LABELS = {
+  deliveryRestrictions: 'delivery_restrictions',
+  deliveryWeight: 'delivery_weight',
+  warranty: 'warranty',
+  termsOfContract: 'terms_of_contract',
+  deliveryTime: 'delivery_time',
 }
 
 // Aplica em toda imagem servida pela proxy images2.productserve.com (não só
@@ -307,6 +323,19 @@ async function main() {
       `[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)` +
         (skippedBrokenLiveImage > 0 ? `, ${skippedBrokenLiveImage} deles confirmados via checagem ao vivo` : '')
     )
+  }
+
+  {
+    const filledCounts = Object.fromEntries(Object.keys(OPTIONAL_FIELD_LABELS).map((key) => [key, 0]))
+    for (const product of products) {
+      for (const key of Object.keys(OPTIONAL_FIELD_LABELS)) {
+        if (product[key]) filledCounts[key]++
+      }
+    }
+    const summary = Object.entries(filledCounts)
+      .map(([key, count]) => `${OPTIONAL_FIELD_LABELS[key]}: ${count}/${products.length} (${((count / products.length) * 100).toFixed(1)}%)`)
+      .join(', ')
+    console.log(`[campos opcionais] preenchimento no feed: ${summary}`)
   }
 
   // Produtos similares: mesma categoria dentro do mesmo vertical, ordenados

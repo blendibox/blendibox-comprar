@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { fetchCoupons, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
+import { getGalleryImages } from '../lib/images'
 import type { CouponEntry, Product, ProductIndexEntry, SimilarRef } from '../types/product'
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
@@ -49,6 +50,7 @@ export function ProductPage() {
   // componente, o efeito abaixo detecta a mudança de path e busca de novo.
   const consumedPathRef = useRef<string | null>(initialProduct ? path : null)
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
+  const [activeImage, setActiveImage] = useState<string | null>(null)
 
   useEffect(() => {
     clearInitialData(path)
@@ -57,6 +59,7 @@ export function ProductPage() {
       return
     }
     setState('loading')
+    setActiveImage(null)
     fetchProduct(merchant, slug)
       .then((data) => {
         setProduct(data)
@@ -78,6 +81,8 @@ export function ProductPage() {
   const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
   const selected = isSelected(product.merchantSlug, product.slug)
   const favorited = isFavorite(product.merchantSlug, product.slug)
+  const galleryImages = getGalleryImages(product)
+  const mainImage = (activeImage && galleryImages.includes(activeImage) ? activeImage : galleryImages[0]) || product.awImageUrl
 
   const now = new Date()
   const merchantCoupons = coupons.filter((c) => {
@@ -101,18 +106,36 @@ export function ProductPage() {
       </nav>
 
       <div className="product-detail">
-        <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
-          <img
-            className="product-detail__image"
-            src={product.awImageUrl}
-            alt={product.productName}
-            // React 18 só reconhece fetchPriority em camelCase a partir do
-            // 19 — minúsculo é o jeito que o próprio React recomenda pra
-            // ele passar direto como atributo customizado do DOM.
-            // @ts-expect-error -- ver comentário acima
-            fetchpriority="high"
-          />
-        </a>
+        <div className="product-detail__gallery">
+          <a href={product.awDeepLink} target="_blank" rel="noopener noreferrer sponsored">
+            <img
+              className="product-detail__image"
+              src={mainImage}
+              alt={product.productName}
+              // React 18 só reconhece fetchPriority em camelCase a partir do
+              // 19 — minúsculo é o jeito que o próprio React recomenda pra
+              // ele passar direto como atributo customizado do DOM.
+              // @ts-expect-error -- ver comentário acima
+              fetchpriority="high"
+            />
+          </a>
+          {galleryImages.length > 1 && (
+            <div className="product-detail__thumbs">
+              {galleryImages.map((url) => (
+                <button
+                  key={url}
+                  type="button"
+                  className={`product-detail__thumb${url === mainImage ? ' product-detail__thumb--active' : ''}`}
+                  onClick={() => setActiveImage(url)}
+                  aria-label={`Ver esta imagem de ${product.productName}`}
+                  aria-pressed={url === mainImage}
+                >
+                  <img src={url} alt="" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
         <div className="product-detail__body">
           <div className="product-card__merchant-row">
             <span className="product-card__merchant">{product.merchantDisplayName}</span>

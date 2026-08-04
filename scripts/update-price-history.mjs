@@ -14,9 +14,14 @@ const DATA_DIR = path.join(ROOT, 'public', 'data')
 const INDEX_PATH = path.join(DATA_DIR, 'index.json')
 const HISTORY_PATH = path.join(ROOT, 'data', 'price-history.json')
 
-// Quantas semanas de histórico guardar por produto — o suficiente pra um
-// gráfico útil (~3 meses) sem deixar o arquivo crescer indefinidamente.
-const MAX_POINTS = 12
+// Quantos pontos de histórico guardar por produto. O build roda todo dia
+// (deploy.yml, cron diário) e grava ~1 ponto por dia, então 180 pontos cobre
+// os 6 meses oferecidos no seletor de período do gráfico (PriceHistoryChart)
+// sem deixar o arquivo crescer indefinidamente. Como o histórico só começa a
+// contar a partir de quando cada limite entrou em vigor, os períodos mais
+// longos (3/6 meses) só mostram mais do que "30 dias" depois que dias reais
+// suficientes tiverem passado — nunca preenchemos com dado inventado.
+const MAX_POINTS = 180
 
 // Janela de tolerância pra achar o ponto "de uma semana atrás": o cron roda
 // todo dia, então normalmente existe um ponto a exatos 7 dias, mas aceita de
