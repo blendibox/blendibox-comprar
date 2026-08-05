@@ -5,6 +5,10 @@
 :root {
   --color-teal: #14b8a6;
   --color-teal-dark: #0d9488;
+  /* --color-teal e --color-teal-dark não têm contraste suficiente (WCAG AA,
+     4.5:1) pra texto branco pequeno em cima — usados só como acento visual
+     (borda, gradiente). Pra texto/badge, usar esta variável mais escura. */
+  --color-teal-a11y: #0f6f66;
   --color-pink: #db2777;
   --color-green: #0a7d3f;
   --color-navy: #0f172a;
@@ -524,7 +528,7 @@ a {
 
 .product-detail__coupon-badge {
   display: inline-flex;
-  background: var(--color-teal);
+  background: var(--color-teal-a11y);
   color: #fff;
   font-size: 11px;
   font-weight: 700;
@@ -535,7 +539,7 @@ a {
 }
 
 .product-detail__coupon-badge:hover {
-  background: var(--color-teal-dark);
+  background: #0c5a52;
 }
 
 /* Pill simples por padrão (usado inline no preço da página de produto); no
@@ -705,7 +709,7 @@ a {
   align-items: center;
   white-space: nowrap;
   background: #fff;
-  color: var(--color-teal-dark);
+  color: var(--color-teal-a11y);
   border: none;
   font-size: 12px;
   font-weight: 700;
@@ -716,7 +720,7 @@ a {
 }
 
 .product-detail__compare-icon--active {
-  background: var(--color-teal);
+  background: var(--color-teal-a11y);
   color: #fff;
 }
 
@@ -996,8 +1000,8 @@ a {
 }
 
 .product-card__compare--active {
-  background: var(--color-teal);
-  border-color: var(--color-teal-dark);
+  background: var(--color-teal-a11y);
+  border-color: var(--color-teal-a11y);
   color: #fff;
 }
 
@@ -1228,7 +1232,10 @@ a {
   margin-bottom: 32px;
   padding: 20px;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--color-teal) 0%, var(--color-teal-dark) 100%);
+  /* --color-teal/--color-teal-dark sozinhos não têm contraste suficiente
+     pro texto branco (WCAG AA) — usa --color-teal-a11y nas duas pontas do
+     degradê, garantindo 4.5:1 em qualquer ponto onde o texto passar. */
+  background: linear-gradient(135deg, var(--color-teal-a11y) 0%, #0a5850 100%);
   /* Reserva o espaço do carrossel (medido: ~450px com um card de 200px de
      largura) antes mesmo do índice carregar — sem isso, a seção "pipoca" na
      tela assim que o fetch termina, empurrando tudo abaixo (CLS). */
@@ -1391,7 +1398,9 @@ a {
   align-self: flex-start;
   background: #fdf2f8;
   border: 1px dashed var(--color-pink);
-  color: var(--color-pink);
+  /* --color-pink puro fica abaixo de 4.5:1 nesse fundo claro — tom mais
+     escuro só pro texto, mantendo a borda com a cor de marca normal. */
+  color: #be185d;
   font-weight: 700;
   padding: 6px 12px;
   border-radius: 6px;
@@ -1498,7 +1507,7 @@ a {
 }
 
 .price-drop-watch .newsletter__consent a {
-  color: var(--color-teal-dark);
+  color: var(--color-teal-a11y);
 }
 
 .price-drop-watch .newsletter__error {
@@ -1606,8 +1615,8 @@ a {
 }
 
 .price-history__period--active {
-  background: var(--color-teal);
-  border-color: var(--color-teal);
+  background: var(--color-teal-a11y);
+  border-color: var(--color-teal-a11y);
   color: #fff;
 }
 
@@ -1621,7 +1630,7 @@ a {
   flex-direction: column;
   justify-content: space-between;
   font-size: 11px;
-  color: #888;
+  color: #666;
   white-space: nowrap;
   padding: 2px 0;
 }
@@ -1637,7 +1646,7 @@ a {
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #888;
+  color: #666;
   margin-top: 2px;
 }
 
