@@ -79,6 +79,19 @@ function productJsonLd(product, canonical) {
     // conservadora e verdadeira (o preço é revalidado bem antes disso),
     // não um valor inventado sem lastro.
     priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    // Art. 49 do CDC garante 7 dias corridos de arrependimento em toda
+    // compra feita fora do estabelecimento (inclui e-commerce), pra
+    // qualquer lojista no Brasil — não é uma política que o lojista
+    // escolheu, é piso legal, então dá pra declarar sem depender do feed
+    // informar a política de devolução de cada um. Fica só o mínimo
+    // juridicamente garantido (janela de dias) — sem afirmar método/custo
+    // de devolução, que aí sim varia por lojista e não temos como confirmar.
+    hasMerchantReturnPolicy: {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'BR',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+      merchantReturnDays: 7,
+    },
   }
   if (product.searchPrice != null) offer.price = product.searchPrice
 

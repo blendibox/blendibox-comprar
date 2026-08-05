@@ -127,25 +127,45 @@ export function ProductPage() {
             <span className="product-detail__merchant-badge">
               <span className="product-detail__merchant-badge-check">✓</span> {product.merchantDisplayName}
             </span>
-            <button
-              type="button"
-              className={`product-detail__favorite-icon${favorited ? ' product-detail__favorite-icon--active' : ''}`}
-              aria-label={favorited ? `Remover ${product.productName} dos favoritos` : `Favoritar ${product.productName}`}
-              aria-pressed={favorited}
-              onClick={() =>
-                toggleFavorite({
-                  merchantSlug: product.merchantSlug,
-                  slug: product.slug,
-                  productName: product.productName,
-                  merchantDisplayName: product.merchantDisplayName,
-                  awImageUrl: product.awImageUrl,
-                  searchPrice: product.searchPrice,
-                  currency: product.currency,
-                })
-              }
-            >
-              {favorited ? '♥' : '♡'}
-            </button>
+            <div className="product-detail__image-actions">
+              <button
+                type="button"
+                className={`product-detail__favorite-icon${favorited ? ' product-detail__favorite-icon--active' : ''}`}
+                aria-label={favorited ? `Remover ${product.productName} dos favoritos` : `Favoritar ${product.productName}`}
+                aria-pressed={favorited}
+                onClick={() =>
+                  toggleFavorite({
+                    merchantSlug: product.merchantSlug,
+                    slug: product.slug,
+                    productName: product.productName,
+                    merchantDisplayName: product.merchantDisplayName,
+                    awImageUrl: product.awImageUrl,
+                    searchPrice: product.searchPrice,
+                    currency: product.currency,
+                  })
+                }
+              >
+                {favorited ? '♥' : '♡'}
+              </button>
+              <button
+                type="button"
+                className={`product-detail__compare-icon${selected ? ' product-detail__compare-icon--active' : ''}`}
+                disabled={!selected && isFull}
+                onClick={() =>
+                  toggle({
+                    merchantSlug: product.merchantSlug,
+                    slug: product.slug,
+                    productName: product.productName,
+                    merchantDisplayName: product.merchantDisplayName,
+                    awImageUrl: product.awImageUrl,
+                    searchPrice: product.searchPrice,
+                    currency: product.currency,
+                  })
+                }
+              >
+                {selected ? '✓ Comparando' : '+ Comparar'}
+              </button>
+            </div>
           </div>
           {galleryImages.length > 1 && (
             <div className="product-detail__thumbs">
@@ -178,7 +198,7 @@ export function ProductPage() {
               searchPrice={product.searchPrice}
               discountPercentage={product.discountPercentage}
             />
-            <PriceDropBadge priceDropPercent={product.priceDropPercent} />
+            <PriceDropBadge priceDropPercent={product.priceDropPercent} href={product.awDeepLink} />
             {merchantCoupons.length > 0 && (
               <Link to={`/cupons?loja=${product.merchantSlug}`} className="product-detail__coupon-badge">
                 🎟 Cupom {product.merchantDisplayName}
@@ -198,24 +218,6 @@ export function ProductPage() {
               {isWhatsappReseller ? 'Comprar pelo WhatsApp' : 'Ver produto na '}
               {!isWhatsappReseller && product.merchantDisplayName}
             </a>
-            <button
-              type="button"
-              className={`product-detail__compare${selected ? ' product-detail__compare--active' : ''}`}
-              disabled={!selected && isFull}
-              onClick={() =>
-                toggle({
-                  merchantSlug: product.merchantSlug,
-                  slug: product.slug,
-                  productName: product.productName,
-                  merchantDisplayName: product.merchantDisplayName,
-                  awImageUrl: product.awImageUrl,
-                  searchPrice: product.searchPrice,
-                  currency: product.currency,
-                })
-              }
-            >
-              {selected ? '✓ Comparando' : '+ Comparar'}
-            </button>
           </div>
           {isWhatsappReseller && (
             <p className="reseller-notice">

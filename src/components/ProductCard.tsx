@@ -47,9 +47,28 @@ export function DiscountBadge({
 // Preenchido só quando scripts/update-price-history.mjs confirma uma queda
 // real de ≥5% em relação ao preço de ~7 dias atrás — não é o mesmo dado do
 // DiscountBadge (que compara contra o preço "de loja" informado no feed).
-export function PriceDropBadge({ priceDropPercent }: { priceDropPercent: number | null | undefined }) {
+//
+// `href` é opcional: só passe quando o selo NÃO estiver dentro de outro link
+// (ex: página de produto) — nos cards da listagem ele já fica dentro do
+// <Link> do card inteiro, e um <a> aninhado dentro de outro <a> é HTML
+// inválido (o navegador quebra a aninhagem de um jeito imprevisível).
+export function PriceDropBadge({
+  priceDropPercent,
+  href,
+}: {
+  priceDropPercent: number | null | undefined
+  href?: string
+}) {
   if (priceDropPercent == null) return null
-  return <span className="price-drop-badge">{`↓ ${priceDropPercent}% essa semana`}</span>
+  const label = `↓ ${priceDropPercent}% essa semana`
+  if (href) {
+    return (
+      <a className="price-drop-badge" href={href} target="_blank" rel="noopener noreferrer sponsored">
+        {label}
+      </a>
+    )
+  }
+  return <span className="price-drop-badge">{label}</span>
 }
 
 export function OriginalPrice({

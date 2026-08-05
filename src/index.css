@@ -467,32 +467,26 @@ a {
   flex-shrink: 0;
 }
 
-/* Queda de preço confirmada (scripts/update-price-history.mjs) — cor
-   diferente do discount-badge de propósito, pra não confundir com desconto
-   "de loja" (preços diferentes, fontes diferentes). */
+/* Queda de preço confirmada (scripts/update-price-history.mjs) — cor âmbar
+   de propósito, diferente do verde do CTA principal e do rosa do
+   discount-badge (desconto "de loja", fonte/definição diferente), pra não
+   competir nem confundir. Brilho periódico chama atenção em qualquer lugar
+   que o selo aparece (cards da listagem/home e página de produto). */
 .price-drop-badge {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
-  background: var(--color-green);
+  background: #d97706;
   color: #fff;
   font-size: 11px;
   font-weight: 700;
   padding: 3px 7px;
   border-radius: 999px;
   white-space: nowrap;
+  text-decoration: none;
 }
 
-/* Na página de produto (não nos cards da listagem) o selo de queda de preço
-   ganha destaque extra: maior, com glow e um brilho passando periodicamente
-   — é o selo mais "vendedor" da página, vale chamar mais atenção aqui. */
-.product-detail__price .price-drop-badge {
-  position: relative;
-  overflow: hidden;
-  font-size: 13px;
-  padding: 5px 10px;
-  box-shadow: 0 0 0 3px rgba(10, 125, 63, 0.15);
-}
-
-.product-detail__price .price-drop-badge::after {
+.price-drop-badge::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -515,9 +509,17 @@ a {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .product-detail__price .price-drop-badge::after {
+  .price-drop-badge::after {
     animation: none;
   }
+}
+
+/* Na página de produto o selo ganha destaque extra de tamanho/glow — é o
+   selo mais "vendedor" da página, vale realçar mais ainda aqui. */
+.product-detail__price .price-drop-badge {
+  font-size: 13px;
+  padding: 5px 10px;
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
 }
 
 .product-detail__coupon-badge {
@@ -668,12 +670,19 @@ a {
   color: var(--color-green);
 }
 
-.product-detail__favorite-icon {
+.product-detail__image-actions {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.product-detail__favorite-icon {
   width: 38px;
   height: 38px;
+  flex-shrink: 0;
   border-radius: 50%;
   border: none;
   background: #fff;
@@ -689,6 +698,31 @@ a {
 .product-detail__favorite-icon--active {
   background: var(--color-pink);
   color: #fff;
+}
+
+.product-detail__compare-icon {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  background: #fff;
+  color: var(--color-teal-dark);
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.product-detail__compare-icon--active {
+  background: var(--color-teal);
+  color: #fff;
+}
+
+.product-detail__compare-icon:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .product-detail__thumbs {
@@ -755,8 +789,14 @@ a {
 .product-detail__actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: 12px;
+  /* Respiro em volta do CTA — ele é a única ação de destaque no corpo agora
+     (comparar/favoritar viraram ações rápidas sobre a foto), então o espaço
+     em volta (+ centralização) ajuda a fazer dele o centro das atenções, em
+     vez de espremido entre o selo de frescor e o disclaimer. */
+  margin: 28px 0;
 }
 
 .cta-button {
@@ -770,26 +810,16 @@ a {
   border-radius: 8px;
 }
 
-.product-detail__compare {
-  display: inline-block;
-  background: #fff;
-  color: var(--color-teal-dark);
-  border: 1px solid var(--color-teal);
-  font-weight: 700;
-  padding: 13px 24px;
-  border-radius: 8px;
-  cursor: pointer;
+.product-detail__actions .cta-button {
+  font-size: 17px;
+  padding: 18px 36px;
+  border-radius: 10px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.product-detail__compare--active {
-  background: var(--color-teal);
-  border-color: var(--color-teal-dark);
-  color: #fff;
-}
-
-.product-detail__compare:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+.product-detail__actions .cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(10, 125, 63, 0.4);
 }
 
 @media (max-width: 500px) {
@@ -798,7 +828,7 @@ a {
     align-items: stretch;
   }
 
-  .product-detail__compare {
+  .product-detail__actions .cta-button {
     text-align: center;
   }
 }
@@ -1473,6 +1503,10 @@ a {
 
 .price-drop-watch .newsletter__error {
   color: #dc2626;
+}
+
+.price-drop-watch .newsletter__soon {
+  color: #5f5f5f;
 }
 
 /* Páginas institucionais (sobre/termos/privacidade) */
