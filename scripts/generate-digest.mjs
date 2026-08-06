@@ -2,7 +2,7 @@
 // index.json que tem dezenas de MB) usado pelo Worker de e-mail semanal
 // (worker/newsletter-worker.js, handler `scheduled`) pra montar o "resumo
 // semanal de ofertas" via Resend Broadcast API. Roda depois de fetch-feeds e
-// parse-coupons no build.
+// fetch-coupons no build.
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'

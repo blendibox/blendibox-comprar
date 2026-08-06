@@ -41,6 +41,7 @@ jobs:
       - name: Baixar feed e gerar JSON + build
         env:
           AWIN_API_KEY: ${{ secrets.AWIN_API_KEY }}
+          AWIN_PROMOTIONS_TOKEN: ${{ secrets.AWIN_PROMOTIONS_TOKEN }}
           OUIPARIS_USER_ID: ${{ secrets.OUIPARIS_USER_ID }}
           AMAZON_ACCESS_KEY: ${{ secrets.AMAZON_ACCESS_KEY }}
           AMAZON_SECRET_KEY: ${{ secrets.AMAZON_SECRET_KEY }}

@@ -75,7 +75,8 @@ dado carregado.
 1. Crie o repositório no GitHub e suba este projeto.
 2. Em **Settings → Pages**, escolha **Source: GitHub Actions**.
 3. Em **Settings → Secrets and variables → Actions**, adicione o secret
-   `AWIN_API_KEY` (só a chave, sem o resto da URL do feed) e, se for usar os
+   `AWIN_API_KEY` (só a chave, sem o resto da URL do feed), `AWIN_PROMOTIONS_TOKEN`
+   (token separado, ver seção "Cupons" abaixo) e, se for usar os
    catálogos de revenda do Grupo Boticário (ver seção própria abaixo),
    `OUIPARIS_USER_ID`. Pro catálogo de livros da Amazon (ver seção própria
    abaixo), adicione também `AMAZON_ACCESS_KEY`, `AMAZON_SECRET_KEY` e
@@ -236,9 +237,22 @@ tratamento e o Google as remove do índice naturalmente com o tempo.
 
 ## Cupons
 
-`data/promotions.csv` é exportado manualmente do painel da Awin (sem link de
-download direto) e versionado no repo — substitua o arquivo e dê push quando
-quiser atualizar os cupons; o build já reprocessa tudo.
+`scripts/fetch-coupons.mjs` busca os cupons/promoções direto na API oficial
+da Awin ([Retrieve Offers](https://help.awin.com/apidocs/promotions)) a cada
+build — não precisa mais exportar CSV manualmente do painel. Precisa de um
+token separado do `AWIN_API_KEY` (aquele é só do datafeed de produtos):
+
+1. No painel da Awin, gere um token de API de publisher (seção de
+   credenciais/API em `ui.awin.com` — token do tipo Bearer, não o mesmo da
+   URL do datafeed).
+2. Adicione como secret `AWIN_PROMOTIONS_TOKEN` no GitHub (ver seção "Setup
+   no GitHub" acima).
+
+O script filtra direto na API pelos merchant IDs já configurados em
+`scripts/merchants.config.json` (a API não filtra por padrão — o corpo da
+requisição precisa aninhar os filtros em `filters.advertiserIds`, não como
+campo solto), então só traz cupom das lojas que a gente já acompanha. Sem a
+variável definida, o build segue normalmente sem cupons.
 
 ## Newsletter, Resend e LGPD
 
