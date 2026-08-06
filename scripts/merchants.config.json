@@ -39,7 +39,7 @@
     "115463": { "slug": "gigantec", "displayName": "Gigantec BR", "vertical": "casa", "active": false },
     "105615": { "slug": "leveros", "displayName": "Leveros BR", "vertical": "casa", "active": false },
     "78382": { "slug": "panasonic", "displayName": "Panasonic BR", "vertical": "casa", "active": true },
-    "106763": { "slug": "sharkninja", "displayName": "Shark-Ninja BR", "vertical": "casa", "active": false },
+    "106763": { "slug": "sharkninja", "displayName": "Shark-Ninja BR", "vertical": "casa", "active": true },
     "78292": { "slug": "webfones", "displayName": "Webfones BR", "vertical": "casa", "active": false },
     "19675": { "slug": "continental", "displayName": "Continental BR", "vertical": "casa", "active": true },
 
