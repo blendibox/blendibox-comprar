@@ -48,6 +48,7 @@
     "78310": { "slug": "chillibeans", "displayName": "Chilli Beans BR", "vertical": "moda", "active": true },
     "124920": { "slug": "lojaybera", "displayName": "Loja Ybera BR", "vertical": "beleza", "active": true },
     "17846": { "slug": "diesel", "displayName": "Diesel BR", "vertical": "moda", "active": true },
+    "124520": { "slug": "guess", "displayName": "Guess BR", "vertical": "moda", "active": true },
     "17631": { "slug": "loccitane", "displayName": "L'Occitane au Brésil BR", "vertical": "beleza", "active": true },
     "17612": { "slug": "elens", "displayName": "eLens BR", "vertical": "moda", "active": true, "verifyImages": true  },
     "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": false },
