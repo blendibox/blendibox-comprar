@@ -24,6 +24,18 @@
     "answer": "Em qualquer card de produto, clicando em \"+ Comparar\" você adiciona o item a uma bandeja (até 3 produtos por vez). A página \"Comparar\" mostra os itens escolhidos lado a lado — imagem, preço, loja e categoria — pra facilitar a decisão."
   },
   {
+    "question": "Preciso criar conta ou fazer login para salvar favoritos?",
+    "answer": "Não precisa de cadastro nem login. Clicando no coração de qualquer produto, ele fica salvo na sua lista de Favoritos — os favoritos ficam guardados no seu próprio navegador, não em nenhum servidor. Se você limpar os dados do navegador ou trocar de dispositivo, a lista não acompanha."
+  },
+  {
+    "question": "Como funciona o aviso de queda de preço?",
+    "answer": "Na página de Favoritos, você pode deixar seu e-mail para ser avisado quando algum dos produtos que salvou baixar de preço. É um aviso único por queda (não uma inscrição de newsletter), enviado só quando há uma queda real confirmada. Se quiser, há uma opção separada e opcional para também receber o resumo semanal de ofertas."
+  },
+  {
+    "question": "O gráfico de histórico de preço mostra dados reais?",
+    "answer": "Sim. Na página de cada produto, o gráfico usa os preços que registramos dia a dia — nada é estimado. Os períodos de 3 e 6 meses só passam a mostrar mais dados conforme o tempo real vai passando, já que o histórico começa a contar a partir de quando cada produto entra no site."
+  },
+  {
     "question": "O Compare Ofertas recebe comissão pelas compras?",
     "answer": "Sim. A maioria dos links do site é de afiliado — se você compra algo depois de clicar, o Compare Ofertas pode receber uma comissão da loja parceira, sem nenhum custo extra pra você. É assim que o serviço se mantém gratuito."
   },

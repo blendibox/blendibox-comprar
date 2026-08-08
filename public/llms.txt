@@ -8,6 +8,8 @@
 - O Compare Ofertas não vende nem processa pagamentos diretamente; a compra final acontece sempre no site da loja parceira ou com a representante de vendas.
 - Links de produto são majoritariamente links de afiliado — cliques que resultam em compra podem gerar comissão para o Compare Ofertas, sem custo extra para quem compra.
 - Nem todo produto tem nota de avaliação ou desconto exibido — esses campos só aparecem quando a loja parceira realmente informa esse dado; nada é inventado.
+- É possível favoritar produtos sem criar conta ou fazer login — os favoritos ficam salvos apenas no navegador do próprio usuário, não em servidor.
+- Na página de Favoritos, o usuário pode deixar o e-mail para receber um aviso único quando um produto favoritado baixar de preço (opt-in separado da newsletter). Cada página de produto tem também uma galeria de imagens e um gráfico de histórico de preço (períodos de 30 dias, 3 e 6 meses) com dados reais registrados dia a dia.
 
 ## Páginas principais
 
@@ -15,6 +17,7 @@
 - [Sobre nós](https://comprar.blendibox.com.br/sobre/): o que é o Compare Ofertas.
 - [Cupons](https://comprar.blendibox.com.br/cupons/): cupons de desconto ativos das lojas parceiras.
 - [Comparar](https://comprar.blendibox.com.br/comparar/): comparação lado a lado de até 3 produtos.
+- [Favoritos](https://comprar.blendibox.com.br/favoritos/): produtos salvos pelo usuário (sem login, guardados no navegador) e cadastro opcional de aviso de queda de preço por e-mail.
 - [Termos de Uso](https://comprar.blendibox.com.br/termos/)
 - [Política de Privacidade](https://comprar.blendibox.com.br/privacidade/)
 
