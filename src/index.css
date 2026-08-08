@@ -229,15 +229,122 @@ a {
   margin-bottom: 6px;
 }
 
-.footer__copy {
-  text-align: center;
+.footer__brand p {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #94a3b8;
+  max-width: 30ch;
+}
+
+.footer__stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.footer__stats strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Barra de benefícios reais (acima do rodapé navy) */
+.footer-benefits {
+  max-width: 1200px;
+  margin: 48px auto 0;
+  padding: 20px 16px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  border-top: 1px solid var(--color-border, #e5e7eb);
+}
+
+.footer-benefits__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.footer-benefits__icon {
+  font-size: 22px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.footer-benefits__item strong {
+  display: block;
+  font-size: 14px;
+  color: var(--color-text, #1f2937);
+}
+
+.footer-benefits__text {
+  display: block;
+  font-size: 12.5px;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+/* A barra de benefícios já traz a margem superior — some com a do footer
+   pra não somar as duas. */
+.footer-benefits + .footer {
+  margin-top: 0;
+}
+
+.footer__bottom {
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 16px;
   border-top: 1px solid #1e293b;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
   font-size: 13px;
+}
+
+.footer__security {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #cbd5e1;
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid #1e293b;
+  border-radius: 999px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.footer__security:hover {
+  color: #fff;
+  border-color: #334155;
+}
+
+.footer__made {
+  color: #94a3b8;
 }
 
 @media (max-width: 700px) {
   .footer__grid {
+    grid-template-columns: 1fr;
+  }
+  .footer-benefits {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 12px;
+  }
+  .footer__bottom {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .footer-benefits {
     grid-template-columns: 1fr;
   }
 }
@@ -255,10 +362,32 @@ a {
   min-height: 260px;
 }
 
+.blendibox-carousel__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .blendibox-carousel h3 {
   color: #fff;
   font-size: 16px;
-  margin: 0 0 12px;
+  margin: 0;
+}
+
+.blendibox-carousel__all {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #5eead4;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.blendibox-carousel__all:hover {
+  color: #99f6e4;
+  text-decoration: underline;
 }
 
 .blendibox-carousel__track {

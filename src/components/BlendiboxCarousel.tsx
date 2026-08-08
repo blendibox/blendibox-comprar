@@ -40,7 +40,17 @@ export function BlendiboxCarousel() {
 
   return (
     <div className="blendibox-carousel">
-      <h3>Produtos Blendibox</h3>
+      <div className="blendibox-carousel__head">
+        <h3>Produtos Blendibox</h3>
+        <a
+          className="blendibox-carousel__all"
+          href="https://loja.blendibox.com.br/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Ver todos os produtos →
+        </a>
+      </div>
       <div
         className="blendibox-carousel__track"
         ref={trackRef}
