@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from 'lucide-react'
 import { fetchCoupons, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { getGalleryImages } from '../lib/images'
@@ -125,7 +126,8 @@ export function ProductPage() {
               />
             </a>
             <span className="product-detail__merchant-badge">
-              <span className="product-detail__merchant-badge-check">✓</span> {product.merchantDisplayName}
+              <BadgeCheck size={15} className="product-detail__merchant-badge-check" aria-hidden="true" />
+              {product.merchantDisplayName}
             </span>
             <div className="product-detail__image-actions">
               <button
@@ -145,7 +147,7 @@ export function ProductPage() {
                   })
                 }
               >
-                {favorited ? '♥' : '♡'}
+                <Heart size={20} fill={favorited ? 'currentColor' : 'none'} aria-hidden="true" />
               </button>
               <button
                 type="button"
@@ -163,7 +165,15 @@ export function ProductPage() {
                   })
                 }
               >
-                {selected ? '✓ Comparando' : '+ Comparar'}
+                {selected ? (
+                  <>
+                    <Check size={16} strokeWidth={2.5} aria-hidden="true" /> Comparando
+                  </>
+                ) : (
+                  <>
+                    <Plus size={16} strokeWidth={2.5} aria-hidden="true" /> Comparar
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -201,12 +211,13 @@ export function ProductPage() {
             <PriceDropBadge priceDropPercent={product.priceDropPercent} href={product.awDeepLink} />
             {merchantCoupons.length > 0 && (
               <Link to={`/cupons?loja=${product.merchantSlug}`} className="product-detail__coupon-badge">
-                🎟 Cupom {product.merchantDisplayName}
+                <Ticket size={14} aria-hidden="true" /> Cupom {product.merchantDisplayName}
               </Link>
             )}
           </div>
           <div className="freshness-badge">
-            {lastPriceCheck ? `✓ Preço verificado em ${formatSimpleDateBr(lastPriceCheck)}` : '✓ Preço verificado diariamente'}
+            <Check size={14} strokeWidth={2.5} aria-hidden="true" />
+            {lastPriceCheck ? ` Preço verificado em ${formatSimpleDateBr(lastPriceCheck)}` : ' Preço verificado diariamente'}
           </div>
           <div className="product-detail__actions">
             <a
@@ -221,7 +232,8 @@ export function ProductPage() {
           </div>
           {isWhatsappReseller && (
             <p className="reseller-notice">
-              {'💬 A compra é feita direto com uma representante de vendas autorizada '}
+              <MessageCircle size={15} aria-hidden="true" />
+              {' A compra é feita direto com uma representante de vendas autorizada '}
               {product.merchantDisplayName}
               {', via WhatsApp. Ao clicar em "Comprar", vai abrir uma conversa já com esse produto e o valor '}
               {'preenchidos — é só confirmar o pedido por lá.'}
@@ -271,7 +283,9 @@ export function ProductPage() {
                 {product.crossChannel.searchPrice != null &&
                   product.searchPrice != null &&
                   product.crossChannel.searchPrice < product.searchPrice && (
-                    <span className="cross-channel-card__cheaper">✓ Mais barato</span>
+                    <span className="cross-channel-card__cheaper">
+                      <Check size={13} strokeWidth={2.5} aria-hidden="true" /> Mais barato
+                    </span>
                   )}
               </div>
             </div>

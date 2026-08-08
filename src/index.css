@@ -18,13 +18,18 @@
      não) — perceptível o suficiente pra separar visualmente ao rolar, sem
      pesar. O fundo base é #fcfcfd; a faixa é um degrau abaixo. */
   --color-band: #f4f5f8;
+  /* Altura do "grande campo de busca" do hero — repetida nos cards de stat
+     abaixo pra criar ritmo vertical consistente. */
+  --hero-field-h: 60px;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: 'Inter Variable', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
@@ -180,9 +185,16 @@ a {
 }
 
 .header__nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   text-decoration: none;
   font-weight: 600;
   color: var(--color-navy);
+}
+
+.header__nav a:hover {
+  color: var(--color-teal-a11y);
 }
 
 .header__nav--mobile {
@@ -194,7 +206,9 @@ a {
 
 @media (max-width: 700px) {
   .header__menu-btn {
-    display: block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
   .header__nav--desktop {
     display: none;
@@ -271,9 +285,6 @@ a {
    (mais barato = bom), teal pra os que crescem (catálogo, lojas). */
 .footer__stat-arrow {
   flex-shrink: 0;
-  width: 18px;
-  text-align: center;
-  font-weight: 800;
   line-height: 1;
 }
 
@@ -310,9 +321,9 @@ a {
 }
 
 .footer-benefits__icon {
-  font-size: 22px;
-  line-height: 1;
   flex-shrink: 0;
+  color: var(--color-teal-a11y);
+  margin-top: 1px;
 }
 
 .footer-benefits__item strong {
@@ -365,7 +376,14 @@ a {
 }
 
 .footer__made {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   color: #94a3b8;
+}
+
+.footer__heart {
+  color: #ef4444;
 }
 
 @media (max-width: 700px) {
@@ -574,20 +592,72 @@ a {
   min-width: 0;
 }
 
-.home-hero__filters {
-  margin: 0;
+/* Campo de busca que "abraça" os selects: container branco arredondado
+   único (lupa + input sem borda + dropdowns encaixados à direita). A altura
+   (--hero-field-h) se repete nos cards de stat abaixo, pra dar ritmo. */
+.home-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--hero-field-h);
+  background: #fff;
+  border: 1px solid #e6e8ec;
+  border-radius: 16px;
+  padding: 6px 6px 6px 16px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 
-/* Busca cresce ocupando o espaço da linha ao lado dos selects. */
-.home-hero__filters input[type='search'] {
-  flex: 1 1 240px;
-  padding: 15px 16px;
+.home-search__icon {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.home-search__input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
   font-size: 16px;
-  border-color: #cbd5e1;
+  color: var(--color-text);
 }
 
-/* Chips de estatística esticam pra preencher a largura da coluna (em vez de
-   se amontoarem à esquerda deixando meia linha vazia). */
+.home-search__filters {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.home-search__select {
+  border: 1px solid #e6e8ec;
+  border-radius: 10px;
+  background: #f8f9fb;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.home-search__select:hover {
+  background: #f1f3f6;
+}
+
+@media (max-width: 620px) {
+  .home-search {
+    flex-wrap: wrap;
+    padding: 10px 12px;
+  }
+  .home-search__filters {
+    flex: 1 1 100%;
+  }
+  .home-search__select {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* Chips de estatística esticam pra preencher a largura da coluna, com a
+   mesma altura do campo de busca. */
 .home-hero__stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -596,46 +666,36 @@ a {
   margin: 0;
 }
 
-/* Cada estatística vira um chip com ícone colorido próprio — cada hue bem
-   distinto do outro e do fundo (ciano/verde/âmbar) pra não ficar tudo no
-   mesmo tom apagado. Só dado real: total do meta.json, quedas confirmadas
-   no home-highlights.json, cadência do cron diário. */
 .home-stat {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px 10px 12px;
+  gap: 12px;
+  min-height: var(--hero-field-h);
+  padding: 10px 18px;
   background: #fff;
   border: 1px solid #eceef2;
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
 }
 
+/* Ícone limpo (sem o círculo/fundo tonalizado), maior e colorido, como o
+   mockup: verde (catálogo cresce), rosa (queda de preço), azul (cadência). */
 .home-stat__icon {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  font-size: 18px;
-  font-weight: 800;
-  line-height: 1;
 }
 
 .home-stat__icon--products {
-  background: #ecfeff;
-  color: #0e7490;
+  color: #16a34a;
 }
 
 .home-stat__icon--drop {
-  background: #f0fdf4;
-  color: #15803d;
+  color: var(--color-pink);
 }
 
 .home-stat__icon--sync {
-  background: #fffbeb;
-  color: #b45309;
+  color: #2563eb;
 }
 
 .home-stat__body {
@@ -645,13 +705,13 @@ a {
 }
 
 .home-stat__body strong {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 800;
   color: var(--color-text);
 }
 
 .home-stat__label {
-  font-size: 12px;
+  font-size: 12.5px;
   color: #6b7280;
 }
 
@@ -676,6 +736,39 @@ a {
 
 .section-title__icon--bag {
   color: var(--color-teal-a11y);
+}
+
+/* Alinhamento ícone Lucide + texto nos badges/botões padronizados. */
+.rating-badge,
+.price-drop-badge,
+.product-card__compare,
+.product-card__favorite,
+.topbar__pitch,
+.product-detail__merchant-badge,
+.product-detail__compare-icon,
+.product-detail__favorite-icon,
+.product-detail__coupon-badge,
+.freshness-badge,
+.cross-channel-card__cheaper,
+.coupon-wheel-modal__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Parágrafos com ícone no início — alinha no topo da 1ª linha sem quebrar o
+   fluxo do texto multi-linha. */
+.reseller-notice,
+.coupon-wheel__gate-lead {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.reseller-notice svg,
+.coupon-wheel__gate-lead svg {
+  flex-shrink: 0;
+  margin-top: 3px;
 }
 
 @media (max-width: 560px) {

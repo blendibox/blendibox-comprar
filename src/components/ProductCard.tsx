@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { Check, Heart, Plus, Star, TrendingDown } from 'lucide-react'
 import type { ProductIndexEntry } from '../types/product'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -18,7 +19,7 @@ export function RatingBadge({ rating }: { rating: number | null | undefined }) {
   if (rating == null || rating <= 0) return null
   return (
     <span className="rating-badge" aria-label={`Avaliação ${rating.toFixed(1)} de 5`}>
-      {'★ '}
+      <Star size={13} fill="currentColor" strokeWidth={0} aria-hidden="true" />
       {rating.toFixed(1)}
     </span>
   )
@@ -60,15 +61,20 @@ export function PriceDropBadge({
   href?: string
 }) {
   if (priceDropPercent == null) return null
-  const label = `↓ ${priceDropPercent}% essa semana`
+  const label = `${priceDropPercent}% essa semana`
+  const inner = (
+    <>
+      <TrendingDown size={13} strokeWidth={2.5} aria-hidden="true" /> {label}
+    </>
+  )
   if (href) {
     return (
       <a className="price-drop-badge" href={href} target="_blank" rel="noopener noreferrer sponsored">
-        {label}
+        {inner}
       </a>
     )
   }
-  return <span className="price-drop-badge">{label}</span>
+  return <span className="price-drop-badge">{inner}</span>
 }
 
 export function OriginalPrice({
@@ -155,7 +161,7 @@ export function ProductCard({
             toggleFavorite(itemPayload)
           }}
         >
-          {favorited ? '♥' : '♡'}
+          <Heart size={18} fill={favorited ? 'currentColor' : 'none'} aria-hidden="true" />
         </button>
         <button
           className={`product-card__compare${selected ? ' product-card__compare--active' : ''}`}
@@ -166,7 +172,15 @@ export function ProductCard({
             toggle(itemPayload)
           }}
         >
-          {selected ? '✓ Comparando' : '+ Comparar'}
+          {selected ? (
+            <>
+              <Check size={15} strokeWidth={2.5} aria-hidden="true" /> Comparando
+            </>
+          ) : (
+            <>
+              <Plus size={15} strokeWidth={2.5} aria-hidden="true" /> Comparar
+            </>
+          )}
         </button>
       </div>
       <div className="product-card__body">

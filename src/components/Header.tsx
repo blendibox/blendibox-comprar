@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowLeftRight, Heart, Home, Menu, Ticket } from 'lucide-react'
 
 const NAV_LINKS = [
-  { to: '/', label: 'Início' },
-  { to: '/cupons', label: 'Cupons' },
-  { to: '/favoritos', label: 'Favoritos' },
-  { to: '/comparar', label: 'Comparar' },
+  { to: '/', label: 'Início', Icon: Home },
+  { to: '/cupons', label: 'Cupons', Icon: Ticket },
+  { to: '/favoritos', label: 'Favoritos', Icon: Heart },
+  { to: '/comparar', label: 'Comparar', Icon: ArrowLeftRight },
 ]
 
 export function Header() {
@@ -19,25 +20,27 @@ export function Header() {
           aria-label="Abrir menu"
           onClick={() => setMenuOpen((v) => !v)}
         >
-          ☰
+          <Menu size={22} />
         </button>
         <Link to="/" className="header__brand">
           Compare <span className="header__brand-accent">Ofertas</span>{' '}
           <span className="header__brand-mark">✱</span>
         </Link>
         <nav className="header__nav header__nav--desktop">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.to} to={link.to}>
-              {link.label}
+          {NAV_LINKS.map(({ to, label, Icon }) => (
+            <Link key={to} to={to}>
+              <Icon size={16} strokeWidth={2} aria-hidden="true" />
+              {label}
             </Link>
           ))}
         </nav>
       </div>
       {menuOpen && (
         <nav className="header__nav header__nav--mobile">
-          {NAV_LINKS.map((link) => (
-            <Link key={link.to} to={link.to} onClick={() => setMenuOpen(false)}>
-              {link.label}
+          {NAV_LINKS.map(({ to, label, Icon }) => (
+            <Link key={to} to={to} onClick={() => setMenuOpen(false)}>
+              <Icon size={16} strokeWidth={2} aria-hidden="true" />
+              {label}
             </Link>
           ))}
         </nav>

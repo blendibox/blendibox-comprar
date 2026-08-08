@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from './router'
+import '@fontsource-variable/inter/wght.css'
 import './index.css'
 
 const rootEl = document.getElementById('root')!

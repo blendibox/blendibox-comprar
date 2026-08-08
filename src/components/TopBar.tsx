@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { Check, Mail } from 'lucide-react'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 const DISMISSED_KEY = 'compare-ofertas:topbar-dismissed'
@@ -68,7 +69,9 @@ export function TopBar() {
   if (status === 'done') {
     return (
       <div className="topbar topbar--done">
-        <span>{'✓ Cadastro feito! Confira seu e-mail.'}</span>
+        <span className="topbar__pitch">
+          <Check size={16} aria-hidden="true" /> Cadastro feito! Confira seu e-mail.
+        </span>
         <button type="button" className="topbar__close" onClick={dismiss} aria-label="Fechar">
           {'×'}
         </button>
@@ -79,7 +82,9 @@ export function TopBar() {
   return (
     <div className="topbar">
       <form className="topbar__form" onSubmit={handleSubmit}>
-        <span className="topbar__pitch">{'📩 Receba cupons exclusivos por e-mail — grátis'}</span>
+        <span className="topbar__pitch">
+          <Mail size={16} aria-hidden="true" /> Receba cupons exclusivos por e-mail — grátis
+        </span>
         <input
           type="email"
           value={email}

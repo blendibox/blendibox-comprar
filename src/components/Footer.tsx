@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Clock, Heart, Link2, RefreshCw, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import { NewsletterSignup } from './NewsletterSignup'
 import { BlendiboxCarousel } from './BlendiboxCarousel'
@@ -8,10 +9,10 @@ const SAFE_BROWSING_URL =
   'https://transparencyreport.google.com/safe-browsing/search?url=comprar.blendibox.com.br'
 
 const BENEFITS = [
-  { icon: '🔄', title: 'Atualizado diariamente', text: 'Preços monitorados todo dia' },
-  { icon: '🏷️', title: 'Cupons oficiais', text: 'Direto das lojas parceiras' },
-  { icon: '📉', title: 'Histórico de preço', text: 'Veja se a oferta é boa de verdade' },
-  { icon: '🔗', title: 'Compra na loja oficial', text: 'Você vai direto pro site do parceiro' },
+  { Icon: RefreshCw, title: 'Atualizado diariamente', text: 'Preços monitorados todo dia' },
+  { Icon: Tag, title: 'Cupons oficiais', text: 'Direto das lojas parceiras' },
+  { Icon: TrendingDown, title: 'Histórico de preço', text: 'Veja se a oferta é boa de verdade' },
+  { Icon: Link2, title: 'Compra na loja oficial', text: 'Você vai direto pro site do parceiro' },
 ]
 
 export function Footer() {
@@ -32,14 +33,12 @@ export function Footer() {
   return (
     <>
       <div className="footer-benefits">
-        {BENEFITS.map((b) => (
-          <div key={b.title} className="footer-benefits__item">
-            <span className="footer-benefits__icon" aria-hidden="true">
-              {b.icon}
-            </span>
+        {BENEFITS.map(({ Icon, title, text }) => (
+          <div key={title} className="footer-benefits__item">
+            <Icon className="footer-benefits__icon" size={22} strokeWidth={2} aria-hidden="true" />
             <div>
-              <strong>{b.title}</strong>
-              <span className="footer-benefits__text">{b.text}</span>
+              <strong>{title}</strong>
+              <span className="footer-benefits__text">{text}</span>
             </div>
           </div>
         ))}
@@ -53,7 +52,7 @@ export function Footer() {
             <ul className="footer__stats">
               {totalProducts != null && (
                 <li>
-                  <span className="footer__stat-arrow footer__stat-arrow--up" aria-hidden="true">↑</span>
+                  <TrendingUp className="footer__stat-arrow footer__stat-arrow--up" size={16} aria-hidden="true" />
                   <span>
                     <strong>{totalProducts.toLocaleString('pt-BR')}</strong> produtos monitorados
                   </span>
@@ -61,7 +60,7 @@ export function Footer() {
               )}
               {priceDropsCount != null && priceDropsCount > 0 && (
                 <li>
-                  <span className="footer__stat-arrow footer__stat-arrow--down" aria-hidden="true">↓</span>
+                  <TrendingDown className="footer__stat-arrow footer__stat-arrow--down" size={16} aria-hidden="true" />
                   <span>
                     <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong> preços caíram esta semana
                   </span>
@@ -69,14 +68,14 @@ export function Footer() {
               )}
               {merchantsCount != null && merchantsCount > 0 && (
                 <li>
-                  <span className="footer__stat-arrow footer__stat-arrow--up" aria-hidden="true">↑</span>
+                  <TrendingUp className="footer__stat-arrow footer__stat-arrow--up" size={16} aria-hidden="true" />
                   <span>
                     <strong>{merchantsCount.toLocaleString('pt-BR')}</strong> lojas parceiras
                   </span>
                 </li>
               )}
               <li>
-                <span className="footer__stat-arrow footer__stat-arrow--sync" aria-hidden="true">🔄</span>
+                <Clock className="footer__stat-arrow footer__stat-arrow--sync" size={16} aria-hidden="true" />
                 <span>Atualizado diariamente</span>
               </li>
             </ul>
@@ -110,11 +109,12 @@ export function Footer() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            🔒 Conexão segura · verificado no Google Safe Browsing
+            <ShieldCheck size={15} aria-hidden="true" />
+            Conexão segura · verificado no Google Safe Browsing
           </a>
           <span className="footer__made">
             {'Desenvolvido com '}
-            <span aria-label="amor">❤️</span>
+            <Heart size={13} fill="currentColor" className="footer__heart" aria-label="amor" />
             {' no Brasil '}
             <span aria-label="Brasil">🇧🇷</span>
           </span>

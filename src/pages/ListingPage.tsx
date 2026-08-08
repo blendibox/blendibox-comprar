@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Flame, RefreshCw, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react'
+import { Clock, Flame, Search, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchIndex, fetchMerchants, fetchMeta } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIndexEntry } from '../types/product'
@@ -110,32 +110,45 @@ export function ListingPage() {
         )}
 
         <div className="home-hero__main">
-        <div className="filters home-hero__filters">
+        {/* Campo de busca "abraça" os selects: um container arredondado único
+            (lupa + input sem borda + dropdowns encaixados à direita), como no
+            mockup. Empilha os selects abaixo do input no mobile. */}
+        <div className="home-search">
+          <Search className="home-search__icon" size={20} aria-hidden="true" />
           <input
             type="search"
+            className="home-search__input"
             placeholder="O que você está procurando? Ex.: tênis Nike, iPhone, bolsa..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label="Buscar produto, loja ou categoria"
           />
-          <select value={vertical} onChange={(e) => setVertical(e.target.value)} aria-label="Departamento">
-            {verticals.map((v) => (
-              <option key={v} value={v}>
-                {v === 'todos' ? 'Todos os departamentos' : v}
-              </option>
-            ))}
-          </select>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value as SortOption)}
-            aria-label="Ordenar por"
-          >
-            {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
-              <option key={key} value={key}>
-                {SORT_LABELS[key]}
-              </option>
-            ))}
-          </select>
+          <div className="home-search__filters">
+            <select
+              className="home-search__select"
+              value={vertical}
+              onChange={(e) => setVertical(e.target.value)}
+              aria-label="Departamento"
+            >
+              {verticals.map((v) => (
+                <option key={v} value={v}>
+                  {v === 'todos' ? 'Todos os departamentos' : v}
+                </option>
+              ))}
+            </select>
+            <select
+              className="home-search__select"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortOption)}
+              aria-label="Ordenar por"
+            >
+              {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
+                <option key={key} value={key}>
+                  {SORT_LABELS[key]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Prova de valor — só dado real: total de produtos (meta.json),
@@ -146,7 +159,7 @@ export function ListingPage() {
             {meta && (
               <div className="home-stat">
                 <span className="home-stat__icon home-stat__icon--products" aria-hidden="true">
-                  <TrendingUp size={18} strokeWidth={2.5} />
+                  <TrendingUp size={26} strokeWidth={2.5} />
                 </span>
                 <span className="home-stat__body">
                   <strong>{meta.totalProducts.toLocaleString('pt-BR')}</strong>
@@ -157,7 +170,7 @@ export function ListingPage() {
             {priceDropsCount > 0 && (
               <div className="home-stat">
                 <span className="home-stat__icon home-stat__icon--drop" aria-hidden="true">
-                  <TrendingDown size={18} strokeWidth={2.5} />
+                  <TrendingDown size={26} strokeWidth={2.5} />
                 </span>
                 <span className="home-stat__body">
                   <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong>
@@ -167,7 +180,7 @@ export function ListingPage() {
             )}
             <div className="home-stat">
               <span className="home-stat__icon home-stat__icon--sync" aria-hidden="true">
-                <RefreshCw size={17} strokeWidth={2.5} />
+                <Clock size={26} strokeWidth={2.5} />
               </span>
               <span className="home-stat__body">
                 <strong>Atualizado</strong>

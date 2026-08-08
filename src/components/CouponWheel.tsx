@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { Gift, Lock, PartyPopper } from 'lucide-react'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
@@ -53,7 +54,7 @@ export function CouponWheelButton() {
   return (
     <>
       <button className="coupon-wheel-fab" onClick={() => setOpen(true)} aria-label="Girar a roleta de cupons">
-        {'🎡'}
+        <Gift size={24} aria-hidden="true" />
       </button>
       {open && <CouponWheelModal segments={segments} onClose={() => setOpen(false)} />}
     </>
@@ -125,7 +126,9 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
         <button className="coupon-wheel-modal__close" onClick={onClose} aria-label="Fechar">
           {'×'}
         </button>
-        <h2>{'🎉 Roleta de Cupons'}</h2>
+        <h2 className="coupon-wheel-modal__title">
+          <PartyPopper size={20} aria-hidden="true" /> Roleta de Cupons
+        </h2>
         <p className="coupon-wheel-modal__hint">Gire e ganhe um cupom de desconto de verdade.</p>
 
         <div className="coupon-wheel-stage">
@@ -179,7 +182,9 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
 
         {result && !unlocked && (
           <form className="coupon-wheel__gate" onSubmit={handleUnlock}>
-            <p>{`🔒 Você caiu em ${result.advertiser}! Digite seu e-mail pra revelar o cupom:`}</p>
+            <p className="coupon-wheel__gate-lead">
+              <Lock size={14} aria-hidden="true" /> {`Você caiu em ${result.advertiser}! Digite seu e-mail pra revelar o cupom:`}
+            </p>
             <input
               type="email"
               value={email}
