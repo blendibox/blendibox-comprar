@@ -364,6 +364,78 @@ a {
   font-size: 14px;
 }
 
+/* Hero da home — a busca é o protagonista (posicionamento de "monitor de
+   preços", não catálogo). Fundo claro, verde só como acento. */
+.home-hero {
+  margin-bottom: 28px;
+}
+
+.home-hero__title {
+  margin: 0 0 6px;
+  font-size: 34px;
+  line-height: 1.15;
+  color: var(--color-navy);
+}
+
+.home-hero__subtitle {
+  margin: 0 0 20px;
+  color: #5f5f5f;
+  font-size: 16px;
+}
+
+.home-hero__filters {
+  margin-bottom: 12px;
+}
+
+/* Busca maior/mais destacada que os selects ao lado. */
+.home-hero__filters input[type='search'] {
+  padding: 15px 16px;
+  font-size: 16px;
+  border-color: #cbd5e1;
+}
+
+.home-hero__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
+  margin: 0;
+  font-size: 13px;
+  color: #5f5f5f;
+}
+
+.home-hero__stats span + span::before {
+  content: '·';
+  margin: 0 12px;
+  color: #cbd5e1;
+}
+
+.home-hero__stat-drop {
+  color: var(--color-green);
+  font-weight: 700;
+}
+
+/* Em tela estreita as stats empilham — sem o "·" no começo de cada linha
+   (que fica solto), stack limpo em vez de inline com separador. */
+@media (max-width: 560px) {
+  .home-hero__stats {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .home-hero__stats span + span::before {
+    content: none;
+  }
+
+  .home-hero__title {
+    font-size: 28px;
+  }
+}
+
+.home-hero--compact {
+  margin-bottom: 20px;
+}
+
 .breadcrumbs {
   font-size: 13px;
   color: #666;
@@ -1230,12 +1302,6 @@ a {
 
 .featured-section {
   margin-bottom: 32px;
-  padding: 20px;
-  border-radius: 12px;
-  /* --color-teal/--color-teal-dark sozinhos não têm contraste suficiente
-     pro texto branco (WCAG AA) — usa --color-teal-a11y nas duas pontas do
-     degradê, garantindo 4.5:1 em qualquer ponto onde o texto passar. */
-  background: linear-gradient(135deg, var(--color-teal-a11y) 0%, #0a5850 100%);
   /* Reserva o espaço do carrossel (medido: ~450px com um card de 200px de
      largura) antes mesmo do índice carregar — sem isso, a seção "pipoca" na
      tela assim que o fetch termina, empurrando tudo abaixo (CLS). */
@@ -1246,8 +1312,13 @@ a {
 }
 
 .featured-section h2 {
-  color: #fff;
+  margin: 0 0 4px;
+}
+
+.featured-section__hint {
   margin: 0 0 16px;
+  color: #666;
+  font-size: 13px;
 }
 
 .carousel {
@@ -1282,24 +1353,6 @@ a {
 
 .carousel__track::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
-}
-
-/* No fundo em gradiente teal dos Destaques, a barra clara/cinza padrão some
-   ou fica deslocada — versão translúcida branca lê bem contra o teal. */
-.featured-section .carousel__track {
-  scrollbar-color: rgba(255, 255, 255, 0.85) rgba(255, 255, 255, 0.25);
-}
-
-.featured-section .carousel__track::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.25);
-}
-
-.featured-section .carousel__track::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.85);
-}
-
-.featured-section .carousel__track::-webkit-scrollbar-thumb:hover {
-  background: #fff;
 }
 
 .carousel__track > * {
@@ -1358,12 +1411,8 @@ a {
 .section-skeleton__hint {
   margin: 0;
   text-align: center;
-  color: #888;
+  color: #666;
   font-size: 13px;
-}
-
-.featured-section .section-skeleton__hint {
-  color: rgba(255, 255, 255, 0.85);
 }
 
 .recent-sales-section h2 {

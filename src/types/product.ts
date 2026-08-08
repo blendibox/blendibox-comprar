@@ -177,6 +177,9 @@ export interface HomeHighlights {
   featured: ProductIndexEntry[]
   priceDrops: ProductIndexEntry[]
   recentSales: { product: ProductIndexEntry; label: string }[]
+  // Total de produtos com queda de preço confirmada nesta atualização — pode
+  // faltar em home-highlights.json gerado antes deste campo existir.
+  priceDropsCount?: number
 }
 
 // Dado injetado por scripts/prerender.mjs pra a home renderizar as seções

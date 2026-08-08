@@ -90,6 +90,10 @@ async function main() {
     featured: pickFeatured(index, merchants),
     priceDrops: pickPriceDrops(index),
     recentSales: pickRecentSales(socialProof, index),
+    // Total real de produtos com queda de preço confirmada (não só os ~10 do
+    // carrossel) — usado na linha de "prova de valor" do hero da home. Mesma
+    // definição de queda do priceDropPercent (ver update-price-history.mjs).
+    priceDropsCount: index.filter((p) => p.priceDropPercent != null).length,
   }
 
   await writeFile(path.join(DATA_DIR, 'home-highlights.json'), JSON.stringify(highlights))
@@ -98,7 +102,7 @@ async function main() {
     Buffer.byteLength(JSON.stringify(highlights)) / 1024
   ).toFixed(1)
   console.log(
-    `home-highlights.json: ${highlights.featured.length} destaques, ${highlights.priceDrops.length} quedas de preço, ${highlights.recentSales.length} vendas recentes (${sizeKb} KB).`
+    `home-highlights.json: ${highlights.featured.length} destaques, ${highlights.priceDrops.length} quedas de preço no carrossel (${highlights.priceDropsCount} no total), ${highlights.recentSales.length} vendas recentes (${sizeKb} KB).`
   )
 }
 
