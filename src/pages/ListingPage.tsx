@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Flame, RefreshCw, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchIndex, fetchMerchants, fetchMeta } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIndexEntry } from '../types/product'
@@ -144,7 +145,9 @@ export function ListingPage() {
           <div className="home-hero__stats">
             {meta && (
               <div className="home-stat">
-                <span className="home-stat__icon home-stat__icon--products" aria-hidden="true">↗</span>
+                <span className="home-stat__icon home-stat__icon--products" aria-hidden="true">
+                  <TrendingUp size={18} strokeWidth={2.5} />
+                </span>
                 <span className="home-stat__body">
                   <strong>{meta.totalProducts.toLocaleString('pt-BR')}</strong>
                   <span className="home-stat__label">produtos monitorados</span>
@@ -153,7 +156,9 @@ export function ListingPage() {
             )}
             {priceDropsCount > 0 && (
               <div className="home-stat">
-                <span className="home-stat__icon home-stat__icon--drop" aria-hidden="true">↓</span>
+                <span className="home-stat__icon home-stat__icon--drop" aria-hidden="true">
+                  <TrendingDown size={18} strokeWidth={2.5} />
+                </span>
                 <span className="home-stat__body">
                   <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong>
                   <span className="home-stat__label">preços caíram esta semana</span>
@@ -161,7 +166,9 @@ export function ListingPage() {
               </div>
             )}
             <div className="home-stat">
-              <span className="home-stat__icon home-stat__icon--sync" aria-hidden="true">↻</span>
+              <span className="home-stat__icon home-stat__icon--sync" aria-hidden="true">
+                <RefreshCw size={17} strokeWidth={2.5} />
+              </span>
               <span className="home-stat__body">
                 <strong>Atualizado</strong>
                 <span className="home-stat__label">diariamente</span>
@@ -183,7 +190,10 @@ export function ListingPage() {
             <section className="price-drop-section">
               {showPriceDrops ? (
                 <>
-                  <h2>📉 Caiu de preço</h2>
+                  <h2 className="section-title">
+                    <TrendingDown className="section-title__icon section-title__icon--drop" size={22} strokeWidth={2.5} />
+                    Caiu de preço
+                  </h2>
                   <p className="price-drop-section__hint">Produtos que ficaram mais baratos nas últimas atualizações.</p>
                   <Carousel>
                     {priceDrops.map((product, i) => (
@@ -205,7 +215,10 @@ export function ListingPage() {
             <section className="featured-section">
               {showFeatured ? (
                 <>
-                  <h2>🔥 Ofertas em destaque</h2>
+                  <h2 className="section-title">
+                    <Flame className="section-title__icon section-title__icon--fire" size={22} strokeWidth={2.5} />
+                    Ofertas em destaque
+                  </h2>
                   <p className="featured-section__hint">Seleção de boas oportunidades das lojas parceiras.</p>
                   <Carousel>
                     {featured.map((product, i) => (
@@ -227,7 +240,10 @@ export function ListingPage() {
             <section className="recent-sales-section">
               {showRecentSales ? (
                 <>
-                  <h2>🛒 Comprado recentemente</h2>
+                  <h2 className="section-title">
+                    <ShoppingBag className="section-title__icon section-title__icon--bag" size={22} strokeWidth={2.5} />
+                    Comprado recentemente
+                  </h2>
                   <p className="recent-sales-section__hint">
                     Produtos que outros clientes compraram através do Compare Ofertas.
                   </p>

@@ -655,6 +655,29 @@ a {
   color: #6b7280;
 }
 
+/* Títulos de seção com ícone Lucide alinhado ao texto. */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title__icon {
+  flex-shrink: 0;
+}
+
+.section-title__icon--drop {
+  color: #15803d;
+}
+
+.section-title__icon--fire {
+  color: #ea580c;
+}
+
+.section-title__icon--bag {
+  color: var(--color-teal-a11y);
+}
+
 @media (max-width: 560px) {
   .home-hero__title {
     font-size: 28px;
