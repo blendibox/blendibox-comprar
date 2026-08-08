@@ -14,6 +14,10 @@
   --color-navy: #0f172a;
   --color-bg: #fcfcfd;
   --color-text: #1a1a1a;
+  /* Faixa cinza levíssima pras seções alternadas da home (uma sim, outra
+     não) — perceptível o suficiente pra separar visualmente ao rolar, sem
+     pesar. O fundo base é #fcfcfd; a faixa é um degrau abaixo. */
+  --color-band: #f4f5f8;
 }
 
 body {
@@ -1524,6 +1528,19 @@ a {
   margin: 0;
   font-size: 14px;
   line-height: 1.4;
+}
+
+/* Faixas alternadas: "Caiu de preço" e "Comprado recentemente" ganham um
+   fundo cinza levíssimo que vaza pra largura total da tela (box-shadow com
+   spread enorme + clip-path prendendo o vazamento só na horizontal — não
+   gera scroll horizontal nem sangra na vertical). O hero e "Ofertas em
+   destaque" ficam no fundo base (branco), criando o intercalado. */
+.price-drop-section,
+.recent-sales-section {
+  background: var(--color-band);
+  box-shadow: 0 0 0 100vmax var(--color-band);
+  clip-path: inset(0 -100vmax);
+  padding: 28px 0;
 }
 
 .featured-section {
