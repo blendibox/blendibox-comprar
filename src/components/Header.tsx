@@ -22,7 +22,8 @@ export function Header() {
           ☰
         </button>
         <Link to="/" className="header__brand">
-          Compare Ofertas <span className="header__brand-mark">✱</span>
+          Compare <span className="header__brand-accent">Ofertas</span>{' '}
+          <span className="header__brand-mark">✱</span>
         </Link>
         <nav className="header__nav header__nav--desktop">
           {NAV_LINKS.map((link) => (

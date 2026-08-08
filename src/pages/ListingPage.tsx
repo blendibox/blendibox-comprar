@@ -100,12 +100,15 @@ export function ListingPage() {
           está filtrando/buscando, o topo enxuga pra dar espaço aos resultados. */}
       <section className={`home-hero${hasActiveFilter ? ' home-hero--compact' : ''}`}>
         {!hasActiveFilter && (
-          <>
-            <h1 className="home-hero__title">Compare preços antes de comprar.</h1>
+          <div className="home-hero__intro">
+            <h1 className="home-hero__title">
+              Compare preços <span className="home-hero__title-accent">antes de comprar.</span>
+            </h1>
             <p className="home-hero__subtitle">Encontre as melhores ofertas e economize no que importa.</p>
-          </>
+          </div>
         )}
 
+        <div className="home-hero__main">
         <div className="filters home-hero__filters">
           <input
             type="search"
@@ -166,6 +169,7 @@ export function ListingPage() {
             </div>
           </div>
         )}
+        </div>
       </section>
 
       {!hasActiveFilter && (

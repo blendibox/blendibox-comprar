@@ -161,6 +161,10 @@ a {
   color: var(--color-navy);
 }
 
+.header__brand-accent {
+  color: var(--color-green);
+}
+
 .header__brand-mark {
   color: var(--color-pink);
 }
@@ -537,26 +541,52 @@ a {
   color: var(--color-navy);
 }
 
+.home-hero__title-accent {
+  display: block;
+  color: var(--color-green);
+}
+
 .home-hero__subtitle {
   margin: 0 0 20px;
   color: #5f5f5f;
   font-size: 16px;
 }
 
-.home-hero__filters {
-  margin-bottom: 12px;
+/* Hero em duas colunas no desktop (como o mockup): intro à esquerda,
+   busca + stats à direita. Empilha numa coluna só no mobile. */
+@media (min-width: 861px) {
+  .home-hero:not(.home-hero--compact) {
+    display: grid;
+    grid-template-columns: minmax(240px, 300px) 1fr;
+    gap: 40px;
+    align-items: center;
+  }
 }
 
-/* Busca maior/mais destacada que os selects ao lado. */
+.home-hero__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.home-hero__filters {
+  margin: 0;
+}
+
+/* Busca cresce ocupando o espaço da linha ao lado dos selects. */
 .home-hero__filters input[type='search'] {
+  flex: 1 1 240px;
   padding: 15px 16px;
   font-size: 16px;
   border-color: #cbd5e1;
 }
 
+/* Chips de estatística esticam pra preencher a largura da coluna (em vez de
+   se amontoarem à esquerda deixando meia linha vazia). */
 .home-hero__stats {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   align-items: stretch;
   gap: 12px;
   margin: 0;
@@ -622,11 +652,6 @@ a {
 }
 
 @media (max-width: 560px) {
-  .home-hero__stats {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .home-hero__title {
     font-size: 28px;
   }
