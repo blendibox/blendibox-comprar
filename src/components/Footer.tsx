@@ -53,20 +53,32 @@ export function Footer() {
             <ul className="footer__stats">
               {totalProducts != null && (
                 <li>
-                  <strong>{totalProducts.toLocaleString('pt-BR')}</strong> produtos monitorados
+                  <span className="footer__stat-arrow footer__stat-arrow--up" aria-hidden="true">↑</span>
+                  <span>
+                    <strong>{totalProducts.toLocaleString('pt-BR')}</strong> produtos monitorados
+                  </span>
                 </li>
               )}
               {priceDropsCount != null && priceDropsCount > 0 && (
                 <li>
-                  <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong> preços caíram esta semana
+                  <span className="footer__stat-arrow footer__stat-arrow--down" aria-hidden="true">↓</span>
+                  <span>
+                    <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong> preços caíram esta semana
+                  </span>
                 </li>
               )}
               {merchantsCount != null && merchantsCount > 0 && (
                 <li>
-                  <strong>{merchantsCount.toLocaleString('pt-BR')}</strong> lojas parceiras
+                  <span className="footer__stat-arrow footer__stat-arrow--up" aria-hidden="true">↑</span>
+                  <span>
+                    <strong>{merchantsCount.toLocaleString('pt-BR')}</strong> lojas parceiras
+                  </span>
                 </li>
               )}
-              <li>Atualizado diariamente</li>
+              <li>
+                <span className="footer__stat-arrow footer__stat-arrow--sync" aria-hidden="true">🔄</span>
+                <span>Atualizado diariamente</span>
+              </li>
             </ul>
           </div>
           <div>
