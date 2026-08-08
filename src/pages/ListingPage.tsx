@@ -138,15 +138,33 @@ export function ListingPage() {
             quantas quedas de preço confirmadas nesta atualização
             (home-highlights.json), e a cadência (cron diário do deploy). */}
         {!hasActiveFilter && (meta || priceDropsCount > 0) && (
-          <p className="home-hero__stats">
-            {meta && <span>{`📦 ${meta.totalProducts.toLocaleString('pt-BR')} produtos monitorados`}</span>}
-            {priceDropsCount > 0 && (
-              <span className="home-hero__stat-drop">
-                {`↓ ${priceDropsCount.toLocaleString('pt-BR')} preços caíram esta semana`}
-              </span>
+          <div className="home-hero__stats">
+            {meta && (
+              <div className="home-stat">
+                <span className="home-stat__icon home-stat__icon--products" aria-hidden="true">↗</span>
+                <span className="home-stat__body">
+                  <strong>{meta.totalProducts.toLocaleString('pt-BR')}</strong>
+                  <span className="home-stat__label">produtos monitorados</span>
+                </span>
+              </div>
             )}
-            <span>🕙 atualizado diariamente</span>
-          </p>
+            {priceDropsCount > 0 && (
+              <div className="home-stat">
+                <span className="home-stat__icon home-stat__icon--drop" aria-hidden="true">↓</span>
+                <span className="home-stat__body">
+                  <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong>
+                  <span className="home-stat__label">preços caíram esta semana</span>
+                </span>
+              </div>
+            )}
+            <div className="home-stat">
+              <span className="home-stat__icon home-stat__icon--sync" aria-hidden="true">↻</span>
+              <span className="home-stat__body">
+                <strong>Atualizado</strong>
+                <span className="home-stat__label">diariamente</span>
+              </span>
+            </div>
+          </div>
         )}
       </section>
 
