@@ -1,12 +1,29 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Gift, Lock, PartyPopper } from 'lucide-react'
+import {
+  BadgeCheck,
+  Gift,
+  Lock,
+  PartyPopper,
+  Percent,
+  RefreshCw,
+  ShieldCheck,
+  Shirt,
+  ShoppingBag,
+  Sparkles,
+  Store,
+  Tag,
+  Ticket,
+} from 'lucide-react'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 const MAX_SEGMENTS = 8
-const SEGMENT_COLORS = ['#14b8a6', '#db2777', '#0a7d3f', '#0f172a', '#5eead4', '#f472b6', '#34d399', '#334155']
+const SEGMENT_COLORS = ['#14b8a6', '#1e3a5f', '#ec4899', '#0f766e', '#22c55e', '#2563eb', '#14b8a6', '#db2777']
+// Ícones só decorativos por fatia (não têm relação com a loja) — dão o visual
+// colorido do mockup sem inventar dado nenhum sobre o cupom.
+const SEGMENT_ICONS = [Tag, ShoppingBag, Ticket, Store, Shirt, Percent, Gift, Sparkles]
 const SPIN_DURATION_MS = 4000
 const LABEL_RADIUS = 82
 
@@ -154,6 +171,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
                 const midAngleRad = (midAngleDeg * Math.PI) / 180
                 const x = LABEL_RADIUS * Math.sin(midAngleRad)
                 const y = -LABEL_RADIUS * Math.cos(midAngleRad)
+                const SegIcon = SEGMENT_ICONS[i % SEGMENT_ICONS.length]
                 return (
                   <div key={s.id} className="coupon-wheel__label-wrap" style={{ left: `calc(50% + ${x}px)`, top: `calc(50% + ${y}px)` }}>
                     <span
@@ -163,7 +181,8 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
                         transition: spinning ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.17, 0.67, 0.32, 1)` : 'none',
                       }}
                     >
-                      {s.advertiser}
+                      <SegIcon size={18} className="coupon-wheel__label-icon" aria-hidden="true" />
+                      <span className="coupon-wheel__label-text">{s.advertiser}</span>
                     </span>
                   </div>
                 )
@@ -175,7 +194,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
               disabled={spinning || Boolean(result)}
               aria-label="Girar a roleta"
             >
-              {spinning ? '...' : 'Girar!'}
+              <span className="coupon-wheel__hub-label">{spinning ? '...' : 'Girar!'}</span>
             </button>
           </div>
         </div>
@@ -220,6 +239,31 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
             </a>
           </div>
         )}
+
+        <ul className="coupon-wheel__benefits">
+          <li>
+            <ShieldCheck size={22} className="coupon-wheel__benefit-icon coupon-wheel__benefit-icon--pink" aria-hidden="true" />
+            <div>
+              <strong>Conexão segura</strong>
+              <span>Seus dados protegidos</span>
+            </div>
+          </li>
+          <li>
+            <BadgeCheck size={22} className="coupon-wheel__benefit-icon coupon-wheel__benefit-icon--teal" aria-hidden="true" />
+            <div>
+              <strong>Cupons de verdade</strong>
+              <span>Direto das lojas parceiras</span>
+            </div>
+          </li>
+          <li>
+            <RefreshCw size={22} className="coupon-wheel__benefit-icon coupon-wheel__benefit-icon--blue" aria-hidden="true" />
+            <div>
+              <strong>Atualizados todo dia</strong>
+              <span>Volte sempre pra conferir</span>
+            </div>
+          </li>
+        </ul>
+        <p className="coupon-wheel__rules">* Cupons válidos por tempo limitado. Consulte as regras de cada loja.</p>
       </div>
     </div>
   )
