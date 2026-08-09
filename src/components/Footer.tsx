@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Heart, Link2, RefreshCw, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
+import { Clock, Heart, Info, Link2, RefreshCw, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import { NewsletterSignup } from './NewsletterSignup'
 import { BlendiboxCarousel } from './BlendiboxCarousel'
@@ -103,15 +103,24 @@ export function Footer() {
           <span className="footer__copy">
             {`© ${new Date().getFullYear()} Blendibox. Todos os direitos reservados.`}
           </span>
-          <a
-            className="footer__security"
-            href={SAFE_BROWSING_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ShieldCheck size={15} aria-hidden="true" />
-            Conexão segura · verificado no Google Safe Browsing
-          </a>
+          <div className="footer__security">
+            <ShieldCheck className="footer__security-shield" size={18} aria-hidden="true" />
+            <span className="footer__security-text">
+              <strong>Navegação segura</strong>
+              <span className="footer__security-sep">·</span>
+              compra direto na loja parceira
+            </span>
+            <a
+              className="footer__security-info"
+              href={SAFE_BROWSING_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Site verificado no Google Safe Browsing — ver relatório"
+              aria-label="Ver verificação no Google Safe Browsing"
+            >
+              <Info size={14} aria-hidden="true" />
+            </a>
+          </div>
           <span className="footer__made">
             {'Desenvolvido com '}
             <Heart size={13} fill="currentColor" className="footer__heart" aria-label="amor" />
