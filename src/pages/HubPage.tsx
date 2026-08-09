@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ChevronDown, TrendingDown } from 'lucide-react'
 import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons, fetchMerchants } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
@@ -38,6 +39,10 @@ export function HubPage() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [search, setSearch] = useState('')
+  const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
+  // Categorias começam recolhidas — assim, em telas menores, o campo de
+  // filtro já aparece na primeira dobra (sem a lista longa de chips empurrando).
+  const [catsOpen, setCatsOpen] = useState(false)
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
   const [merchantsMeta, setMerchantsMeta] = useState<MerchantMeta[]>([])
 
@@ -76,7 +81,7 @@ export function HubPage() {
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [slug, sort, search])
+  }, [slug, sort, search, onlyPriceDrops])
 
   const merchants = useMemo(() => {
     if (!ready || !isVertical) return []
@@ -101,9 +106,12 @@ export function HubPage() {
   // (não afeta a contagem total do cabeçalho nem os chips de loja/categoria,
   // que continuam refletindo o catálogo inteiro daqui).
   const searched = useMemo(() => {
-    if (!search.trim()) return sortedFiltered
-    return sortedFiltered.filter((p) => matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search))
-  }, [sortedFiltered, search])
+    return sortedFiltered.filter((p) => {
+      const matchesDrop = !onlyPriceDrops || p.priceDropPercent != null
+      const matchesText = !search.trim() || matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search)
+      return matchesDrop && matchesText
+    })
+  }, [sortedFiltered, search, onlyPriceDrops])
   const items = ready ? searched : initial?.items ?? []
   // Nome/vertical de exibição usam a lista completa (sem o filtro de busca)
   // pra não quebrar o cabeçalho quando a busca não encontra nada — e caem
@@ -177,14 +185,30 @@ export function HubPage() {
 
       {displayCategories.length > 0 && vertical && (
         <section className="hub-links">
-          <h2>Categorias</h2>
-          <div className="hub-links__list">
-            {displayCategories.map(([catSlug, count]) => (
-              <Link key={catSlug} to={`/${vertical}/categoria/${catSlug}`} className="hub-chip">
-                {catSlug.replace(/-/g, ' ')} <span>({count})</span>
-              </Link>
-            ))}
-          </div>
+          <button
+            type="button"
+            className="hub-links__toggle"
+            onClick={() => setCatsOpen((o) => !o)}
+            aria-expanded={catsOpen}
+          >
+            <h2>
+              Categorias <span className="hub-links__count">({displayCategories.length})</span>
+            </h2>
+            <ChevronDown
+              size={18}
+              className={`hub-links__chevron${catsOpen ? ' hub-links__chevron--open' : ''}`}
+              aria-hidden="true"
+            />
+          </button>
+          {catsOpen && (
+            <div className="hub-links__list">
+              {displayCategories.map(([catSlug, count]) => (
+                <Link key={catSlug} to={`/${vertical}/categoria/${catSlug}`} className="hub-chip">
+                  {catSlug.replace(/-/g, ' ')} <span>({count})</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       )}
 
@@ -206,6 +230,15 @@ export function HubPage() {
               </option>
             ))}
           </select>
+          <label className={`drops-toggle${onlyPriceDrops ? ' drops-toggle--on' : ''}`}>
+            <input
+              type="checkbox"
+              checked={onlyPriceDrops}
+              onChange={(e) => setOnlyPriceDrops(e.target.checked)}
+            />
+            <TrendingDown size={15} strokeWidth={2.5} aria-hidden="true" />
+            Só quedas de preço
+          </label>
         </div>
       )}
 

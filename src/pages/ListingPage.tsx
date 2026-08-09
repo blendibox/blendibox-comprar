@@ -35,6 +35,7 @@ export function ListingPage() {
   const [search, setSearch] = useState('')
   const [vertical, setVertical] = useState('todos')
   const [sort, setSort] = useState<SortOption>('relevancia')
+  const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
 
   useEffect(() => {
@@ -47,7 +48,7 @@ export function ListingPage() {
     fetchHomeHighlights().then(setHighlights).catch(() => setHighlights(null))
   }, [])
 
-  const hasActiveFilter = Boolean(search.trim()) || vertical !== 'todos'
+  const hasActiveFilter = Boolean(search.trim()) || vertical !== 'todos' || onlyPriceDrops
 
   // Só busca o índice completo quando vira preciso de verdade (busca ou
   // filtro de departamento ativos) — na home "limpa" (a maioria das visitas)
@@ -73,14 +74,15 @@ export function ListingPage() {
   const filtered = useMemo(() => {
     const base = products.filter((p) => {
       const matchesVertical = vertical === 'todos' || p.vertical === vertical
-      return matchesVertical && matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search)
+      const matchesDrop = !onlyPriceDrops || p.priceDropPercent != null
+      return matchesVertical && matchesDrop && matchesSearch([p.productName, p.merchantDisplayName, p.categorySlug], search)
     })
     return sortProducts(base, sort)
-  }, [products, search, vertical, sort])
+  }, [products, search, vertical, sort, onlyPriceDrops])
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [search, vertical, sort])
+  }, [search, vertical, sort, onlyPriceDrops])
 
   const indexReady = indexState === 'ready'
   const visible = filtered.slice(0, visibleCount)
@@ -150,6 +152,16 @@ export function ListingPage() {
             </select>
           </div>
         </div>
+
+        <label className={`drops-toggle${onlyPriceDrops ? ' drops-toggle--on' : ''}`}>
+          <input
+            type="checkbox"
+            checked={onlyPriceDrops}
+            onChange={(e) => setOnlyPriceDrops(e.target.checked)}
+          />
+          <TrendingDown size={16} strokeWidth={2.5} aria-hidden="true" />
+          Só produtos que caíram de preço
+        </label>
 
         {/* Prova de valor — só dado real: total de produtos (meta.json),
             quantas quedas de preço confirmadas nesta atualização

@@ -798,17 +798,84 @@ a {
   flex-wrap: wrap;
 }
 
-.filters input,
-.filters select {
+/* Só os campos diretos (busca/ordenar) — o `>` evita que essas regras
+   vazem pro checkbox dentro do chip .drops-toggle (que também é um input),
+   o que estourava a largura dele com o min-width: 220px. */
+.filters > input,
+.filters > select {
   padding: 10px 12px;
   border: 1px solid #ddd;
   border-radius: 8px;
   font-size: 14px;
 }
 
-.filters input {
+.filters > input {
   flex: 1;
   min-width: 220px;
+}
+
+/* No mobile a busca ocupa a linha inteira, deixando "Ordenar" + o chip de
+   queda lado a lado na linha de baixo (em vez do chip sobrar sozinho numa
+   terceira linha). No desktop os três seguem inline. */
+@media (max-width: 700px) {
+  .filters > input {
+    flex-basis: 100%;
+  }
+}
+
+/* Toggle "só quedas de preço" (chip com checkbox) — usado na home e no hub.
+   flex:none + white-space:nowrap garantem que ele nunca estica nem quebra o
+   texto em várias linhas quando a tela muda de tamanho — fica sempre um chip
+   compacto do tamanho do conteúdo. */
+.drops-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  align-self: center;
+  white-space: nowrap;
+  padding: 9px 12px;
+  border: 1px solid #e6e8ec;
+  border-radius: 999px;
+  background: #fff;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.drops-toggle input {
+  flex: none;
+  width: 16px;
+  min-width: 0;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+
+.drops-toggle svg {
+  color: var(--color-green);
+}
+
+.drops-toggle:hover {
+  border-color: #cbd5e1;
+}
+
+.drops-toggle--on {
+  border-color: var(--color-green);
+  background: #f0fdf4;
+  color: var(--color-green);
+  font-weight: 600;
+}
+
+/* Na home o toggle fica numa linha própria (alinhado à esquerda), não
+   esticado como os campos do container de busca. */
+.home-hero__main > .drops-toggle {
+  align-self: flex-start;
 }
 
 .status {
@@ -1361,6 +1428,42 @@ a {
 .hub-links h2 {
   font-size: 16px;
   margin-bottom: 10px;
+}
+
+/* Cabeçalho clicável das categorias recolhíveis. */
+.hub-links__toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  text-align: left;
+}
+
+.hub-links__toggle h2 {
+  margin: 0;
+}
+
+.hub-links__count {
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.hub-links__chevron {
+  color: #6b7280;
+  transition: transform 0.2s ease;
+}
+
+.hub-links__chevron--open {
+  transform: rotate(180deg);
+}
+
+.hub-links__toggle + .hub-links__list {
+  margin-top: 10px;
 }
 
 .hub-links__list {
