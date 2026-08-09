@@ -4,6 +4,7 @@ import { Footer } from './components/Footer'
 import { ComparatorTray } from './components/ComparatorTray'
 import { TopBar } from './components/TopBar'
 import { CouponWheelButton } from './components/CouponWheel'
+import { ScrollToTop } from './components/ScrollToTop'
 import { ComparatorProvider } from './context/ComparatorContext'
 import { FavoritesProvider } from './context/FavoritesContext'
 
@@ -11,6 +12,7 @@ export function Layout() {
   return (
     <ComparatorProvider>
       <FavoritesProvider>
+        <ScrollToTop />
         <TopBar />
         <Header />
         <main>
