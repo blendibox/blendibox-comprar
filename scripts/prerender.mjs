@@ -138,6 +138,57 @@ function productJsonLd(product, canonical) {
   return [productLd, breadcrumbLd]
 }
 
+// FAQ das páginas de cupom por loja — TEM QUE bater com o texto visível em
+// src/pages/CouponsMerchantPage.tsx (faqFor), senão o FAQPage do JSON-LD fica
+// inválido (o Google exige que o conteúdo do FAQ apareça na página).
+function couponFaq(displayName) {
+  return [
+    {
+      q: `Os cupons da ${displayName} são de verdade?`,
+      a: `Sim. Todos os cupons e promoções da ${displayName} vêm direto do programa oficial de afiliados da loja e são verificados na nossa atualização diária. Cupons vencidos são removidos automaticamente.`,
+    },
+    {
+      q: `Como usar um cupom de desconto da ${displayName}?`,
+      a: `Copie o código do cupom aqui, clique para ir à loja e cole o código no carrinho ou na finalização da compra no site da ${displayName}. A compra é feita direto com a loja.`,
+    },
+    {
+      q: `E as promoções da ${displayName} sem código de cupom?`,
+      a: `Algumas ofertas da ${displayName} não precisam de código: é só clicar em "Ir para a loja" e o desconto já está aplicado na página de ofertas do site da ${displayName}. Nesses casos não há código pra copiar — basta aproveitar a promoção direto na loja.`,
+    },
+    {
+      q: `Com que frequência os cupons da ${displayName} são atualizados?`,
+      a: `Todo dia. Buscamos as promoções ativas da ${displayName} diariamente, então a lista está sempre atualizada e sem cupons vencidos.`,
+    },
+  ]
+}
+
+// JSON-LD das páginas de cupom por loja: BreadcrumbList (rich result de
+// navegação) + FAQPage (rich result de perguntas — o mais valioso pra essas
+// páginas). Coupon não tem tipo próprio no schema.org, e um Offer sem preço
+// gera aviso no Search Console, então focamos nesses dois que ranqueiam de
+// verdade sem risco.
+function couponsMerchantJsonLd(displayName, canonical) {
+  const breadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Cupons', item: `${SITE_URL}/cupons/` },
+      { '@type': 'ListItem', position: 3, name: `Cupom ${displayName}`, item: canonical },
+    ],
+  }
+  const faq = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: couponFaq(displayName).map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  }
+  return [breadcrumb, faq]
+}
+
 function inlineJson(value) {
   // Evita que o JSON quebre a tag <script> caso algum texto contenha "</script>".
   return JSON.stringify(value).replace(/</g, '\\u003c')
@@ -385,6 +436,36 @@ async function main() {
       head: { title, description, canonical, jsonLd },
     })
     generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
+  }
+
+  // --- Páginas de cupom por loja (/cupons/{merchantSlug}) — SEO pra buscas
+  // "cupom {loja}" (alta intenção de compra). Uma por loja que tem cupom
+  // ativo, com FAQ visível + JSON-LD (BreadcrumbList + FAQPage). ---
+  const couponsData = JSON.parse(await readFile(path.join(DATA_DIR, 'coupons.json'), 'utf-8').catch(() => '[]'))
+  const couponsByMerchant = new Map()
+  for (const c of couponsData) {
+    if (!c.merchantSlug) continue
+    if (!couponsByMerchant.has(c.merchantSlug)) {
+      couponsByMerchant.set(c.merchantSlug, { displayName: c.advertiser || c.merchantSlug, coupons: [] })
+    }
+    couponsByMerchant.get(c.merchantSlug).coupons.push(c)
+  }
+  for (const [merchantSlug, { displayName, coupons: merchantCoupons }] of couponsByMerchant) {
+    const routePath = `/cupons/${merchantSlug}`
+    const canonical = `${SITE_URL}${routePath}/`
+    const url = await renderPage({
+      template,
+      renderRoute,
+      routePath,
+      initialData: { merchantSlug, displayName, coupons: merchantCoupons },
+      head: {
+        title: `Cupom ${displayName} — códigos de desconto ativos | Compare Ofertas`,
+        description: `${merchantCoupons.length} ${merchantCoupons.length === 1 ? 'cupom/promoção ativo' : 'cupons e promoções ativos'} da ${displayName}, verificados diariamente. Copie o código e use direto na loja.`,
+        canonical,
+        jsonLd: couponsMerchantJsonLd(displayName, canonical),
+      },
+    })
+    generatedUrls.push({ url, changefreq: 'daily', priority: 0.6 })
   }
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))

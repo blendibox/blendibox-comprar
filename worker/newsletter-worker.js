@@ -433,6 +433,18 @@ async function checkPriceDropsAndNotify(env) {
 
 const EVENT_TYPES = ['casamento', 'aniversario', 'cha', 'outro']
 
+// Transforma texto num slug pra URL (sem acento, minúsculo, hífens) — usado
+// pro id "amigável" da lista (ex.: "casamento-ana-e-joao-x7k2p9").
+function slugifyRegistry(s) {
+  return String(s ?? '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
+}
+
 function randomToken(len) {
   const bytes = new Uint8Array(len)
   crypto.getRandomValues(bytes)
@@ -486,7 +498,24 @@ async function createRegistry(request, env, headers) {
   if (!EMAIL_REGEX.test(ownerEmail)) return jsonResponse({ error: 'E-mail inválido' }, 400, headers)
   if (!title) return jsonResponse({ error: 'Título obrigatório' }, 400, headers)
 
-  const id = crypto.randomUUID()
+  // ID amigável na URL: código personalizado (se informado e ainda livre) ou
+  // gerado do título + sufixo curto pra garantir unicidade e legibilidade.
+  let id
+  if (body.customId != null && String(body.customId).trim() !== '') {
+    const custom = slugifyRegistry(body.customId)
+    if (custom.length < 3) return jsonResponse({ error: 'O código precisa ter pelo menos 3 letras ou números.' }, 400, headers)
+    const taken = await env.REGISTRY_DB.prepare('SELECT id FROM registries WHERE id=?').bind(custom).first()
+    if (taken) return jsonResponse({ error: 'Esse código já está em uso — escolha outro.' }, 409, headers)
+    id = custom
+  } else {
+    const base = slugifyRegistry(title) || 'lista'
+    for (let i = 0; i < 4 && !id; i++) {
+      const candidate = `${base}-${randomToken(6)}`
+      const taken = await env.REGISTRY_DB.prepare('SELECT id FROM registries WHERE id=?').bind(candidate).first()
+      if (!taken) id = candidate
+    }
+    if (!id) id = `${base}-${crypto.randomUUID().slice(0, 8)}`
+  }
   const editToken = crypto.randomUUID()
   await env.REGISTRY_DB.prepare(
     'INSERT INTO registries (id, edit_token, title, event_type, event_date, owner_email, created_at) VALUES (?,?,?,?,?,?,?)'

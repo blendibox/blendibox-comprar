@@ -39,6 +39,7 @@ export function createRegistry(input: {
   eventType: RegistryEventType
   eventDate?: string
   ownerEmail: string
+  customId?: string
 }) {
   return request<{ ok: true; id: string; editToken: string }>('/registry', {
     method: 'POST',

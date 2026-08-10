@@ -210,7 +210,7 @@ export function ProductPage() {
             />
             <PriceDropBadge priceDropPercent={product.priceDropPercent} href={product.awDeepLink} />
             {merchantCoupons.length > 0 && (
-              <Link to={`/cupons?loja=${product.merchantSlug}`} className="product-detail__coupon-badge">
+              <Link to={`/cupons/${product.merchantSlug}`} className="product-detail__coupon-badge">
                 <Ticket size={14} aria-hidden="true" /> Cupom {product.merchantDisplayName}
               </Link>
             )}

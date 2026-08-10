@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Check, Copy, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Heart, Search, Trash2, X } from 'lucide-react'
 import { fetchIndex, fetchProduct } from '../lib/api'
 import { matchesSearch } from '../lib/search'
 import { formatPrice } from '../components/ProductCard'
+import { useFavorites } from '../context/FavoritesContext'
 import type { ProductIndexEntry } from '../types/product'
 import {
   addRegistryItem,
@@ -27,6 +28,8 @@ export function RegistryManagePage() {
   const [indexLoading, setIndexLoading] = useState(false)
   const [adding, setAdding] = useState('')
   const [quantities, setQuantities] = useState<Record<string, number>>({})
+  const { items: favorites, remove: removeFavorite } = useFavorites()
+  const [showFavorites, setShowFavorites] = useState(false)
 
   const shareUrl = `${window.location.origin}/lista/${id}`
 
@@ -59,20 +62,24 @@ export function RegistryManagePage() {
     [data]
   )
 
-  const add = async (p: ProductIndexEntry) => {
-    setAdding(`${p.merchantSlug}/${p.slug}`)
+  // Genérico — usado tanto pela busca quanto pelos favoritos. O deeplink de
+  // afiliado só existe no JSON completo do produto (o índice leve não traz),
+  // então busca só na hora de adicionar.
+  const addProduct = async (
+    entry: { merchantSlug: string; slug: string; name: string; image: string | null; price: number | null },
+    quantity = 1
+  ) => {
+    setAdding(`${entry.merchantSlug}/${entry.slug}`)
     try {
-      // O deeplink de afiliado só existe no JSON completo do produto (o índice
-      // leve não traz) — busca só na hora de adicionar.
-      const full = await fetchProduct(p.merchantSlug, p.slug)
+      const full = await fetchProduct(entry.merchantSlug, entry.slug)
       await addRegistryItem(id, editToken, {
-        merchantSlug: p.merchantSlug,
-        slug: p.slug,
-        name: p.productName,
-        image: p.awImageUrl,
-        price: p.searchPrice,
+        merchantSlug: entry.merchantSlug,
+        slug: entry.slug,
+        name: entry.name,
+        image: entry.image,
+        price: entry.price,
         deeplink: full.awDeepLink,
-        quantity: quantities[`${p.merchantSlug}/${p.slug}`] || 1,
+        quantity,
       })
       await reload()
     } catch (e) {
@@ -175,7 +182,12 @@ export function RegistryManagePage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => add(p)}
+                    onClick={() =>
+                      addProduct(
+                        { merchantSlug: p.merchantSlug, slug: p.slug, name: p.productName, image: p.awImageUrl, price: p.searchPrice },
+                        quantities[key] || 1
+                      )
+                    }
                     disabled={already || adding === key}
                     className="registry-result__add"
                   >
@@ -187,6 +199,62 @@ export function RegistryManagePage() {
           </div>
         )}
       </section>
+
+      {favorites.length > 0 && (
+        <section className="registry-add">
+          <button
+            type="button"
+            className="registry-fav-toggle"
+            onClick={() => setShowFavorites((v) => !v)}
+            aria-expanded={showFavorites}
+          >
+            <Heart size={16} aria-hidden="true" /> Carregar meus favoritos ({favorites.length})
+          </button>
+          {showFavorites && (
+            <div className="registry-results">
+              {favorites.map((f) => {
+                const key = `${f.merchantSlug}/${f.slug}`
+                const already = addedKeys.has(key)
+                return (
+                  <div key={key} className="registry-result">
+                    <img src={f.awImageUrl} alt="" loading="lazy" />
+                    <div className="registry-result__body">
+                      <span className="registry-result__merchant">{f.merchantDisplayName}</span>
+                      <span className="registry-result__name">{f.productName}</span>
+                      <span className="registry-result__price">{formatPrice(f.searchPrice, f.currency)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        addProduct({
+                          merchantSlug: f.merchantSlug,
+                          slug: f.slug,
+                          name: f.productName,
+                          image: f.awImageUrl,
+                          price: f.searchPrice,
+                        })
+                      }
+                      disabled={already || adding === key}
+                      className="registry-result__add"
+                    >
+                      {already ? 'Já na lista' : adding === key ? 'Adicionando...' : 'Adicionar'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFavorite(f.merchantSlug, f.slug)}
+                      className="registry-result__remove"
+                      aria-label="Remover dos favoritos"
+                      title="Remover dos favoritos"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+      )}
 
       <section className="registry-add">
         <h2>Itens da lista</h2>

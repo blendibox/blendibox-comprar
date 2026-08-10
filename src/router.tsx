@@ -7,6 +7,7 @@ import { ProductPage } from './pages/ProductPage'
 import { ComparePage } from './pages/ComparePage'
 import { FavoritesPage } from './pages/FavoritesPage'
 import { CouponsPage } from './pages/CouponsPage'
+import { CouponsMerchantPage } from './pages/CouponsMerchantPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
 import { AboutPage } from './pages/AboutPage'
@@ -24,6 +25,7 @@ export function AppRoutes() {
         <Route path="comparar" element={<ComparePage />} />
         <Route path="favoritos" element={<FavoritesPage />} />
         <Route path="cupons" element={<CouponsPage />} />
+        <Route path="cupons/:loja" element={<CouponsMerchantPage />} />
         <Route path="sobre" element={<AboutPage />} />
         <Route path="perguntas-frequentes" element={<FaqPage />} />
         <Route path="termos" element={<TermsPage />} />

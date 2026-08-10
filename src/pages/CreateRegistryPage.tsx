@@ -16,8 +16,19 @@ export function CreateRegistryPage() {
   const [eventType, setEventType] = useState<RegistryEventType>('casamento')
   const [eventDate, setEventDate] = useState('')
   const [ownerEmail, setOwnerEmail] = useState('')
+  const [customId, setCustomId] = useState('')
   const [status, setStatus] = useState<'idle' | 'sending' | 'error'>('idle')
   const [error, setError] = useState('')
+
+  // Prévia do endereço (mesma lógica de slug do worker) — só pra mostrar como
+  // vai ficar a URL enquanto digita.
+  const slugPreview = customId
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60)
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -29,6 +40,7 @@ export function CreateRegistryPage() {
         eventType,
         eventDate: eventDate || undefined,
         ownerEmail: ownerEmail.trim(),
+        customId: customId.trim() || undefined,
       })
       saveOwnerToken(id, editToken)
       addMyList({ id, editToken, title: title.trim() })
@@ -86,6 +98,20 @@ export function CreateRegistryPage() {
             placeholder="Pra você gerenciar a lista"
             required
           />
+        </label>
+
+        <label className="registry-form__field">
+          <span>Endereço da lista (opcional)</span>
+          <input
+            type="text"
+            value={customId}
+            onChange={(e) => setCustomId(e.target.value)}
+            placeholder="ex.: ana-e-joao"
+            maxLength={60}
+          />
+          <small className="registry-form__addr">
+            comprar.blendibox.com.br/lista/<strong>{slugPreview || 'gerado-do-título'}</strong>
+          </small>
         </label>
 
         {error && <p className="status status--error">{error}</p>}
