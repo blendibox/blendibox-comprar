@@ -41,7 +41,7 @@ const DAILY_CRON = '0 9 * * *'
 function corsHeaders(env) {
   return {
     'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   }
 }
@@ -144,16 +144,26 @@ async function handleWatch(request, env, headers) {
 export default {
   async fetch(request, env) {
     const headers = corsHeaders(env)
+    const url = new URL(request.url)
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers })
     }
 
+    // Webhook da Awin (Transaction Notifications) — server-to-server, sem CORS.
+    if (url.pathname === '/awin-transaction' && request.method === 'POST') {
+      return handleAwinTransaction(request, env)
+    }
+
+    // API da lista de presentes (Fase 1).
+    if (url.pathname === '/registry' || url.pathname.startsWith('/registry/')) {
+      return handleRegistry(request, env, url, headers)
+    }
+
+    // Rotas existentes (newsletter/watch) — só POST.
     if (request.method !== 'POST') {
       return jsonResponse({ error: 'Método não permitido' }, 405, headers)
     }
-
-    const url = new URL(request.url)
     if (url.pathname === '/watch') return handleWatch(request, env, headers)
     return handleNewsletterSignup(request, env, headers)
   },
@@ -405,4 +415,277 @@ async function checkPriceDropsAndNotify(env) {
   }
 
   console.log(`checkPriceDropsAndNotify: ${byEmail.size} e-mail(s) avisado(s) sobre ${drops.length} queda(s) de preço`)
+}
+
+// ---------------------------------------------------------------------------
+// Lista de presentes (Fase 1) — D1 REGISTRY_DB. Ver worker/registry-schema.sql
+// e docs/lista-presentes-spec.md. Estados do item:
+//   disponível -> com interesse (alguém clicou) -> comprado (Awin confirmou).
+// A compra SÓ é marcada pelo webhook da Awin, casada pelo clickref.
+// ---------------------------------------------------------------------------
+
+const EVENT_TYPES = ['casamento', 'aniversario', 'cha', 'outro']
+
+function randomToken(len) {
+  const bytes = new Uint8Array(len)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => (b % 36).toString(36)).join('')
+}
+
+// Anexa o clickref ao deeplink de afiliado da Awin — volta no webhook da
+// transação e é como casamos a compra ao item exato.
+function appendClickref(deeplink, clickref) {
+  const sep = deeplink.includes('?') ? '&' : '?'
+  return `${deeplink}${sep}clickref=${encodeURIComponent(clickref)}`
+}
+
+// O formato exato do payload da Transaction Notification varia; tenta os
+// locais mais prováveis do clickref (Click-source data ligado no painel).
+function extractClickref(t) {
+  return (
+    t.clickRef ?? t.clickref ?? t.clickRefs?.clickRef ?? t.clickRefs?.clickref ?? t.clickSourceData?.clickRef ?? null
+  )
+}
+
+async function handleRegistry(request, env, url, headers) {
+  if (!env.REGISTRY_DB) return jsonResponse({ error: 'Lista de presentes não configurada neste Worker' }, 500, headers)
+
+  const parts = url.pathname.split('/').filter(Boolean) // ['registry', id?, 'items'?, itemId?, action?]
+  const method = request.method
+
+  if (parts.length === 1 && method === 'POST') return createRegistry(request, env, headers)
+
+  const id = parts[1]
+  if (!id) return jsonResponse({ error: 'Rota inválida' }, 404, headers)
+
+  if (parts.length === 2 && method === 'GET') return getRegistry(id, env, headers)
+  if (parts.length === 3 && parts[2] === 'access' && method === 'POST') return registerGuest(id, request, env, headers)
+  if (parts.length === 3 && parts[2] === 'items' && method === 'POST') return addItem(id, request, env, headers)
+  if (parts.length === 4 && parts[2] === 'items' && method === 'DELETE') return removeItem(id, parts[3], request, env, headers)
+  if (parts.length === 5 && parts[2] === 'items' && parts[4] === 'interest' && method === 'POST')
+    return recordInterest(id, parts[3], request, env, headers)
+
+  return jsonResponse({ error: 'Rota não encontrada' }, 404, headers)
+}
+
+async function createRegistry(request, env, headers) {
+  const body = await request.json().catch(() => null)
+  if (!body) return jsonResponse({ error: 'JSON inválido' }, 400, headers)
+
+  const ownerEmail = String(body.ownerEmail || '').trim().toLowerCase()
+  const title = String(body.title || '').trim().slice(0, 120)
+  const eventType = EVENT_TYPES.includes(body.eventType) ? body.eventType : 'outro'
+  const eventDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.eventDate || '')) ? body.eventDate : null
+  if (!EMAIL_REGEX.test(ownerEmail)) return jsonResponse({ error: 'E-mail inválido' }, 400, headers)
+  if (!title) return jsonResponse({ error: 'Título obrigatório' }, 400, headers)
+
+  const id = crypto.randomUUID()
+  const editToken = crypto.randomUUID()
+  await env.REGISTRY_DB.prepare(
+    'INSERT INTO registries (id, edit_token, title, event_type, event_date, owner_email, created_at) VALUES (?,?,?,?,?,?,?)'
+  )
+    .bind(id, editToken, title, eventType, eventDate, ownerEmail, new Date().toISOString())
+    .run()
+
+  return jsonResponse({ ok: true, id, editToken }, 200, headers)
+}
+
+async function getRegistry(id, env, headers) {
+  const reg = await env.REGISTRY_DB.prepare(
+    'SELECT id, title, event_type, event_date FROM registries WHERE id=?'
+  )
+    .bind(id)
+    .first()
+  if (!reg) return jsonResponse({ error: 'Lista não encontrada' }, 404, headers)
+
+  const items = await env.REGISTRY_DB.prepare(
+    `SELECT i.id, i.merchant_slug, i.slug, i.snap_name, i.snap_image, i.snap_price, i.purchased_at,
+       (SELECT COUNT(*) FROM registry_interest ri WHERE ri.item_id = i.id) AS interest_count
+     FROM registry_items i WHERE i.registry_id=? ORDER BY i.added_at`
+  )
+    .bind(id)
+    .all()
+
+  const list = (items.results || []).map((it) => ({
+    id: it.id,
+    merchantSlug: it.merchant_slug,
+    slug: it.slug,
+    name: it.snap_name,
+    image: it.snap_image,
+    price: it.snap_price,
+    status: it.purchased_at ? 'comprado' : it.interest_count > 0 ? 'interesse' : 'disponivel',
+  }))
+
+  // Nunca expõe e-mails de dono/convidados — só o que é público.
+  return jsonResponse(
+    { registry: { id: reg.id, title: reg.title, eventType: reg.event_type, eventDate: reg.event_date }, items: list },
+    200,
+    headers
+  )
+}
+
+// Convidado se cadastra pra acessar a lista (captura o lead + permite
+// atribuir interesse). Consentimento explícito é obrigatório (LGPD). A
+// newsletter geral é opt-in separado.
+async function registerGuest(id, request, env, headers) {
+  const body = await request.json().catch(() => null)
+  if (!body) return jsonResponse({ error: 'JSON inválido' }, 400, headers)
+  const email = String(body.email || '').trim().toLowerCase()
+  if (!EMAIL_REGEX.test(email)) return jsonResponse({ error: 'E-mail inválido' }, 400, headers)
+  if (!body.consent) return jsonResponse({ error: 'Consentimento necessário' }, 400, headers)
+
+  const reg = await env.REGISTRY_DB.prepare('SELECT id FROM registries WHERE id=?').bind(id).first()
+  if (!reg) return jsonResponse({ error: 'Lista não encontrada' }, 404, headers)
+
+  const existing = await env.REGISTRY_DB.prepare(
+    'SELECT access_token FROM registry_guests WHERE registry_id=? AND email=?'
+  )
+    .bind(id, email)
+    .first()
+
+  let accessToken = existing?.access_token
+  if (!accessToken) {
+    accessToken = crypto.randomUUID()
+    await env.REGISTRY_DB.prepare(
+      'INSERT INTO registry_guests (id, registry_id, email, access_token, registered_at) VALUES (?,?,?,?,?)'
+    )
+      .bind(crypto.randomUUID(), id, email, accessToken, new Date().toISOString())
+      .run()
+    if (body.subscribeNewsletter) {
+      try {
+        await addToNewsletterAudience(email, env)
+      } catch {
+        // ignora — cadastro na lista já feito
+      }
+    }
+  }
+
+  return jsonResponse({ ok: true, accessToken }, 200, headers)
+}
+
+async function addItem(id, request, env, headers) {
+  const body = await request.json().catch(() => null)
+  if (!body) return jsonResponse({ error: 'JSON inválido' }, 400, headers)
+
+  const reg = await env.REGISTRY_DB.prepare('SELECT edit_token FROM registries WHERE id=?').bind(id).first()
+  if (!reg) return jsonResponse({ error: 'Lista não encontrada' }, 404, headers)
+  if (reg.edit_token !== String(body.editToken || '')) return jsonResponse({ error: 'Não autorizado' }, 403, headers)
+
+  const item = body.item || {}
+  if (!item.merchantSlug || !item.slug || !item.name || !item.deeplink)
+    return jsonResponse({ error: 'Item incompleto' }, 400, headers)
+
+  const itemId = crypto.randomUUID()
+  await env.REGISTRY_DB.prepare(
+    'INSERT INTO registry_items (id, registry_id, merchant_slug, slug, snap_name, snap_image, snap_price, snap_deeplink, added_at) VALUES (?,?,?,?,?,?,?,?,?)'
+  )
+    .bind(
+      itemId,
+      id,
+      String(item.merchantSlug),
+      String(item.slug),
+      String(item.name).slice(0, 300),
+      item.image ? String(item.image) : null,
+      item.price != null ? Number(item.price) : null,
+      String(item.deeplink),
+      new Date().toISOString()
+    )
+    .run()
+
+  return jsonResponse({ ok: true, itemId }, 200, headers)
+}
+
+async function removeItem(id, itemId, request, env, headers) {
+  const body = await request.json().catch(() => ({}))
+  const reg = await env.REGISTRY_DB.prepare('SELECT edit_token FROM registries WHERE id=?').bind(id).first()
+  if (!reg) return jsonResponse({ error: 'Lista não encontrada' }, 404, headers)
+  if (reg.edit_token !== String(body.editToken || '')) return jsonResponse({ error: 'Não autorizado' }, 403, headers)
+
+  await env.REGISTRY_DB.prepare('DELETE FROM registry_items WHERE id=? AND registry_id=?').bind(itemId, id).run()
+  return jsonResponse({ ok: true }, 200, headers)
+}
+
+// Convidado clicou pra ir à loja: registra o interesse com um clickref único
+// e devolve o deeplink já com &clickref=... A compra só é confirmada depois,
+// pelo webhook da Awin.
+async function recordInterest(id, itemId, request, env, headers) {
+  const body = await request.json().catch(() => ({}))
+  const item = await env.REGISTRY_DB.prepare(
+    'SELECT id, snap_deeplink FROM registry_items WHERE id=? AND registry_id=?'
+  )
+    .bind(itemId, id)
+    .first()
+  if (!item) return jsonResponse({ error: 'Item não encontrado' }, 404, headers)
+
+  let guestId = null
+  const accessToken = String(body.accessToken || '')
+  if (accessToken) {
+    const g = await env.REGISTRY_DB.prepare(
+      'SELECT id FROM registry_guests WHERE registry_id=? AND access_token=?'
+    )
+      .bind(id, accessToken)
+      .first()
+    guestId = g?.id || null
+  }
+
+  const clickref = 'reg' + randomToken(14)
+  await env.REGISTRY_DB.prepare(
+    'INSERT INTO registry_interest (id, item_id, guest_id, clickref, created_at) VALUES (?,?,?,?,?)'
+  )
+    .bind(crypto.randomUUID(), itemId, guestId, clickref, new Date().toISOString())
+    .run()
+
+  return jsonResponse({ ok: true, deeplink: appendClickref(item.snap_deeplink, clickref), clickref }, 200, headers)
+}
+
+// Webhook da Awin (Transaction Notifications). Guarda a transação (idempotente
+// por transaction_id) e, se o clickref bater com um interesse conhecido, marca
+// o item como comprado. Responde 200 sempre que consegue processar — a Awin
+// reenviaria em caso de erro.
+async function handleAwinTransaction(request, env) {
+  if (!env.REGISTRY_DB) return new Response('registry db not configured', { status: 500 })
+
+  let body
+  try {
+    body = await request.json()
+  } catch {
+    return new Response('bad json', { status: 400 })
+  }
+
+  const txns = Array.isArray(body) ? body : Array.isArray(body?.transactions) ? body.transactions : [body]
+  let matched = 0
+
+  for (const t of txns) {
+    const txnId = String(t.id ?? t.transactionId ?? '')
+    if (!txnId) continue
+
+    const clickref = extractClickref(t)
+    const status = t.commissionStatus ?? t.status ?? null
+    const amount = Number(t.saleAmount?.amount ?? t.transactionAmount ?? t.commissionAmount ?? 0) || null
+    const currency = t.saleAmount?.currency ?? t.currency ?? null
+    const advertiserId = String(t.advertiserId ?? t.advertiser?.id ?? '')
+
+    await env.REGISTRY_DB.prepare(
+      'INSERT OR REPLACE INTO awin_transactions (transaction_id, clickref, advertiser_id, amount, currency, status, received_at, raw) VALUES (?,?,?,?,?,?,?,?)'
+    )
+      .bind(txnId, clickref, advertiserId, amount, currency, status, new Date().toISOString(), JSON.stringify(t))
+      .run()
+
+    if (clickref) {
+      const interest = await env.REGISTRY_DB.prepare('SELECT item_id FROM registry_interest WHERE clickref=?')
+        .bind(clickref)
+        .first()
+      if (interest?.item_id) {
+        await env.REGISTRY_DB.prepare(
+          'UPDATE registry_items SET purchased_at=?, purchased_clickref=? WHERE id=? AND purchased_at IS NULL'
+        )
+          .bind(new Date().toISOString(), clickref, interest.item_id)
+          .run()
+        matched++
+      }
+    }
+  }
+
+  console.log(`handleAwinTransaction: ${txns.length} transação(ões), ${matched} casada(s) com item de lista`)
+  return new Response('ok', { status: 200 })
 }

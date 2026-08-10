@@ -36,3 +36,10 @@ DIGEST_FROM_EMAIL = "Compare Ofertas <ofertas@blendibox.com.br>"
 [[kv_namespaces]]
 binding = "PRICE_WATCH"
 id = "8461f3dc2b4246d0a0e89625c45b6a42"
+
+# D1 da lista de presentes (Fase 1). Schema em worker/registry-schema.sql,
+# aplicado com `wrangler d1 execute blendibox-registry --file=... --remote`.
+[[d1_databases]]
+binding = "REGISTRY_DB"
+database_name = "blendibox-registry"
+database_id = "96c615a2-78a6-4aa8-b408-24db37f5b690"
