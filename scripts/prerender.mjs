@@ -384,6 +384,13 @@ async function main() {
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))
 
+  // Fallback SPA pro GitHub Pages: rotas não pré-renderizadas (ex.: a lista de
+  // presentes /lista/:id compartilhada, ou /favoritos) caem no 404.html, que é
+  // a casca limpa do app — o router client assume e renderiza a rota certa
+  // (em vez do 404 padrão do GitHub). `template` é o index.html do Vite antes
+  // de qualquer conteúdo de rota ser injetado.
+  await writeFile(path.join(DIST_DIR, '404.html'), template)
+
   console.log(
     `Pré-renderização concluída: ${productPageCount} páginas de produto, ${byVertical.size} verticais, ${byMerchant.size} lojas, ${byCategory.size} categorias (${generatedUrls.length} URLs no total).`
   )

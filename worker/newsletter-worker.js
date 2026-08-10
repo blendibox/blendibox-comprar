@@ -38,11 +38,18 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MAX_WATCH_ITEMS = 20
 const DAILY_CRON = '0 9 * * *'
 
-function corsHeaders(env) {
+function corsHeaders(env, request) {
+  const allowed = env.ALLOWED_ORIGIN || '*'
+  const origin = request?.headers?.get('Origin') || ''
+  // Reflete a origem quando é o domínio de produção ou qualquer localhost
+  // (dev) — sem abrir pra '*'. localhost só é acessível na máquina do dev.
+  const allowOrigin =
+    origin && (origin === allowed || /^https?:\/\/localhost(:\d+)?$/.test(origin)) ? origin : allowed
   return {
-    'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || '*',
+    'Access-Control-Allow-Origin': allowOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
   }
 }
 
@@ -143,7 +150,7 @@ async function handleWatch(request, env, headers) {
 
 export default {
   async fetch(request, env) {
-    const headers = corsHeaders(env)
+    const headers = corsHeaders(env, request)
     const url = new URL(request.url)
 
     if (request.method === 'OPTIONS') {

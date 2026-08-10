@@ -11,6 +11,9 @@ import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
 import { AboutPage } from './pages/AboutPage'
 import { FaqPage } from './pages/FaqPage'
+import { CreateRegistryPage } from './pages/CreateRegistryPage'
+import { RegistryPublicPage } from './pages/RegistryPublicPage'
+import { RegistryManagePage } from './pages/RegistryManagePage'
 
 export function AppRoutes() {
   return (
@@ -24,6 +27,9 @@ export function AppRoutes() {
         <Route path="perguntas-frequentes" element={<FaqPage />} />
         <Route path="termos" element={<TermsPage />} />
         <Route path="privacidade" element={<PrivacyPage />} />
+        <Route path="listas/nova" element={<CreateRegistryPage />} />
+        <Route path="lista/:id" element={<RegistryPublicPage />} />
+        <Route path="lista/:id/editar" element={<RegistryManagePage />} />
         <Route path=":vertical/categoria/:categorySlug" element={<CategoryPage />} />
         <Route path=":slug" element={<HubPage />} />
         <Route path=":merchant/:slug" element={<ProductPage />} />
