@@ -43,7 +43,12 @@ CREATE TABLE IF NOT EXISTS registry_items (
   snap_image         TEXT,
   snap_price         REAL,
   snap_deeplink      TEXT NOT NULL,
-  purchased_at       TEXT,             -- NULL = ainda não confirmado como comprado
+  -- Quantidade desejada (ex.: 10 pacotes de fralda num chá de bebê) e quantas
+  -- já foram confirmadas pela Awin. O item só fica "comprado" quando
+  -- purchased_count >= quantity.
+  quantity           INTEGER NOT NULL DEFAULT 1,
+  purchased_count    INTEGER NOT NULL DEFAULT 0,
+  purchased_at       TEXT,             -- data da 1ª compra confirmada
   purchased_clickref TEXT,
   added_at           TEXT NOT NULL
 );

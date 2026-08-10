@@ -149,7 +149,7 @@ async function handleWatch(request, env, headers) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const headers = corsHeaders(env, request)
     const url = new URL(request.url)
 
@@ -159,7 +159,7 @@ export default {
 
     // Webhook da Awin (Transaction Notifications) — server-to-server, sem CORS.
     if (url.pathname === '/awin-transaction' && request.method === 'POST') {
-      return handleAwinTransaction(request, env)
+      return handleAwinTransaction(request, env, ctx)
     }
 
     // API da lista de presentes (Fase 1).
@@ -506,22 +506,31 @@ async function getRegistry(id, env, headers) {
   if (!reg) return jsonResponse({ error: 'Lista não encontrada' }, 404, headers)
 
   const items = await env.REGISTRY_DB.prepare(
-    `SELECT i.id, i.merchant_slug, i.slug, i.snap_name, i.snap_image, i.snap_price, i.purchased_at,
+    `SELECT i.id, i.merchant_slug, i.slug, i.snap_name, i.snap_image, i.snap_price, i.quantity, i.purchased_count,
        (SELECT COUNT(*) FROM registry_interest ri WHERE ri.item_id = i.id) AS interest_count
      FROM registry_items i WHERE i.registry_id=? ORDER BY i.added_at`
   )
     .bind(id)
     .all()
 
-  const list = (items.results || []).map((it) => ({
-    id: it.id,
-    merchantSlug: it.merchant_slug,
-    slug: it.slug,
-    name: it.snap_name,
-    image: it.snap_image,
-    price: it.snap_price,
-    status: it.purchased_at ? 'comprado' : it.interest_count > 0 ? 'interesse' : 'disponivel',
-  }))
+  const list = (items.results || []).map((it) => {
+    const quantity = it.quantity ?? 1
+    const purchased = it.purchased_count ?? 0
+    // "comprado" só quando toda a quantidade foi confirmada. Com quantidade
+    // parcial ainda dá pra presentear (ex.: faltam 3 pacotes de fralda).
+    const status = purchased >= quantity ? 'comprado' : it.interest_count > 0 ? 'interesse' : 'disponivel'
+    return {
+      id: it.id,
+      merchantSlug: it.merchant_slug,
+      slug: it.slug,
+      name: it.snap_name,
+      image: it.snap_image,
+      price: it.snap_price,
+      quantity,
+      purchasedCount: purchased,
+      status,
+    }
+  })
 
   // Nunca expõe e-mails de dono/convidados — só o que é público.
   return jsonResponse(
@@ -582,9 +591,10 @@ async function addItem(id, request, env, headers) {
   if (!item.merchantSlug || !item.slug || !item.name || !item.deeplink)
     return jsonResponse({ error: 'Item incompleto' }, 400, headers)
 
+  const quantity = Math.min(99, Math.max(1, Math.floor(Number(item.quantity) || 1)))
   const itemId = crypto.randomUUID()
   await env.REGISTRY_DB.prepare(
-    'INSERT INTO registry_items (id, registry_id, merchant_slug, slug, snap_name, snap_image, snap_price, snap_deeplink, added_at) VALUES (?,?,?,?,?,?,?,?,?)'
+    'INSERT INTO registry_items (id, registry_id, merchant_slug, slug, snap_name, snap_image, snap_price, snap_deeplink, quantity, added_at) VALUES (?,?,?,?,?,?,?,?,?,?)'
   )
     .bind(
       itemId,
@@ -595,6 +605,7 @@ async function addItem(id, request, env, headers) {
       item.image ? String(item.image) : null,
       item.price != null ? Number(item.price) : null,
       String(item.deeplink),
+      quantity,
       new Date().toISOString()
     )
     .run()
@@ -649,7 +660,7 @@ async function recordInterest(id, itemId, request, env, headers) {
 // por transaction_id) e, se o clickref bater com um interesse conhecido, marca
 // o item como comprado. Responde 200 sempre que consegue processar — a Awin
 // reenviaria em caso de erro.
-async function handleAwinTransaction(request, env) {
+async function handleAwinTransaction(request, env, ctx) {
   if (!env.REGISTRY_DB) return new Response('registry db not configured', { status: 500 })
 
   let body
@@ -666,6 +677,13 @@ async function handleAwinTransaction(request, env) {
     const txnId = String(t.id ?? t.transactionId ?? '')
     if (!txnId) continue
 
+    // Idempotência: a Awin pode reenviar a mesma notificação — se já
+    // processamos essa transação, pula (senão contaria a compra duas vezes).
+    const seen = await env.REGISTRY_DB.prepare('SELECT transaction_id FROM awin_transactions WHERE transaction_id=?')
+      .bind(txnId)
+      .first()
+    if (seen) continue
+
     const clickref = extractClickref(t)
     const status = t.commissionStatus ?? t.status ?? null
     const amount = Number(t.saleAmount?.amount ?? t.transactionAmount ?? t.commissionAmount ?? 0) || null
@@ -673,26 +691,74 @@ async function handleAwinTransaction(request, env) {
     const advertiserId = String(t.advertiserId ?? t.advertiser?.id ?? '')
 
     await env.REGISTRY_DB.prepare(
-      'INSERT OR REPLACE INTO awin_transactions (transaction_id, clickref, advertiser_id, amount, currency, status, received_at, raw) VALUES (?,?,?,?,?,?,?,?)'
+      'INSERT INTO awin_transactions (transaction_id, clickref, advertiser_id, amount, currency, status, received_at, raw) VALUES (?,?,?,?,?,?,?,?)'
     )
       .bind(txnId, clickref, advertiserId, amount, currency, status, new Date().toISOString(), JSON.stringify(t))
       .run()
 
-    if (clickref) {
-      const interest = await env.REGISTRY_DB.prepare('SELECT item_id FROM registry_interest WHERE clickref=?')
-        .bind(clickref)
-        .first()
-      if (interest?.item_id) {
-        await env.REGISTRY_DB.prepare(
-          'UPDATE registry_items SET purchased_at=?, purchased_clickref=? WHERE id=? AND purchased_at IS NULL'
-        )
-          .bind(new Date().toISOString(), clickref, interest.item_id)
-          .run()
-        matched++
-      }
+    if (!clickref) continue
+    const interest = await env.REGISTRY_DB.prepare('SELECT item_id FROM registry_interest WHERE clickref=?')
+      .bind(clickref)
+      .first()
+    if (!interest?.item_id) continue
+
+    // +1 na quantidade comprada, sem passar do total desejado (quantity).
+    const upd = await env.REGISTRY_DB.prepare(
+      'UPDATE registry_items SET purchased_count = purchased_count + 1, purchased_at = COALESCE(purchased_at, ?), purchased_clickref = COALESCE(purchased_clickref, ?) WHERE id=? AND purchased_count < quantity'
+    )
+      .bind(new Date().toISOString(), clickref, interest.item_id)
+      .run()
+
+    if ((upd.meta?.changes ?? 0) > 0) {
+      matched++
+      // Avisa o dono por e-mail, sem segurar a resposta pra Awin.
+      const notify = notifyOwnerOfPurchase(env, interest.item_id)
+      if (ctx?.waitUntil) ctx.waitUntil(notify)
+      else await notify
     }
   }
 
-  console.log(`handleAwinTransaction: ${txns.length} transação(ões), ${matched} casada(s) com item de lista`)
+  console.log(`handleAwinTransaction: ${txns.length} transação(ões), ${matched} compra(s) confirmada(s) em item de lista`)
   return new Response('ok', { status: 200 })
+}
+
+// Avisa o dono da lista por e-mail (Resend) quando uma compra é confirmada.
+// Best-effort — falha aqui não deve afetar a resposta pro webhook da Awin.
+async function notifyOwnerOfPurchase(env, itemId) {
+  try {
+    if (!env.RESEND_API_KEY) return
+    const row = await env.REGISTRY_DB.prepare(
+      `SELECT ri.snap_name, ri.quantity, ri.purchased_count, r.owner_email, r.title, r.id AS registry_id, r.edit_token
+       FROM registry_items ri JOIN registries r ON r.id = ri.registry_id WHERE ri.id=?`
+    )
+      .bind(itemId)
+      .first()
+    if (!row?.owner_email) return
+
+    const siteUrl = (env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
+    const manageUrl = `${siteUrl}/lista/${row.registry_id}/editar?token=${row.edit_token}`
+    const quantity = row.quantity ?? 1
+    const purchased = row.purchased_count ?? 0
+    const remaining = Math.max(0, quantity - purchased)
+    const qtyLine = quantity > 1 ? ` (${purchased} de ${quantity})` : ''
+
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: env.DIGEST_FROM_EMAIL,
+        to: row.owner_email,
+        subject: `🎁 Presente comprado da sua lista "${row.title}"`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
+            <h2 style="color:#0f172a;">Alguém comprou um presente 🎁</h2>
+            <p style="font-size:15px;color:#333;">Um convidado comprou <strong>${escapeHtml(row.snap_name)}</strong>${qtyLine} da sua lista <strong>${escapeHtml(row.title)}</strong>.</p>
+            ${remaining > 0 ? `<p style="font-size:14px;color:#666;">Ainda ${remaining === 1 ? 'falta' : 'faltam'} ${remaining} deste item.</p>` : ''}
+            <p style="margin-top:20px;"><a href="${manageUrl}" style="color:#0a7d3f;">Ver a lista</a></p>
+          </div>`,
+        text: `Alguém comprou "${row.snap_name}"${qtyLine} da sua lista "${row.title}".${remaining > 0 ? ` ${remaining === 1 ? 'Falta' : 'Faltam'} ${remaining}.` : ''}\n${manageUrl}`,
+      }),
+    })
+  } catch (e) {
+    console.error('notifyOwnerOfPurchase falhou:', e)
+  }
 }

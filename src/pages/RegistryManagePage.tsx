@@ -26,6 +26,7 @@ export function RegistryManagePage() {
   const [index, setIndex] = useState<ProductIndexEntry[] | null>(null)
   const [indexLoading, setIndexLoading] = useState(false)
   const [adding, setAdding] = useState('')
+  const [quantities, setQuantities] = useState<Record<string, number>>({})
 
   const shareUrl = `${window.location.origin}/lista/${id}`
 
@@ -71,6 +72,7 @@ export function RegistryManagePage() {
         image: p.awImageUrl,
         price: p.searchPrice,
         deeplink: full.awDeepLink,
+        quantity: quantities[`${p.merchantSlug}/${p.slug}`] || 1,
       })
       await reload()
     } catch (e) {
@@ -157,6 +159,20 @@ export function RegistryManagePage() {
                     <span className="registry-result__name">{p.productName}</span>
                     <span className="registry-result__price">{formatPrice(p.searchPrice, p.currency)}</span>
                   </div>
+                  {!already && (
+                    <input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={quantities[key] ?? 1}
+                      onChange={(e) =>
+                        setQuantities((q) => ({ ...q, [key]: Math.max(1, Math.min(99, Number(e.target.value) || 1)) }))
+                      }
+                      className="registry-result__qty"
+                      aria-label="Quantidade"
+                      title="Quantidade"
+                    />
+                  )}
                   <button
                     type="button"
                     onClick={() => add(p)}
@@ -185,8 +201,17 @@ export function RegistryManagePage() {
                   <span className="registry-result__name">{it.name}</span>
                   <span className="registry-result__price">
                     {formatPrice(it.price, 'BRL')}
-                    {it.status === 'comprado' && <span className="registry-tag registry-tag--bought"> · já comprado</span>}
-                    {it.status === 'interesse' && <span className="registry-tag registry-tag--interest"> · alguém demonstrou interesse</span>}
+                    {it.quantity > 1 ? (
+                      <span className={`registry-tag ${it.status === 'comprado' ? 'registry-tag--bought' : 'registry-tag--interest'}`}>
+                        {' · '}
+                        {it.purchasedCount} de {it.quantity} comprados
+                      </span>
+                    ) : (
+                      <>
+                        {it.status === 'comprado' && <span className="registry-tag registry-tag--bought"> · já comprado</span>}
+                        {it.status === 'interesse' && <span className="registry-tag registry-tag--interest"> · alguém demonstrou interesse</span>}
+                      </>
+                    )}
                   </span>
                 </div>
                 <button type="button" onClick={() => remove(it.id)} className="registry-result__remove" aria-label="Remover item">

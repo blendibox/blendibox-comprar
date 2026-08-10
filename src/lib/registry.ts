@@ -14,6 +14,8 @@ export interface RegistryItem {
   name: string
   image: string | null
   price: number | null
+  quantity: number
+  purchasedCount: number
   status: RegistryItemStatus
 }
 
@@ -58,7 +60,15 @@ export function registerGuest(id: string, input: { email: string; consent: boole
 export function addRegistryItem(
   id: string,
   editToken: string,
-  item: { merchantSlug: string; slug: string; name: string; image?: string | null; price?: number | null; deeplink: string }
+  item: {
+    merchantSlug: string
+    slug: string
+    name: string
+    image?: string | null
+    price?: number | null
+    deeplink: string
+    quantity?: number
+  }
 ) {
   return request<{ ok: true; itemId: string }>(`/registry/${id}/items`, {
     method: 'POST',

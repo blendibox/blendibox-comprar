@@ -76,13 +76,18 @@ export function RegistryPublicPage() {
               <div className="registry-card__body">
                 <span className="registry-card__name">{it.name}</span>
                 <span className="registry-card__price">{formatPrice(it.price, 'BRL')}</span>
+                {it.quantity > 1 && (
+                  <span className="registry-card__qty">
+                    {it.purchasedCount} de {it.quantity} comprados
+                  </span>
+                )}
                 {bought ? (
                   <span className="registry-card__status registry-card__status--bought">
-                    <Check size={15} /> Já comprado
+                    <Check size={15} /> {it.quantity > 1 ? 'Tudo comprado' : 'Já comprado'}
                   </span>
                 ) : (
                   <>
-                    {it.status === 'interesse' && (
+                    {it.status === 'interesse' && it.quantity === 1 && (
                       <span className="registry-card__hint">Alguém já demonstrou interesse — confirme antes de comprar.</span>
                     )}
                     <button
