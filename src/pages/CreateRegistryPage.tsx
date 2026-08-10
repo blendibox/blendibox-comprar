@@ -5,8 +5,13 @@ import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } fro
 
 const EVENT_OPTIONS: { value: RegistryEventType; label: string }[] = [
   { value: 'casamento', label: 'Casamento' },
+  { value: 'cha-bebe', label: 'Chá de bebê' },
+  { value: 'cha-casa', label: 'Chá de panela / casa nova' },
   { value: 'aniversario', label: 'Aniversário' },
-  { value: 'cha', label: 'Chá de casa nova / bebê' },
+  { value: 'mesversario', label: 'Mêsversário' },
+  { value: 'quinze-anos', label: '15 anos (debutante)' },
+  { value: 'pet', label: 'Aniversário do pet' },
+  { value: 'formatura', label: 'Formatura / bodas' },
   { value: 'outro', label: 'Outro' },
 ]
 

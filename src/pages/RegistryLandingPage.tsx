@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Baby, Cake, Gift, Heart, PartyPopper, Share2, ShoppingBag, Sparkles } from 'lucide-react'
+import { Baby, Cake, Crown, Gift, Heart, PartyPopper, PawPrint, Share2, ShoppingBag, Sparkles } from 'lucide-react'
 import { getMyLists } from '../lib/registry'
 
 const STEPS = [
@@ -11,8 +11,10 @@ const STEPS = [
 const OCCASIONS = [
   { Icon: Heart, title: 'Casamento', text: 'Monte o enxoval com eletrodomésticos, casa e decoração das lojas parceiras.' },
   { Icon: Baby, title: 'Chá de bebê', text: 'Fraldas, itens de enxoval e cuidados — com quantidade pra vários convidados.' },
-  { Icon: Cake, title: 'Aniversário', text: 'Deixe claro o que você realmente quer ganhar, sem presente repetido.' },
-  { Icon: Sparkles, title: 'Chá de casa nova', text: 'Do micro-ondas ao jogo de panelas, tudo num link só.' },
+  { Icon: Sparkles, title: 'Chá de panela / casa nova', text: 'Do micro-ondas ao jogo de panelas, tudo num link só.' },
+  { Icon: Cake, title: 'Aniversário & mêsversário', text: 'Deixe claro o que você realmente quer ganhar, sem presente repetido.' },
+  { Icon: Crown, title: '15 anos', text: 'A debutante monta a lista dos sonhos e os convidados escolhem o presente.' },
+  { Icon: PawPrint, title: 'Aniversário do pet', text: 'Brinquedos, caminha, petiscos — o niver do bichinho também merece lista.' },
   { Icon: PartyPopper, title: 'Formatura & bodas', text: 'Qualquer ocasião que junta gente pra presentear.' },
   { Icon: Gift, title: 'Amigo secreto', text: 'Cada um marca o que já comprou e ninguém dá a mesma coisa.' },
 ]

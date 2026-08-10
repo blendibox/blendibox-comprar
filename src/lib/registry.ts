@@ -5,7 +5,17 @@ import { NEWSLETTER_WORKER_URL } from '../config/newsletter'
 const BASE = NEWSLETTER_WORKER_URL
 
 export type RegistryItemStatus = 'disponivel' | 'interesse' | 'comprado'
-export type RegistryEventType = 'casamento' | 'aniversario' | 'cha' | 'outro'
+export type RegistryEventType =
+  | 'casamento'
+  | 'aniversario'
+  | 'mesversario'
+  | 'quinze-anos'
+  | 'cha-bebe'
+  | 'cha-casa'
+  | 'pet'
+  | 'formatura'
+  | 'cha'
+  | 'outro'
 
 export interface RegistryItem {
   id: string

@@ -14,6 +14,12 @@ import {
 const EVENT_LABEL: Record<string, string> = {
   casamento: 'Lista de casamento',
   aniversario: 'Lista de aniversário',
+  mesversario: 'Mêsversário',
+  'quinze-anos': 'Lista de 15 anos',
+  'cha-bebe': 'Chá de bebê',
+  'cha-casa': 'Chá de panela / casa nova',
+  pet: 'Aniversário do pet',
+  formatura: 'Formatura',
   cha: 'Chá',
   outro: 'Lista de presentes',
 }

@@ -431,7 +431,18 @@ async function checkPriceDropsAndNotify(env) {
 // A compra SÓ é marcada pelo webhook da Awin, casada pelo clickref.
 // ---------------------------------------------------------------------------
 
-const EVENT_TYPES = ['casamento', 'aniversario', 'cha', 'outro']
+const EVENT_TYPES = [
+  'casamento',
+  'aniversario',
+  'mesversario',
+  'quinze-anos',
+  'cha-bebe',
+  'cha-casa',
+  'pet',
+  'formatura',
+  'cha',
+  'outro',
+]
 
 // Transforma texto num slug pra URL (sem acento, minúsculo, hífens) — usado
 // pro id "amigável" da lista (ex.: "casamento-ana-e-joao-x7k2p9").
