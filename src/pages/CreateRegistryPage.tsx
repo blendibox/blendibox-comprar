@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Gift } from 'lucide-react'
-import { createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
+import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
 
 const EVENT_OPTIONS: { value: RegistryEventType; label: string }[] = [
   { value: 'casamento', label: 'Casamento' },
@@ -31,6 +31,7 @@ export function CreateRegistryPage() {
         ownerEmail: ownerEmail.trim(),
       })
       saveOwnerToken(id, editToken)
+      addMyList({ id, editToken, title: title.trim() })
       navigate(`/lista/${id}/editar?token=${editToken}`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar a lista')

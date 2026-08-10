@@ -119,3 +119,32 @@ export function getGuestToken(id: string): string | null {
     return null
   }
 }
+
+// Índice das listas que este navegador criou (múltiplas listas por "conta",
+// sem login no MVP) — usado pela landing pra mostrar "Minhas listas".
+const MY_LISTS_KEY = 'registry:mylists'
+
+export interface MyList {
+  id: string
+  editToken: string
+  title: string
+}
+
+export function getMyLists(): MyList[] {
+  try {
+    const raw = localStorage.getItem(MY_LISTS_KEY)
+    return raw ? (JSON.parse(raw) as MyList[]) : []
+  } catch {
+    return []
+  }
+}
+
+export function addMyList(entry: MyList) {
+  try {
+    const lists = getMyLists().filter((l) => l.id !== entry.id)
+    lists.unshift(entry)
+    localStorage.setItem(MY_LISTS_KEY, JSON.stringify(lists.slice(0, 20)))
+  } catch {
+    // segue sem persistir — o link de gestão também tem o token
+  }
+}

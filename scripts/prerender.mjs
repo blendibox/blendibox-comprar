@@ -368,6 +368,11 @@ async function main() {
     { routePath: '/termos', title: 'Termos de Uso | Compare Ofertas', description: 'Termos de uso do Compare Ofertas.' },
     { routePath: '/privacidade', title: 'Política de Privacidade | Compare Ofertas', description: 'Política de privacidade e proteção de dados do Compare Ofertas.' },
     { routePath: '/cupons', title: 'Cupons | Compare Ofertas', description: 'Cupons e promoções ativas das lojas parceiras do Compare Ofertas.' },
+    {
+      routePath: '/lista-de-presentes',
+      title: 'Lista de presentes | Compare Ofertas',
+      description: 'Crie sua lista de presentes de casamento, chá de bebê ou aniversário e compartilhe o link — ninguém dá presente repetido.',
+    },
     { routePath: '/comparar', title: 'Comparar ofertas | Compare Ofertas', description: 'Compare lado a lado até 3 ofertas selecionadas.' },
   ]
   for (const { routePath, title, description, jsonLd } of staticPages) {
