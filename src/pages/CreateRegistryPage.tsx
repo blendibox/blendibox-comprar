@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Gift } from 'lucide-react'
+import { Gift, Lock } from 'lucide-react'
 import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
+import { RegistrySteps } from '../components/RegistrySteps'
 
 const EVENT_OPTIONS: { value: RegistryEventType; label: string }[] = [
   { value: 'casamento', label: 'Casamento' },
@@ -49,7 +50,7 @@ export function CreateRegistryPage() {
       })
       saveOwnerToken(id, editToken)
       addMyList({ id, editToken, title: title.trim() })
-      navigate(`/lista/${id}/editar?token=${editToken}`)
+      navigate(`/lista/${id}/editar?token=${editToken}&novo=1`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar a lista')
       setStatus('error')
@@ -61,8 +62,13 @@ export function CreateRegistryPage() {
       <header className="registry-hero">
         <Gift className="registry-hero__icon" size={28} aria-hidden="true" />
         <h1>Crie sua lista de presentes</h1>
-        <p>Monte a lista com produtos das lojas parceiras e compartilhe o link. Os convidados marcam o que já compraram — ninguém repete presente.</p>
+        <p>
+          Monte sua lista com produtos das nossas lojas parceiras e compartilhe o link. A gente avisa quando cada
+          presente é comprado — sem presente repetido.
+        </p>
       </header>
+
+      <RegistrySteps current={1} />
 
       <form className="registry-form" onSubmit={submit}>
         <label className="registry-form__field">
@@ -95,14 +101,17 @@ export function CreateRegistryPage() {
         </div>
 
         <label className="registry-form__field">
-          <span>Seu e-mail</span>
+          <span>E-mail do responsável</span>
           <input
             type="email"
             value={ownerEmail}
             onChange={(e) => setOwnerEmail(e.target.value)}
-            placeholder="Pra você gerenciar a lista"
+            placeholder="seu@email.com"
             required
           />
+          <small className="registry-form__hint">
+            <Lock size={12} aria-hidden="true" /> É por aqui que você vai acessar e editar sua lista.
+          </small>
         </label>
 
         <label className="registry-form__field">

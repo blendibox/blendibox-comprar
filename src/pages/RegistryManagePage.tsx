@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Check, Copy, Heart, Search, Trash2, X } from 'lucide-react'
+import { Check, Copy, Heart, PartyPopper, Search, Trash2, X } from 'lucide-react'
 import { fetchIndex, fetchProduct } from '../lib/api'
 import { matchesSearch } from '../lib/search'
 import { formatPrice } from '../components/ProductCard'
+import { RegistrySteps } from '../components/RegistrySteps'
 import { useFavorites } from '../context/FavoritesContext'
 import type { ProductIndexEntry } from '../types/product'
 import {
@@ -18,6 +19,7 @@ export function RegistryManagePage() {
   const { id = '' } = useParams()
   const [params] = useSearchParams()
   const editToken = params.get('token') || getOwnerToken(id) || ''
+  const justCreated = params.get('novo') === '1'
 
   const [data, setData] = useState<RegistryData | null>(null)
   const [loadError, setLoadError] = useState('')
@@ -122,10 +124,37 @@ export function RegistryManagePage() {
 
   return (
     <div className="page registry-page">
-      <header className="registry-manage__header">
-        <h1>{data.registry.title}</h1>
-        <p className="page__meta">Gestão da lista · {data.items.length} itens</p>
-      </header>
+      {justCreated ? (
+        <header className="registry-success">
+          <PartyPopper className="registry-success__icon" size={38} aria-hidden="true" />
+          <h1>Sua lista está pronta!</h1>
+          <p>{data.registry.title} — agora adicione os presentes e compartilhe o link.</p>
+        </header>
+      ) : (
+        <header className="registry-manage__header">
+          <h1>{data.registry.title}</h1>
+          <p className="page__meta">Gestão da lista · {data.items.length} itens</p>
+        </header>
+      )}
+
+      <RegistrySteps current={2} />
+
+      {data.items.length > 0 && (
+        <div className="registry-dashboard">
+          <span>
+            <strong>{data.items.filter((i) => i.status === 'comprado').length}</strong> de {data.items.length} presentes
+            recebidos
+          </span>
+          {(() => {
+            const boughtValue = data.items.reduce((sum, i) => sum + (i.price || 0) * i.purchasedCount, 0)
+            return boughtValue > 0 ? (
+              <span>
+                <strong>{formatPrice(boughtValue, 'BRL')}</strong> em presentes comprados
+              </span>
+            ) : null
+          })()}
+        </div>
+      )}
 
       <div className="registry-share">
         <span className="registry-share__label">Link pra compartilhar com os convidados:</span>

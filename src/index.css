@@ -2889,25 +2889,263 @@ a {
 
 /* ===== Landing da lista de presentes ===== */
 .registry-landing {
-  max-width: 920px;
+  max-width: 1000px;
+  overflow-x: clip; /* decorações do hero nunca criam scroll horizontal */
 }
 .registry-landing__hero {
-  text-align: center;
-  padding: 12px 0 8px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: 28px;
+  padding: 18px 0 8px;
+}
+.registry-landing__hero-copy {
+  text-align: left;
+  max-width: 30rem;
+}
+
+/* Coluna visual — card + fundo divertido (blob rosa, confete, corações) */
+.registry-landing__hero-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+}
+.registry-deco {
+  position: absolute;
+  z-index: 1;
+  pointer-events: none;
+}
+.registry-deco--blob {
+  width: 88%;
+  aspect-ratio: 1;
+  right: 0;
+  background: radial-gradient(circle at 50% 45%, #fde4ef 0%, #fdeef6 42%, rgba(253, 238, 246, 0) 70%);
+  border-radius: 50%;
+  z-index: 0;
+}
+.registry-deco--confetti {
+  width: 11px;
+  height: 6px;
+  border-radius: 2px;
+  opacity: 0.9;
+}
+.registry-deco--heart {
+  color: #f9a8d4;
+  z-index: 1;
 }
 .registry-landing__hero-icon {
   color: var(--color-pink);
 }
 .registry-landing__hero h1 {
-  margin: 8px 0 10px;
-  font-size: 34px;
+  margin: 8px 0 12px;
+  font-size: 38px;
+  line-height: 1.1;
 }
 .registry-landing__hero p {
-  max-width: 60ch;
-  margin: 0 auto;
+  max-width: 52ch;
+  margin: 0;
   color: #5f5f5f;
   font-size: 16px;
   line-height: 1.5;
+}
+.registry-landing__hl {
+  color: var(--color-pink);
+}
+
+/* Stats inline do hero — números reais (meta/merchants) */
+.registry-landing__herostats {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 20px 0 0;
+  padding: 0;
+}
+.registry-landing__herostats li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+}
+.registry-landing__herostats svg {
+  color: var(--color-teal-a11y);
+  flex-shrink: 0;
+}
+.registry-landing__herostats strong {
+  color: var(--color-text);
+}
+
+/* Card ilustrativo "Sua lista" — produtos REAIS do catálogo */
+.registry-preview {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: min(400px, calc(100vw - 32px));
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 18px;
+  box-shadow: 0 22px 50px -24px rgba(17, 24, 39, 0.4);
+  padding: 16px;
+}
+.registry-preview__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f2f5;
+}
+.registry-preview__head svg {
+  color: var(--color-pink);
+}
+.registry-preview__items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.registry-preview__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f6f8;
+}
+.registry-preview__item img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fafafa;
+  flex-shrink: 0;
+}
+.registry-preview__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.registry-preview__name {
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.registry-preview__merchant {
+  font-size: 11px;
+  color: #999;
+}
+.registry-preview__price {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+.registry-preview__badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+.registry-preview__badge--available {
+  background: #ecfdf3;
+  color: #0a7d3f;
+}
+.registry-preview__badge--bought {
+  background: #fce7f3;
+  color: #be185d;
+}
+.registry-preview__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  font-size: 12px;
+  color: #6b7280;
+}
+.registry-preview__foot svg {
+  color: #0a7d3f;
+  flex-shrink: 0;
+}
+
+/* Faixa de marcas — só lojas ativas (dado real do merchants.json) */
+.registry-landing__brands {
+  margin-top: 26px;
+  text-align: center;
+}
+.registry-landing__brands-label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9a9a9a;
+  margin-bottom: 12px;
+}
+.registry-landing__brands-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 10px;
+}
+.registry-landing__brand {
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  font-weight: 700;
+  font-size: 14px;
+  color: #444;
+}
+.registry-landing__brand--more {
+  background: #f4f5f8;
+  color: #777;
+  font-weight: 600;
+}
+
+/* Por que aqui — grid de argumentos */
+.registry-landing__why {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.registry-landing__why-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 16px;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+}
+.registry-landing__why-chip {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  margin-bottom: 2px;
+}
+.registry-landing__why-chip--green {
+  background: #ecfdf3;
+  color: #0a7d3f;
+}
+.registry-landing__why-chip--pink {
+  background: #fce7f3;
+  color: #be185d;
+}
+.registry-landing__why-card strong {
+  font-size: 15px;
+}
+.registry-landing__why-card span {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.45;
 }
 .registry-landing__cta {
   margin: 22px 0 6px;
@@ -3051,16 +3289,55 @@ a {
   border-radius: 16px;
 }
 .registry-landing__bottom h2 {
-  margin: 0 0 18px;
+  margin: 0 0 8px;
   font-size: 22px;
 }
+.registry-landing__bottom-sub {
+  margin: 0 0 20px;
+  color: #5f5f5f;
+  font-size: 15px;
+}
 
+@media (max-width: 860px) {
+  .registry-landing__hero {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+    text-align: center;
+    justify-items: center;
+  }
+  .registry-landing__hero-copy {
+    text-align: center;
+    max-width: none;
+    order: 1;
+  }
+  .registry-landing__hero-visual {
+    order: 2;
+    min-height: 300px;
+  }
+  .registry-landing__hero p {
+    margin: 0 auto;
+  }
+  .registry-landing__herostats {
+    justify-content: center;
+  }
+  .registry-deco--blob {
+    width: 108%;
+  }
+}
+@media (max-width: 760px) {
+  .registry-landing__why {
+    grid-template-columns: 1fr 1fr;
+  }
+}
 @media (max-width: 640px) {
   .registry-landing__steps {
     grid-template-columns: 1fr;
   }
+  .registry-landing__why {
+    grid-template-columns: 1fr;
+  }
   .registry-landing__hero h1 {
-    font-size: 28px;
+    font-size: 30px;
   }
 }
 
@@ -3157,4 +3434,117 @@ a {
 }
 .registry-form__addr strong {
   color: var(--color-green);
+}
+
+/* Barra de progresso da lista de presentes */
+.registry-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  list-style: none;
+  margin: 0 auto 24px;
+  padding: 0;
+  max-width: 520px;
+}
+.registry-steps__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.registry-steps__item:not(:last-child)::after {
+  content: '';
+  width: 28px;
+  height: 2px;
+  background: #e5e7eb;
+  margin: 0 10px;
+}
+.registry-steps__num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #e5e7eb;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.registry-steps__item--current {
+  color: var(--color-pink);
+}
+.registry-steps__item--current .registry-steps__num {
+  border-color: var(--color-pink);
+  background: var(--color-pink);
+  color: #fff;
+}
+.registry-steps__item--done {
+  color: var(--color-green);
+}
+.registry-steps__item--done .registry-steps__num {
+  border-color: var(--color-green);
+  background: var(--color-green);
+  color: #fff;
+}
+@media (max-width: 480px) {
+  .registry-steps__label {
+    display: none;
+  }
+  .registry-steps__item:not(:last-child)::after {
+    width: 40px;
+  }
+}
+
+/* Tela "sua lista está pronta" */
+.registry-success {
+  text-align: center;
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 55%, #fdf2f8 100%);
+  border: 1px solid #eef0f3;
+  border-radius: 16px;
+  padding: 28px 20px;
+  margin-bottom: 22px;
+}
+.registry-success__icon {
+  color: var(--color-pink);
+}
+.registry-success h1 {
+  margin: 8px 0 6px;
+  font-size: 26px;
+}
+.registry-success p {
+  margin: 0;
+  color: #555;
+  font-size: 15px;
+}
+
+/* Painel do dono */
+.registry-dashboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 28px;
+  padding: 16px 18px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #166534;
+}
+.registry-dashboard strong {
+  color: var(--color-green);
+  font-size: 16px;
+}
+
+/* Hint dos campos do formulário */
+.registry-form__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  color: #16a34a;
+  font-weight: 400;
 }
