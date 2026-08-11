@@ -3462,6 +3462,7 @@ a {
 /* ===== Walkthrough interativo (/como-funciona) ===== */
 .walkthrough {
   max-width: 1000px;
+  overflow-x: clip;
 }
 .walkthrough__hero {
   text-align: center;
@@ -3475,87 +3476,65 @@ a {
   margin: 0;
   color: #5f5f5f;
 }
-.walkthrough__stage {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  gap: 32px;
-  align-items: start;
+/* Carrossel unificado: cada slide = tela + texto do passo, juntos */
+.wt-carousel {
+  max-width: 860px;
+  margin: 0 auto;
 }
-.walkthrough__steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.wt-slide {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  align-items: center;
+  gap: 36px;
+  animation: wtFade 0.4s ease;
 }
-.walkthrough__step {
-  position: relative;
+.wt-slide > .walkthrough__frame {
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 430px;
 }
-.walkthrough__step button {
-  display: flex;
-  gap: 14px;
-  width: 100%;
-  text-align: left;
-  background: #fff;
-  border: 1px solid #eef0f3;
-  border-radius: 14px;
-  padding: 16px;
-  cursor: pointer;
-  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+.wt-slide__caption {
+  flex: 1 1 0;
+  min-width: 0;
 }
-.walkthrough__step:not(.is-active) button {
-  opacity: 0.62;
+.wt-slide__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #9a9a9a;
 }
-.walkthrough__step.is-active button {
-  border-color: var(--color-pink);
-  box-shadow: 0 10px 30px -18px rgba(219, 39, 119, 0.6);
-}
-.walkthrough__step button:hover {
-  opacity: 1;
-}
-.walkthrough__num {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+.wt-slide__num {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #f4f5f8;
-  color: #667;
+  background: var(--color-pink);
+  color: #fff;
   font-weight: 800;
   font-size: 14px;
 }
-.walkthrough__step.is-active .walkthrough__num {
-  background: var(--color-pink);
-  color: #fff;
+.wt-slide__caption h2 {
+  margin: 12px 0 8px;
+  font-size: 24px;
 }
-.walkthrough__step.is-done .walkthrough__num {
-  background: #ecfdf3;
-  color: #0a7d3f;
-}
-.walkthrough__step-body {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.walkthrough__step-body strong {
+.wt-slide__caption p {
+  margin: 0;
+  color: #5f5f5f;
   font-size: 15px;
+  line-height: 1.55;
 }
-.walkthrough__step-body span {
-  font-size: 13px;
-  color: #666;
-  line-height: 1.45;
-}
-.walkthrough__progress {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  bottom: 8px;
-  height: 3px;
+.wt-slide__progress {
+  display: block;
+  height: 4px;
   border-radius: 2px;
   background: #f1e0ea;
   overflow: hidden;
+  margin-top: 20px;
+  max-width: 260px;
 }
 .walkthrough__progress-fill {
   display: block;
@@ -3570,10 +3549,6 @@ a {
   to { transform: scaleX(1); }
 }
 
-.walkthrough__screen {
-  position: sticky;
-  top: 90px;
-}
 .walkthrough__frame {
   background: #fff;
   border: 1px solid #e7e9ee;
@@ -3860,13 +3835,23 @@ a {
 }
 
 @media (max-width: 820px) {
-  .walkthrough__stage {
-    grid-template-columns: 1fr;
-    gap: 22px;
+  .wt-slide {
+    flex-direction: column;
+    gap: 20px;
   }
-  .walkthrough__screen {
-    position: static;
-    order: -1;
+  .wt-slide > .walkthrough__frame {
+    flex: none;
+    width: 100%;
+    max-width: 100%;
+  }
+  .wt-slide__caption {
+    flex: none;
+    width: 100%;
+    text-align: center;
+  }
+  .wt-slide__progress {
+    margin-left: auto;
+    margin-right: auto;
   }
 }
 @media (prefers-reduced-motion: reduce) {

@@ -137,57 +137,51 @@ export function WalkthroughPage() {
       </header>
 
       <div
-        className="walkthrough__stage"
+        className="wt-carousel"
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
       >
-        <ol className="walkthrough__steps">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className={`walkthrough__step ${i === active ? 'is-active' : i < active ? 'is-done' : ''}`}>
-              <button type="button" onClick={() => go(i)}>
-                <span className="walkthrough__num">{i < active ? <Check size={14} /> : i + 1}</span>
-                <span className="walkthrough__step-body">
-                  <strong>{s.title}</strong>
-                  <span>{s.text}</span>
-                </span>
-              </button>
-              {i === active && (
-                <span className="walkthrough__progress" aria-hidden="true">
-                  <span
-                    key={`${active}-${auto}-${hover}`}
-                    className="walkthrough__progress-fill"
-                    style={{ animationPlayState: auto && !hover ? 'running' : 'paused' }}
-                  />
-                </span>
-              )}
-            </li>
-          ))}
-        </ol>
-
-        <div className="walkthrough__screen">
+        <div key={active} className="wt-slide">
           <div className="walkthrough__frame">
             <div className="walkthrough__frame-bar">
               <span /><span /><span />
             </div>
-            <div key={active} className="walkthrough__frame-body">
+            <div className="walkthrough__frame-body">
               <Screen step={active} />
             </div>
           </div>
-          <div className="walkthrough__controls">
-            <button type="button" onClick={() => go(active - 1)} aria-label="Anterior"><ChevronLeft size={18} /></button>
-            <div className="walkthrough__dots">
-              {STEPS.map((s, i) => (
-                <button
-                  key={s.title}
-                  type="button"
-                  className={i === active ? 'is-active' : ''}
-                  onClick={() => go(i)}
-                  aria-label={`Passo ${i + 1}`}
-                />
-              ))}
-            </div>
-            <button type="button" onClick={() => go(active + 1)} aria-label="Próximo"><ChevronRight size={18} /></button>
+
+          <div className="wt-slide__caption">
+            <span className="wt-slide__badge">
+              <span className="wt-slide__num">{active + 1}</span>
+              Passo {active + 1} de {STEPS.length}
+            </span>
+            <h2>{STEPS[active].title}</h2>
+            <p>{STEPS[active].text}</p>
+            <span className="wt-slide__progress" aria-hidden="true">
+              <span
+                key={`${active}-${auto}-${hover}`}
+                className="walkthrough__progress-fill"
+                style={{ animationPlayState: auto && !hover ? 'running' : 'paused' }}
+              />
+            </span>
           </div>
+        </div>
+
+        <div className="walkthrough__controls">
+          <button type="button" onClick={() => go(active - 1)} aria-label="Anterior"><ChevronLeft size={18} /></button>
+          <div className="walkthrough__dots">
+            {STEPS.map((s, i) => (
+              <button
+                key={s.title}
+                type="button"
+                className={i === active ? 'is-active' : ''}
+                onClick={() => go(i)}
+                aria-label={`Passo ${i + 1}: ${s.title}`}
+              />
+            ))}
+          </div>
+          <button type="button" onClick={() => go(active + 1)} aria-label="Próximo"><ChevronRight size={18} /></button>
         </div>
       </div>
 
