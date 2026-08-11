@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Heart, Info, Link2, RefreshCw, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
+import { timeAgo } from '../lib/timeAgo'
 import { NewsletterSignup } from './NewsletterSignup'
 import { BlendiboxCarousel } from './BlendiboxCarousel'
 
@@ -23,11 +24,24 @@ export function Footer() {
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
   const [priceDropsCount, setPriceDropsCount] = useState<number | null>(null)
   const [merchantsCount, setMerchantsCount] = useState<number | null>(null)
+  const [generatedAt, setGeneratedAt] = useState<string | null>(null)
+  const [now, setNow] = useState(() => Date.now())
 
   useEffect(() => {
-    fetchMeta().then((m) => setTotalProducts(m.totalProducts)).catch(() => {})
+    fetchMeta()
+      .then((m) => {
+        setTotalProducts(m.totalProducts)
+        setGeneratedAt(m.generatedAt ?? null)
+      })
+      .catch(() => {})
     fetchMerchants().then((m) => setMerchantsCount(m.length)).catch(() => {})
     fetchHomeHighlights().then((h) => setPriceDropsCount(h.priceDropsCount ?? null)).catch(() => {})
+  }, [])
+
+  // Mantém o "há X" vivo sem recarregar a página.
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(t)
   }, [])
 
   return (
@@ -76,7 +90,15 @@ export function Footer() {
               )}
               <li>
                 <Clock className="footer__stat-arrow footer__stat-arrow--sync" size={16} aria-hidden="true" />
-                <span>Atualizado diariamente</span>
+                {generatedAt ? (
+                  <span
+                    title={`Última atualização: ${new Date(generatedAt).toLocaleString('pt-BR')} · atualizamos diariamente`}
+                  >
+                    Atualizado {timeAgo(generatedAt, now)}
+                  </span>
+                ) : (
+                  <span>Atualizado diariamente</span>
+                )}
               </li>
             </ul>
           </div>
@@ -90,6 +112,7 @@ export function Footer() {
           <div>
             <h3>Institucional</h3>
             <Link to="/sobre">Sobre nós</Link>
+            <Link to="/como-funciona">Como funciona</Link>
             <Link to="/perguntas-frequentes">Perguntas frequentes</Link>
             <Link to="/termos">Termos de Uso</Link>
             <Link to="/privacidade">Privacidade</Link>

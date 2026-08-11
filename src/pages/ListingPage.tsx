@@ -7,6 +7,7 @@ import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { timeAgo } from '../lib/timeAgo'
 
 const PAGE_SIZE = 60
 const HOME_PATH = '/'
@@ -37,6 +38,16 @@ export function ListingPage() {
   const [sort, setSort] = useState<SortOption>('relevancia')
   const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
+  // Só definido após montar (client-only) pra o "atualizado há X" não divergir
+  // do HTML pré-renderizado (evita erro de hidratação #418). Enquanto null,
+  // mostra "diariamente", igual ao servidor.
+  const [now, setNow] = useState<number | null>(null)
+
+  useEffect(() => {
+    setNow(Date.now())
+    const t = setInterval(() => setNow(Date.now()), 30000)
+    return () => clearInterval(t)
+  }, [])
 
   useEffect(() => {
     clearInitialData(HOME_PATH)
@@ -196,7 +207,16 @@ export function ListingPage() {
               </span>
               <span className="home-stat__body">
                 <strong>Atualizado</strong>
-                <span className="home-stat__label">diariamente</span>
+                <span
+                  className="home-stat__label"
+                  title={
+                    meta?.generatedAt
+                      ? `Última atualização: ${new Date(meta.generatedAt).toLocaleString('pt-BR')} · atualizamos diariamente`
+                      : undefined
+                  }
+                >
+                  {now && meta?.generatedAt ? timeAgo(meta.generatedAt, now) : 'diariamente'}
+                </span>
               </span>
             </div>
           </div>

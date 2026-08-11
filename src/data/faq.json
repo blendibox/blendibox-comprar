@@ -32,6 +32,30 @@
     "answer": "Na página de Favoritos, você pode deixar seu e-mail para ser avisado quando algum dos produtos que salvou baixar de preço. É um aviso único por queda (não uma inscrição de newsletter), enviado só quando há uma queda real confirmada. Se quiser, há uma opção separada e opcional para também receber o resumo semanal de ofertas."
   },
   {
+    "question": "Como ativo o aviso de queda de preço, passo a passo?",
+    "answer": "Primeiro, clique no coração dos produtos que quer acompanhar — eles ficam salvos em Favoritos, no seu próprio navegador, sem login. Depois, na página de Favoritos, informe seu e-mail no campo \"Avise-me quando baixar de preço\" e aceite o consentimento. A partir daí, conferimos o preço desses itens diariamente e, quando há uma queda real, você recebe um e-mail com o novo valor e o link da oferta."
+  },
+  {
+    "question": "O que recebo ao assinar a newsletter?",
+    "answer": "Ao cadastrar seu e-mail no rodapé do site, você recebe um e-mail de boas-vindas confirmando a inscrição e, semanalmente, um resumo com cupons e as maiores quedas de preço das lojas parceiras. Você pode cancelar quando quiser pelo link de descadastro que vai no rodapé de todo e-mail."
+  },
+  {
+    "question": "Como funciona a lista de presentes?",
+    "answer": "Você monta uma lista com produtos de várias lojas parceiras, ganha um link curto e compartilha com os convidados. Cada convidado escolhe um presente e compra direto no site da loja. É de graça, não precisa criar conta — só um e-mail para você gerenciar a lista — e ninguém dá presente repetido, porque cada compra é confirmada pela própria loja."
+  },
+  {
+    "question": "Preciso criar conta para montar uma lista de presentes?",
+    "answer": "Não. Você informa um e-mail apenas para gerenciar a lista e receber os avisos de compra, e recebe um link de gestão. Guarde esse link: é por ele que você edita a lista depois."
+  },
+  {
+    "question": "Como o site sabe que um presente da lista já foi comprado?",
+    "answer": "A compra é confirmada pela própria loja parceira, não no \"chute\". Quando um convidado compra pelo link da lista, a loja informa a compra e o item é marcado como comprado automaticamente — por isso ninguém dá presente repetido. Enquanto não há confirmação, o item aparece apenas como \"alguém demonstrou interesse\"."
+  },
+  {
+    "question": "Os convidados precisam se cadastrar para dar um presente?",
+    "answer": "Não precisam criar conta. O convidado abre o link da lista, informa o e-mail (para evitar presente repetido) e é levado ao site da loja parceira para concluir a compra com a segurança da própria loja."
+  },
+  {
     "question": "O gráfico de histórico de preço mostra dados reais?",
     "answer": "Sim. Na página de cada produto, o gráfico usa os preços que registramos dia a dia — nada é estimado. Os períodos de 3 e 6 meses só passam a mostrar mais dados conforme o tempo real vai passando, já que o histórico começa a contar a partir de quando cada produto entra no site."
   },

@@ -444,8 +444,8 @@ async function main() {
   const staticPages = [
     {
       routePath: '/como-funciona',
-      title: 'Como funciona a lista de presentes | Compare Ofertas',
-      description: 'Passo a passo para criar sua lista de presentes com produtos de várias lojas e compartilhar o link — sem presente repetido.',
+      title: 'Como funciona | Compare Ofertas',
+      description: 'Passo a passo do Compare Ofertas: lista de presentes, newsletter de cupons e aviso de queda de preço nos favoritos.',
       jsonLd: [howToJsonLd],
     },
     { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },

@@ -157,14 +157,26 @@ export function RegistryLandingPage() {
             <span
               key={`c${i}`}
               className="registry-deco registry-deco--confetti"
-              style={{ top: c.top, left: c.left, background: c.color, transform: `rotate(${c.rot}deg)` }}
+              style={{
+                top: c.top,
+                left: c.left,
+                background: c.color,
+                ['--rot']: `${c.rot}deg`,
+                animationDuration: `${5 + (i % 4) * 0.8}s`,
+                animationDelay: `${(i % 5) * 0.5}s`,
+              } as React.CSSProperties}
             />
           ))}
           {HEARTS.map((h, i) => (
             <Heart
               key={`h${i}`}
               className="registry-deco registry-deco--heart"
-              style={{ top: h.top, left: h.left }}
+              style={{
+                top: h.top,
+                left: h.left,
+                animationDuration: `${4.5 + i * 0.9}s`,
+                animationDelay: `${i * 0.6}s`,
+              }}
               size={h.size}
               fill="currentColor"
             />

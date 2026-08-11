@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftRight, Gift, Heart, Home, Menu, Ticket } from 'lucide-react'
+import { ArrowLeftRight, Gift, Heart, HelpCircle, Home, Menu, Ticket } from 'lucide-react'
 
 const NAV_LINKS = [
   { to: '/', label: 'Início', Icon: Home },
@@ -8,6 +8,7 @@ const NAV_LINKS = [
   { to: '/cupons', label: 'Cupons', Icon: Ticket },
   { to: '/favoritos', label: 'Favoritos', Icon: Heart },
   { to: '/comparar', label: 'Comparar', Icon: ArrowLeftRight },
+  { to: '/como-funciona', label: 'Como funciona', Icon: HelpCircle },
 ]
 
 export function Header() {
