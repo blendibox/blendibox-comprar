@@ -12,7 +12,7 @@ export function Layout() {
   // Nas telas de lista de presentes o FAB da roleta de cupons compete
   // visualmente com o tema (presente) — esconde nessas rotas.
   const { pathname } = useLocation()
-  const onRegistry = pathname.startsWith('/lista')
+  const onRegistry = pathname.startsWith('/lista') || pathname === '/como-funciona'
 
   return (
     <ComparatorProvider>

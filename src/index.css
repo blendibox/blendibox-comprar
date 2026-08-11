@@ -3444,6 +3444,438 @@ a {
 .registry-form__addr strong {
   color: var(--color-green);
 }
+.registry-fav-hint {
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: #777;
+}
+.registry-landing__seelink {
+  color: var(--color-pink);
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+}
+.registry-landing__seelink:hover {
+  text-decoration: underline;
+}
+
+/* ===== Walkthrough interativo (/como-funciona) ===== */
+.walkthrough {
+  max-width: 1000px;
+}
+.walkthrough__hero {
+  text-align: center;
+  margin-bottom: 26px;
+}
+.walkthrough__hero h1 {
+  font-size: 30px;
+  margin: 0 0 8px;
+}
+.walkthrough__hero p {
+  margin: 0;
+  color: #5f5f5f;
+}
+.walkthrough__stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  gap: 32px;
+  align-items: start;
+}
+.walkthrough__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.walkthrough__step {
+  position: relative;
+}
+.walkthrough__step button {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #eef0f3;
+  border-radius: 14px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+}
+.walkthrough__step:not(.is-active) button {
+  opacity: 0.62;
+}
+.walkthrough__step.is-active button {
+  border-color: var(--color-pink);
+  box-shadow: 0 10px 30px -18px rgba(219, 39, 119, 0.6);
+}
+.walkthrough__step button:hover {
+  opacity: 1;
+}
+.walkthrough__num {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #f4f5f8;
+  color: #667;
+  font-weight: 800;
+  font-size: 14px;
+}
+.walkthrough__step.is-active .walkthrough__num {
+  background: var(--color-pink);
+  color: #fff;
+}
+.walkthrough__step.is-done .walkthrough__num {
+  background: #ecfdf3;
+  color: #0a7d3f;
+}
+.walkthrough__step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.walkthrough__step-body strong {
+  font-size: 15px;
+}
+.walkthrough__step-body span {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.45;
+}
+.walkthrough__progress {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 8px;
+  height: 3px;
+  border-radius: 2px;
+  background: #f1e0ea;
+  overflow: hidden;
+}
+.walkthrough__progress-fill {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: var(--color-pink);
+  transform-origin: left;
+  animation: wtProgress 4.8s linear forwards;
+}
+@keyframes wtProgress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+.walkthrough__screen {
+  position: sticky;
+  top: 90px;
+}
+.walkthrough__frame {
+  background: #fff;
+  border: 1px solid #e7e9ee;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px -30px rgba(17, 24, 39, 0.45);
+  overflow: hidden;
+}
+.walkthrough__frame-bar {
+  display: flex;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #f7f8fa;
+  border-bottom: 1px solid #eef0f3;
+}
+.walkthrough__frame-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #d9dce2;
+}
+.walkthrough__frame-body {
+  padding: 20px;
+  min-height: 268px;
+  animation: wtFade 0.45s ease;
+}
+@keyframes wtFade {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.walkthrough__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+.walkthrough__controls > button {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid #e7e9ee;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #555;
+}
+.walkthrough__controls > button:hover {
+  border-color: var(--color-pink);
+  color: var(--color-pink);
+}
+.walkthrough__dots {
+  display: flex;
+  gap: 8px;
+}
+.walkthrough__dots button {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: none;
+  background: #d9dce2;
+  cursor: pointer;
+  padding: 0;
+}
+.walkthrough__dots button.is-active {
+  background: var(--color-pink);
+  transform: scale(1.25);
+}
+
+/* Telas mock */
+.wt-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.wt-mock__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+.wt-mock__title svg {
+  color: var(--color-pink);
+}
+.wt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.wt-field > span {
+  font-size: 11px;
+  color: #888;
+  font-weight: 600;
+}
+.wt-field-row {
+  display: flex;
+  gap: 10px;
+}
+.wt-input {
+  border: 1px solid #e7e9ee;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 13px;
+  color: #333;
+  background: #fcfcfd;
+}
+.wt-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e7e9ee;
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: #555;
+}
+.wt-searchbar svg {
+  color: #999;
+}
+.wt-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  border: 1px solid #eef0f3;
+  border-radius: 11px;
+  padding: 9px 11px;
+}
+.wt-row--done {
+  background: #fafcfb;
+}
+.wt-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #eef0f3, #f6f7f9);
+  flex-shrink: 0;
+}
+.wt-row__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+.wt-row__body b {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wt-row__body small {
+  font-size: 11px;
+  color: #999;
+}
+.wt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.wt-btn--primary {
+  background: var(--color-green);
+  color: #fff;
+  padding: 11px 18px;
+  align-self: flex-start;
+  margin-top: 4px;
+}
+.wt-btn--sm {
+  background: #ecfdf3;
+  color: #0a7d3f;
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.wt-btn--pink {
+  background: #fce7f3;
+  color: #be185d;
+}
+.wt-fav {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  align-self: flex-start;
+  padding: 9px 15px;
+  border: 1px solid #f9a8d4;
+  border-radius: 999px;
+  background: #fdf2f8;
+  color: var(--color-pink);
+  font-weight: 600;
+  font-size: 13px;
+  margin-top: 2px;
+}
+.wt-share {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #e7e9ee;
+  border-radius: 10px;
+  padding: 8px 8px 8px 12px;
+}
+.wt-share__url {
+  flex: 1;
+  font-size: 12.5px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wt-share__url b {
+  color: var(--color-green);
+}
+.wt-chips {
+  display: flex;
+  gap: 8px;
+}
+.wt-chip {
+  padding: 7px 13px;
+  border-radius: 999px;
+  background: #f4f5f8;
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+.wt-chip--wa {
+  background: #e7f8ee;
+  color: #0a7d3f;
+}
+.wt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+}
+.wt-badge--bought {
+  background: #fce7f3;
+  color: #be185d;
+}
+.wt-badge--available {
+  background: #ecfdf3;
+  color: #0a7d3f;
+}
+.wt-toast {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 4px;
+  padding: 11px 13px;
+  border-radius: 11px;
+  background: #fff7fb;
+  border: 1px solid #f9d3e6;
+  color: #be185d;
+  font-size: 13px;
+  font-weight: 600;
+  animation: wtToast 0.5s ease 0.2s both;
+}
+.wt-toast svg {
+  color: var(--color-pink);
+}
+@keyframes wtToast {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.walkthrough__cta {
+  margin-top: 40px;
+  text-align: center;
+  padding: 34px 20px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 55%, #fdf2f8 100%);
+  border: 1px solid #eef0f3;
+  border-radius: 16px;
+}
+.walkthrough__cta h2 {
+  margin: 0 0 16px;
+  font-size: 22px;
+}
+
+@media (max-width: 820px) {
+  .walkthrough__stage {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .walkthrough__screen {
+    position: static;
+    order: -1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough__progress-fill,
+  .walkthrough__frame-body,
+  .wt-toast {
+    animation: none;
+  }
+}
 
 /* Barra de progresso da lista de presentes */
 .registry-steps {

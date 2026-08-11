@@ -408,7 +408,28 @@ async function main() {
     })),
   }
 
+  const howToJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: 'Como criar uma lista de presentes no Compare Ofertas',
+    description:
+      'Passo a passo para criar uma lista de presentes com produtos de várias lojas parceiras e compartilhar o link — sem presente repetido.',
+    step: [
+      { '@type': 'HowToStep', name: 'Crie sua lista', text: 'Dê um título, escolha a ocasião e informe seu e-mail. É de graça e sem criar conta.' },
+      { '@type': 'HowToStep', name: 'Adicione os presentes', text: 'Busque produtos de qualquer loja parceira ou carregue seus favoritos direto na lista, com quantidade.' },
+      { '@type': 'HowToStep', name: 'Compartilhe o link', text: 'Você recebe um link curto e amigável para enviar aos convidados por WhatsApp, Instagram ou e-mail.' },
+      { '@type': 'HowToStep', name: 'Os convidados escolhem', text: 'Cada convidado escolhe um presente e compra direto no site da loja parceira.' },
+      { '@type': 'HowToStep', name: 'Compra confirmada, sem repetição', text: 'Quando a loja confirma a compra, o presente sai da lista e o responsável recebe um aviso por e-mail.' },
+    ],
+  }
+
   const staticPages = [
+    {
+      routePath: '/como-funciona',
+      title: 'Como funciona a lista de presentes | Compare Ofertas',
+      description: 'Passo a passo para criar sua lista de presentes com produtos de várias lojas e compartilhar o link — sem presente repetido.',
+      jsonLd: [howToJsonLd],
+    },
     { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },
     {
       routePath: '/perguntas-frequentes',
