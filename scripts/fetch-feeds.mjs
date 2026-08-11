@@ -58,6 +58,7 @@ const NUMERIC_FIELDS = new Set([
   'rating',
   'averageRating',
   'numberAvailable',
+  'stockQuantity',
   'discountPercentage',
 ])
 
@@ -88,6 +89,8 @@ const FIELD_MAP = {
   rating: 'rating',
   average_rating: 'averageRating',
   number_available: 'numberAvailable',
+  in_stock: 'inStock',
+  stock_quantity: 'stockQuantity',
   product_GTIN: 'productGtin',
   discount_percentage: 'discountPercentage',
   large_image: 'largeImage',
@@ -111,6 +114,11 @@ const OPTIONAL_FIELD_LABELS = {
   warranty: 'warranty',
   termsOfContract: 'terms_of_contract',
   deliveryTime: 'delivery_time',
+  // Rastreamos o preenchimento de estoque/frete pra saber, por advertiser,
+  // em quais o snippet de "disponibilidade" tem lastro real no feed.
+  inStock: 'in_stock',
+  stockQuantity: 'stock_quantity',
+  deliveryCost: 'delivery_cost',
 }
 
 // Aplica em toda imagem servida pela proxy images2.productserve.com (não só

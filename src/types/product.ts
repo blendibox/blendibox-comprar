@@ -48,6 +48,11 @@ export interface Product {
   rating: number | null
   averageRating: number | null
   numberAvailable: number | null
+  // Estoque real do feed Awin: in_stock ("1"/"0") e stock_quantity (número).
+  // Preenchidos por advertiser que informa — usados pra availability do JSON-LD
+  // e do feed do Google Merchant. Só afirmamos disponibilidade quando há sinal.
+  inStock: string | null
+  stockQuantity: number | null
   productGtin: string
   discountPercentage: number | null
   // Versão em resolução maior da imagem — a Awin não garante em todo feed, só

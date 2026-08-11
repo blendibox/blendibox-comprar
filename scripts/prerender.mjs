@@ -60,16 +60,34 @@ function buildHead({ title, description, canonical, image, jsonLd }) {
   return tags.join('\n    ')
 }
 
+// Disponibilidade com base no dado REAL do feed, quando existe:
+// in_stock ("1"/"0"/"true"/…) tem prioridade; senão stock_quantity; senão o
+// legado number_available. Só na ausência total de sinal é que assumimos
+// disponível (produto está num feed ativo do lojista) — nunca inventamos
+// "fora de estoque" nem nada além do que o feed diz.
+function availabilityFor(product) {
+  const raw = product.inStock
+  if (raw != null && String(raw).trim() !== '') {
+    const s = String(raw).trim().toLowerCase()
+    if (['0', 'false', 'no', 'n', 'out of stock', 'outofstock', 'unavailable'].includes(s))
+      return 'https://schema.org/OutOfStock'
+    if (['1', 'true', 'yes', 'y', 'in stock', 'instock', 'available'].includes(s))
+      return 'https://schema.org/InStock'
+  }
+  if (typeof product.stockQuantity === 'number')
+    return product.stockQuantity > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+  if (product.numberAvailable === 0) return 'https://schema.org/OutOfStock'
+  return 'https://schema.org/InStock'
+}
+
 function productJsonLd(product, canonical) {
   const offer = {
     '@type': 'Offer',
     url: canonical,
     priceCurrency: product.currency || 'BRL',
-    // Produto vem de um feed ativo do lojista — na ausência de sinal
-    // explícito em contrário, é razoável assumir que está disponível
-    // (diferente de inventar avaliação/nota, que não temos base nenhuma
-    // pra afirmar).
-    availability: product.numberAvailable === 0 ? 'https://schema.org/OutOfStock' : 'https://schema.org/InStock',
+    // Disponibilidade a partir do estoque real do feed (in_stock/stock_quantity);
+    // só assume "disponível" quando não há nenhum sinal (feed ativo do lojista).
+    availability: availabilityFor(product),
     // Data em que confirmamos esse preço — o lastUpdated do feed quando
     // existe, senão a data desta atualização do site.
     validFrom: product.lastUpdated || new Date().toISOString(),

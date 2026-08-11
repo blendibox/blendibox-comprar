@@ -19,6 +19,21 @@ const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').re
 
 const ITEMS_PER_FILE = 10000
 
+// Disponibilidade real do feed Awin (in_stock/stock_quantity), com fallback
+// pro legado number_available; só assume "disponível" sem nenhum sinal. Mesma
+// regra usada no JSON-LD do site (prerender.mjs) pra manter consistência.
+function isInStock(product) {
+  const raw = product.inStock
+  if (raw != null && String(raw).trim() !== '') {
+    const s = String(raw).trim().toLowerCase()
+    if (['0', 'false', 'no', 'n', 'out of stock', 'outofstock', 'unavailable'].includes(s)) return false
+    if (['1', 'true', 'yes', 'y', 'in stock', 'instock', 'available'].includes(s)) return true
+  }
+  if (typeof product.stockQuantity === 'number') return product.stockQuantity > 0
+  if (product.numberAvailable === 0) return false
+  return true
+}
+
 async function walkProductFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true })
   const files = []
@@ -77,7 +92,7 @@ function buildItemXml(product) {
 
   const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
   const link = `${SITE_URL}/${product.merchantSlug}/${product.slug}/`
-  const available = product.numberAvailable === 0 ? 'out of stock' : 'in stock'
+  const available = isInStock(product) ? 'in stock' : 'out of stock'
   const hasGtin = Boolean(product.productGtin)
   const color = product.color || extractJewelryColor(product) || 'Branco'
   const size = product.size || 'Único'
