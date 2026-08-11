@@ -3425,6 +3425,15 @@ a {
 .registry-fav-toggle:hover {
   background: #fce7f3;
 }
+.registry-fav-toggle:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.registry-fav-hint {
+  margin: -6px 0 0;
+  font-size: 13px;
+  color: #888;
+}
 
 .registry-form__addr {
   font-size: 12px;

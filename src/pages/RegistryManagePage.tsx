@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Check, Copy, Heart, PartyPopper, Search, Trash2, X } from 'lucide-react'
+import { Check, Copy, Heart, PartyPopper, Search, Trash2 } from 'lucide-react'
 import { fetchIndex, fetchProduct } from '../lib/api'
 import { matchesSearch } from '../lib/search'
 import { formatPrice } from '../components/ProductCard'
@@ -30,8 +30,8 @@ export function RegistryManagePage() {
   const [indexLoading, setIndexLoading] = useState(false)
   const [adding, setAdding] = useState('')
   const [quantities, setQuantities] = useState<Record<string, number>>({})
-  const { items: favorites, remove: removeFavorite } = useFavorites()
-  const [showFavorites, setShowFavorites] = useState(false)
+  const { items: favorites } = useFavorites()
+  const [loadingFavs, setLoadingFavs] = useState(false)
 
   const shareUrl = `${window.location.origin}/lista/${id}`
 
@@ -88,6 +88,35 @@ export function RegistryManagePage() {
       alert(e instanceof Error ? e.message : 'Erro ao adicionar')
     } finally {
       setAdding('')
+    }
+  }
+
+  // Favoritos que ainda não estão na lista — o botão carrega todos de uma vez
+  // direto pra lista; a partir daí a gestão (excluir) acontece só na lista.
+  const favoritesToAdd = favorites.filter((f) => !addedKeys.has(`${f.merchantSlug}/${f.slug}`))
+
+  const loadFavorites = async () => {
+    setLoadingFavs(true)
+    try {
+      for (const f of favoritesToAdd) {
+        try {
+          const full = await fetchProduct(f.merchantSlug, f.slug)
+          await addRegistryItem(id, editToken, {
+            merchantSlug: f.merchantSlug,
+            slug: f.slug,
+            name: f.productName,
+            image: f.awImageUrl,
+            price: f.searchPrice,
+            deeplink: full.awDeepLink,
+            quantity: 1,
+          })
+        } catch {
+          // pula o favorito que falhar e segue com os demais
+        }
+      }
+      await reload()
+    } finally {
+      setLoadingFavs(false)
     }
   }
 
@@ -229,59 +258,15 @@ export function RegistryManagePage() {
         )}
       </section>
 
-      {favorites.length > 0 && (
+      {favoritesToAdd.length > 0 && (
         <section className="registry-add">
-          <button
-            type="button"
-            className="registry-fav-toggle"
-            onClick={() => setShowFavorites((v) => !v)}
-            aria-expanded={showFavorites}
-          >
-            <Heart size={16} aria-hidden="true" /> Carregar meus favoritos ({favorites.length})
+          <button type="button" className="registry-fav-toggle" onClick={loadFavorites} disabled={loadingFavs}>
+            <Heart size={16} aria-hidden="true" />
+            {loadingFavs ? 'Carregando...' : `Carregar meus favoritos (${favoritesToAdd.length})`}
           </button>
-          {showFavorites && (
-            <div className="registry-results">
-              {favorites.map((f) => {
-                const key = `${f.merchantSlug}/${f.slug}`
-                const already = addedKeys.has(key)
-                return (
-                  <div key={key} className="registry-result">
-                    <img src={f.awImageUrl} alt="" loading="lazy" />
-                    <div className="registry-result__body">
-                      <span className="registry-result__merchant">{f.merchantDisplayName}</span>
-                      <span className="registry-result__name">{f.productName}</span>
-                      <span className="registry-result__price">{formatPrice(f.searchPrice, f.currency)}</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        addProduct({
-                          merchantSlug: f.merchantSlug,
-                          slug: f.slug,
-                          name: f.productName,
-                          image: f.awImageUrl,
-                          price: f.searchPrice,
-                        })
-                      }
-                      disabled={already || adding === key}
-                      className="registry-result__add"
-                    >
-                      {already ? 'Já na lista' : adding === key ? 'Adicionando...' : 'Adicionar'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeFavorite(f.merchantSlug, f.slug)}
-                      className="registry-result__remove"
-                      aria-label="Remover dos favoritos"
-                      title="Remover dos favoritos"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <p className="registry-fav-hint">
+            Adiciona seus produtos favoritos direto na lista. Depois é só excluir aqui embaixo o que não quiser.
+          </p>
         </section>
       )}
 
