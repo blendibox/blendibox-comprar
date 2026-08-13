@@ -231,17 +231,6 @@ export function ProductPage() {
               {!isWhatsappReseller && product.merchantDisplayName}
             </a>
           </div>
-          <PriceTargetForm
-            product={{
-              merchantSlug: product.merchantSlug,
-              slug: product.slug,
-              productName: product.productName,
-              merchantDisplayName: product.merchantDisplayName,
-              awImageUrl: product.awImageUrl,
-              searchPrice: product.searchPrice,
-              currency: product.currency,
-            }}
-          />
           {isWhatsappReseller && (
             <p className="reseller-notice">
               <MessageCircle size={15} aria-hidden="true" />
@@ -262,6 +251,17 @@ export function ProductPage() {
           {product.priceHistory && product.priceHistory.length > 1 && (
             <PriceHistoryChart points={product.priceHistory} currency={product.currency} />
           )}
+          <PriceTargetForm
+            product={{
+              merchantSlug: product.merchantSlug,
+              slug: product.slug,
+              productName: product.productName,
+              merchantDisplayName: product.merchantDisplayName,
+              awImageUrl: product.awImageUrl,
+              searchPrice: product.searchPrice,
+              currency: product.currency,
+            }}
+          />
 
           {product.description && (
             <div className="product-detail__description">

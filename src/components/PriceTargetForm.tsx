@@ -1,31 +1,31 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Bell, Check } from 'lucide-react'
+import { Bell, Check, ChevronDown, ShieldCheck, TrendingDown } from 'lucide-react'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 import { formatPrice } from './ProductCard'
 
 type Status = 'idle' | 'sending' | 'done' | 'error'
 
-// Campo "meta de preço" inline, logo abaixo do botão de compra — onde numa
-// loja estaria o "avise-me quando voltar ao estoque". Aqui é "me avise quando
-// chegar a R$X" (ou, sem meta, quando baixar de qualquer valor). Pedir o e-mail
-// no momento de maior intenção de compra. Favorita o produto junto, pra o
-// acompanhamento também aparecer nos Favoritos.
+// Alerta de preço na página de produto — "defina quanto quer pagar". Recolhido
+// por padrão (só título + seta) pra não empurrar o gráfico de histórico no
+// mobile; expande no clique. Mostra economia esperada e sugestões rápidas
+// (tudo calculado do preço atual — nada de dado inventado). Favorita o produto
+// junto, pra o acompanhamento também aparecer nos Favoritos.
 export function PriceTargetForm({ product }: { product: FavoriteItem }) {
   const { isFavorite, toggle } = useFavorites()
+  const current = product.searchPrice
+  const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
-  const [target, setTarget] = useState('')
+  const [target, setTarget] = useState(current != null ? String(Math.round(current * 0.9)) : '')
   const [status, setStatus] = useState<Status>('idle')
 
-  const current = product.searchPrice
   if (!NEWSLETTER_CONFIGURED || current == null) return null
 
-  // Aceita "450", "450,90", "1.050,00" — só vale se for um número positivo
-  // ABAIXO do preço atual (senão a meta já estaria batida).
   const parsed = parseFloat(target.replace(/[^\d,]/g, '').replace(',', '.'))
   const targetPrice = Number.isFinite(parsed) && parsed > 0 && parsed < current ? parsed : null
-  const suggested = Math.max(1, Math.floor(current * 0.9))
+  const savings = targetPrice != null ? current - targetPrice : null
+  const chips = [5, 10, 15].map((pct) => ({ pct, value: Math.round(current * (1 - pct / 100)) }))
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -50,54 +50,102 @@ export function PriceTargetForm({ product }: { product: FavoriteItem }) {
   if (status === 'done') {
     return (
       <div className="price-target price-target--done">
-        <Check size={16} aria-hidden="true" />
+        <Check size={18} aria-hidden="true" />
         {targetPrice != null
-          ? ` Prontinho! Avisamos quando chegar a ${formatPrice(targetPrice, product.currency)}.`
-          : ' Prontinho! Avisamos quando este produto baixar de preço.'}
+          ? ` Alerta ativado! Avisamos quando chegar a ${formatPrice(targetPrice, product.currency)} (ou baixar antes).`
+          : ' Alerta ativado! Avisamos quando este produto baixar de preço.'}
       </div>
     )
   }
 
   return (
-    <form className="price-target" onSubmit={submit}>
-      <div className="price-target__head">
-        <Bell size={16} aria-hidden="true" /> <strong>Quer pagar menos?</strong>
-      </div>
-      <p className="price-target__hint">
-        Deixe seu e-mail e a gente te avisa quando este produto chegar no preço que você quer — ou baixar de
-        qualquer valor.
-      </p>
-      <div className="price-target__fields">
-        <label className="price-target__target">
-          <span>Me avise ao chegar a</span>
-          <span className="price-target__price-input">
-            <em>R$</em>
-            <input
-              inputMode="decimal"
-              value={target}
-              onChange={(e) => setTarget(e.target.value)}
-              placeholder={String(suggested)}
-              aria-label={`Preço desejado (atual ${formatPrice(current, product.currency)})`}
-            />
-          </span>
-        </label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Seu melhor e-mail"
-          required
-          aria-label="Seu e-mail"
-          className="price-target__email"
-        />
-        <button type="submit" className="price-target__submit" disabled={status === 'sending'}>
-          {status === 'sending' ? 'Enviando...' : 'Me avise'}
-        </button>
-      </div>
-      <label className="price-target__consent">
-        <input type="checkbox" required /> Aceito a <Link to="/privacidade">Política de Privacidade</Link>
-      </label>
-      {status === 'error' && <p className="price-target__error">Não foi possível cadastrar. Tente de novo.</p>}
-    </form>
+    <div className={`price-target${open ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="price-target__toggle"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+      >
+        <span className="price-target__badge" aria-hidden="true">
+          <Bell size={18} />
+        </span>
+        <span className="price-target__title">
+          <strong>Defina quanto quer pagar</strong>
+          <span>A gente avisa quando o preço chegar no valor que você escolher.</span>
+          <span className="price-target__current">Preço atual: {formatPrice(current, product.currency)}</span>
+        </span>
+        <ChevronDown size={20} className="price-target__chevron" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <form className="price-target__body" onSubmit={submit}>
+          <div className="price-target__target-row">
+            <label className="price-target__field">
+              <span>Me avise quando chegar a</span>
+              <span className="price-target__price-input">
+                <em>R$</em>
+                <input
+                  inputMode="decimal"
+                  value={target}
+                  onChange={(e) => setTarget(e.target.value)}
+                  aria-label="Preço desejado"
+                />
+              </span>
+            </label>
+            {savings != null && savings > 0 && (
+              <span className="price-target__savings">
+                Economia esperada: {formatPrice(savings, product.currency)}
+              </span>
+            )}
+          </div>
+
+          <div className="price-target__chips">
+            <span className="price-target__chips-label">Sugestões rápidas:</span>
+            {chips.map((c) => (
+              <button
+                key={c.pct}
+                type="button"
+                className="price-target__chip"
+                onClick={() => setTarget(String(c.value))}
+              >
+                {formatPrice(c.value, product.currency)} (-{c.pct}%)
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Seu melhor e-mail"
+            required
+            aria-label="Seu e-mail"
+            className="price-target__email"
+          />
+
+          <button type="submit" className="price-target__submit" disabled={status === 'sending'}>
+            <Bell size={16} aria-hidden="true" /> {status === 'sending' ? 'Enviando...' : 'Ativar alerta de preço'}
+          </button>
+
+          <label className="price-target__consent">
+            <input type="checkbox" required /> Aceito a <Link to="/privacidade">Política de Privacidade</Link>
+          </label>
+
+          <div className="price-target__trust">
+            <span>
+              <Check size={13} aria-hidden="true" /> Avisamos ao atingir seu preço
+            </span>
+            <span>
+              <TrendingDown size={13} aria-hidden="true" /> Histórico monitorado
+            </span>
+            <span>
+              <ShieldCheck size={13} aria-hidden="true" /> Sem spam · cancele fácil
+            </span>
+          </div>
+
+          {status === 'error' && <p className="price-target__error">Não foi possível ativar. Tente de novo.</p>}
+        </form>
+      )}
+    </div>
   )
 }
