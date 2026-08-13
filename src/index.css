@@ -1546,7 +1546,9 @@ a {
 
 @media (max-width: 700px) {
   .product-detail {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr) — não "1fr" (= minmax(auto,1fr)), pra a coluna poder
+       encolher abaixo do min-content da imagem e não estourar a tela. */
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
