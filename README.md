@@ -3,8 +3,13 @@
 Site estático (React + Vite + React Router) que lista ofertas de vários feeds
 de produtos da Awin, com páginas de produto pré-renderizadas (SEO real, sem
 depender de JS pro Google indexar), comparador lado a lado, cupons de desconto
+(inclusive páginas por loja), gráfico de histórico de preço, favoritos com
+aviso de queda de preço por e-mail, seção "comprado recentemente" a partir de
+vendas reais, uma **lista de presentes** (registro de casamento/chá/aniversário)
 e migração de URLs do site antigo. Hospedado no GitHub Pages, atualizado
-automaticamente por um workflow do GitHub Actions.
+automaticamente por um workflow do GitHub Actions. Partes dinâmicas (newsletter,
+avisos, lista de presentes) rodam num **Cloudflare Worker** (`worker/`) com KV
+e D1.
 
 ## Como funciona
 
@@ -21,10 +26,11 @@ automaticamente por um workflow do GitHub Actions.
    que sempre ganham página estática, ignorando o limiar de "produtos
    similares" anti-conteúdo-fino).
 
-2. **`scripts/parse-coupons.mjs`** lê `data/promotions.csv` (exportado
-   manualmente do painel da Awin — não tem link de download direto como o
-   feed de produtos) e gera `public/data/coupons.json`, já filtrando cupons
-   expirados.
+2. **`scripts/fetch-coupons.mjs`** busca cupons/promoções direto na API oficial
+   da Awin (não precisa mais exportar CSV) e gera `public/data/coupons.json`,
+   já filtrando cupons expirados. Ver a seção **Cupons** abaixo. Também existem
+   páginas de SEO por loja em `/cupons/{loja}` (`src/pages/CouponsMerchantPage.tsx`),
+   com JSON-LD (`FAQPage` + `BreadcrumbList`).
 
 3. **`vite build`** builda o SPA normalmente.
 
@@ -48,17 +54,36 @@ automaticamente por um workflow do GitHub Actions.
    Console) + `robots.txt`, só com as páginas reais (nunca com os stubs de
    redirect).
 
-7. **`scripts/update-price-history.mjs`** roda logo depois do fetch e guarda
-   um retrato semanal de preço por produto em `data/price-history.json`
-   (pequeno, versionado no git — o workflow faz commit dele de volta toda
-   semana). Cada produto ganha um campo `priceHistory` com as últimas 12
-   semanas, usado pro gráfico de preço na página do produto.
+7. **`scripts/update-price-history.mjs`** roda logo depois do fetch e mantém
+   `data/price-history.json` (versionado no git — o workflow faz commit dele de
+   volta a cada rodada). Regras pra o arquivo não estourar o limite de 100 MB
+   do GitHub:
+   - **grava só quando o preço muda** (subida ou queda) — nunca repete o mesmo
+     valor todo dia (o histórico vira uma função-degrau enxuta);
+   - **poda** chaves de produtos que saíram do catálogo (reconstrói o objeto só
+     com os produtos da rodada atual);
+   - **só rastreia** produtos ativos com página estática (`eligibleForStaticPage`).
 
-8. O workflow **`.github/workflows/deploy.yml`** roda tudo isso toda
-   segunda-feira (cron), a cada push em `main`, ou manualmente, e publica via
+   Cada produto ganha um campo `priceHistory` (usado pro gráfico em degrau na
+   página do produto) e, quando o preço cai **em relação ao último registro
+   anterior**, `priceDropPercent`/`previousPrice`. A queda é marcada **no dia da
+   mudança** e não persiste (no dia seguinte, estável, o preço atual já é o
+   último registro). Também gera `public/data/price-drops.json` (lista enxuta
+   pro Worker de e-mail — ver "Aviso de queda de preço").
+
+8. **`scripts/parse-sales-highlights.mjs`** monta a seção "Comprado
+   recentemente" da home a partir das transações reais da **API de Transações
+   da Awin** (`showBasketProducts=true`, mesmo `AWIN_PROMOTIONS_TOKEN` dos
+   cupons, últimos 90 dias). Casa cada compra ao produto do catálogo por
+   SKU/nome, inclui compras `pending` (venda real) e ignora `declined`/`deleted`.
+   Se a API falhar, cai no CSV manual (`data/sales-highlights.csv`) e nunca
+   esvazia a seção.
+
+9. O workflow **`.github/workflows/deploy.yml`** roda tudo isso **todo dia**
+   (cron), a cada push em `main`, ou manualmente, e publica via
    `actions/deploy-pages` — sem criar branch `gh-pages` nem histórico de
-   commits com dados grandes (a única exceção é o `price-history.json`, que é
-   pequeno e precisa persistir de uma semana pra outra).
+   commits com dados grandes (a única exceção é o `price-history.json`, que
+   precisa persistir de uma rodada pra outra).
 
 ## Estrutura de URL
 
@@ -305,19 +330,65 @@ npx wrangler kv namespace create PRICE_WATCH
 O comando imprime um `id` — cole ele em `worker/wrangler.toml`, no lugar de
 `COLE_AQUI_O_ID_DO_NAMESPACE`, e rode `npx wrangler deploy` de novo.
 
-Todo dia (`scripts/update-price-history.mjs`, que já roda no build) gera
-`public/data/price-drops.json` com todo produto que caiu de preço nessa
-rodada. O Worker tem um segundo Cron Trigger (09h UTC, `wrangler.toml`) que
-lê esse arquivo, cruza com o KV `PRICE_WATCH` e manda um e-mail avulso (não é
-Broadcast — conteúdo por destinatário) pra quem estava de olho. O aviso é
-único: assim que enviado, a entrada é apagada do KV, então não fica repetindo
-todo dia enquanto o preço continuar baixo.
+Ao pedir o aviso, o Worker guarda no KV, por produto, o e-mail **e o preço
+naquele momento** (`priceAtWatch`, o baseline). Todo dia
+`scripts/update-price-history.mjs` gera `public/data/price-drops.json` com todo
+produto que caiu de preço nessa rodada (vs. o último registro anterior). O
+Worker tem um segundo Cron Trigger (09h UTC, `wrangler.toml`) que lê esse
+arquivo, cruza com o KV `PRICE_WATCH` e só avisa quem tem **baseline maior que
+o preço atual** — ou seja, caiu **depois** que a pessoa começou a acompanhar,
+não por um desconto que já existia. É um e-mail avulso (não Broadcast) e único:
+o watcher avisado é removido do KV; quem ainda não caiu abaixo do seu preço
+continua na fila.
+
+A barra fixa de "avise-me quando baixar de preço" aparece na página de
+Favoritos e também na página de produto (modo "favoritar e acompanhar" num
+clique) — ver `src/components/PriceDropWatchForm.tsx`. E há a barra de
+newsletter no topo (`src/components/TopBar.tsx`), ambas dispensáveis e com
+consentimento LGPD explícito.
+
+## Lista de presentes
+
+Registro de presentes (casamento, chá de bebê/panela, aniversário, mêsversário,
+15 anos, pet…) — o dono monta uma lista com produtos do catálogo, compartilha um
+link curto e os convidados escolhem o que presentear, comprando direto na loja
+parceira. Landing em `/lista-de-presentes`, criação em `/listas/nova`, gestão em
+`/lista/:id/editar`, página pública em `/lista/:id`.
+
+O estado persiste no **Cloudflare D1** (`REGISTRY_DB`, schema em
+`worker/registry-schema.sql`) — é a primeira parte não-estática do projeto. O
+clique em "Presentear" só marca **interesse**; a **compra é confirmada apenas
+pela Awin**, via webhook de Transaction Notifications (`POST /awin-transaction`),
+casando pelo `clickref` (`reg<token>` anexado ao deeplink). Idempotente por
+`transaction_id`; ao confirmar, incrementa a quantidade comprada e avisa o dono
+por e-mail (Resend). Ver `docs/lista-presentes-spec.md`.
+
+Setup do D1 (uma vez):
+
+```bash
+cd worker
+npx wrangler d1 create blendibox-registry            # cole o id em wrangler.toml (REGISTRY_DB)
+npx wrangler d1 execute blendibox-registry --remote --file ./registry-schema.sql
+```
+
+No painel da Awin, configure as Transaction Notifications apontando pra
+`https://<seu-worker>/awin-transaction`.
+
+Há também um passo a passo interativo em `/como-funciona`
+(`src/pages/WalkthroughPage.tsx`), com abas pra Lista de presentes, Newsletter e
+Alerta de preço.
 
 ## Tamanho dos dados
 
-`public/data/*.json` nunca é commitado versionado como "definitivo" no
-histórico de deploy (só existe dentro do artefato de build do Pages), mas o
-`index.json` e os arquivos de produto crescem junto com o catálogo — hoje
-(11 lojas) o `index.json` fica na casa de dezenas de MB. Se isso virar
-problema de performance de carregamento, considere particionar o índice por
-vertical/categoria em vez de um arquivo único.
+`public/data/*.json` não é versionado no git (só existe dentro do artefato de
+build do Pages) — a exceção é `data/price-history.json`, que precisa persistir
+entre rodadas e por isso é commitado de volta. Como ele cresce com o catálogo,
+o `update-price-history.mjs` o mantém pequeno (grava só na mudança + poda
+produtos fora do catálogo + só produtos com página) pra não passar do limite de
+100 MB do GitHub.
+
+O `index.json` e os arquivos de produto crescem junto com o catálogo — hoje
+o `index.json` fica na casa de dezenas de MB. Se isso virar problema de
+performance de carregamento, considere particionar o índice por
+vertical/categoria em vez de um arquivo único. (A home já não depende dele:
+usa `home-highlights.json`, bem menor, gerado no build.)
