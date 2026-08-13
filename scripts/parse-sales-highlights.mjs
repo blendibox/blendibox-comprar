@@ -56,9 +56,10 @@ function relativeLabel(dateStr, now) {
 // Tenta achar o produto real correspondente à linha da venda, dentro do mesmo
 // merchant: primeiro pelo SKU (sufixo do slug), depois pelo nome do produto
 // (prefixo do slug). Retorna null se não achar.
-function resolveProduct(candidates, skuSlug, productName) {
-  if (skuSlug) {
-    const bySku = candidates.find((p) => p.slug.endsWith(`-${skuSlug}`) || p.slug === skuSlug)
+function resolveProduct(candidates, skuSlugs, productName) {
+  for (const sku of skuSlugs) {
+    if (!sku) continue
+    const bySku = candidates.find((p) => p.slug.endsWith(`-${sku}`) || p.slug === sku)
     if (bySku) return bySku
   }
   const nameSlug = slugify(productName)
@@ -116,9 +117,10 @@ async function fetchRowsFromApi(merchantsById) {
     }
     for (const p of products) {
       const productName = p.productName ?? p.name ?? ''
-      const skuCode = p.productId ?? p.skuCode ?? p.sku ?? ''
-      if (!productName && !skuCode) continue
-      rows.push({ merchant, productName, skuCode: String(skuCode), date })
+      const productId = p.productId ?? ''
+      const skuCode = p.skuCode ?? p.sku ?? ''
+      if (!productName && !productId && !skuCode) continue
+      rows.push({ merchant, productName, productId: String(productId), skuCode: String(skuCode), date })
     }
   }
 
@@ -141,6 +143,7 @@ function rowsFromCsv(csvText, byDisplayName) {
   return parsed.map((r) => ({
     merchant: byDisplayName.get(r['merchant']),
     productName: r['product_name'],
+    productId: '',
     skuCode: r['sku_code'],
     date: toYmd(r['date']) || r['date'],
   }))
@@ -193,7 +196,7 @@ async function main() {
     const merchant = row.merchant
     if (!merchant?.active) continue
     const candidates = byMerchant.get(merchant.slug) ?? []
-    const product = resolveProduct(candidates, slugify(row.skuCode), row.productName)
+    const product = resolveProduct(candidates, [slugify(row.productId), slugify(row.skuCode)], row.productName)
     if (!product) {
       unmatched++
       continue
