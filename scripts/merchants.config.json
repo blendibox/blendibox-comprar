@@ -57,7 +57,7 @@
     "17893": { "slug": "futfanatics", "displayName": "Fut Fanatics BR", "vertical": "esporte", "active": false },
     "118977": { "slug": "lauriesporte", "displayName": "Lauri Esporte", "vertical": "esporte", "active": false },
     "17698": { "slug": "olympikus", "displayName": "Olympikus BR", "vertical": "esporte", "active": true, "priority": true },
-    "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": true },
+    "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": true, "verifyImages": true },
     "127555": { "slug": "zeedog", "displayName": "Zee Dog BR", "vertical": "pet", "active": true },
     "127557": { "slug": "zeenow", "displayName": "Zee Now BR", "vertical": "pet", "active": true },
     "17824": { "slug": "compracerta", "displayName": "Compra Certa BR", "vertical": "casa", "active": true },
