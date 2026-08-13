@@ -249,7 +249,11 @@ export function ProductPage() {
           </p>
 
           {product.priceHistory && product.priceHistory.length > 1 && (
-            <PriceHistoryChart points={product.priceHistory} currency={product.currency} />
+            <PriceHistoryChart
+              points={product.priceHistory}
+              currency={product.currency}
+              currentPrice={product.searchPrice}
+            />
           )}
           <PriceTargetForm
             product={{

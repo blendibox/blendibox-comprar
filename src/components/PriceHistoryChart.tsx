@@ -29,7 +29,15 @@ function formatShortDate(iso: string) {
   return `${day}/${month}`
 }
 
-export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; currency: string }) {
+export function PriceHistoryChart({
+  points,
+  currency,
+  currentPrice: currentPriceProp,
+}: {
+  points: PricePoint[]
+  currency: string
+  currentPrice?: number | null
+}) {
   const [period, setPeriod] = useState<PeriodKey>('30d')
 
   if (points.length < 2) return null
@@ -40,7 +48,12 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
 
   const sorted = [...points].sort((a, b) => dateMs(a.date) - dateMs(b.date))
   const firstMs = dateMs(sorted[0].date)
-  const currentPrice = sorted[sorted.length - 1].price
+  const todayIso = isoOf(now)
+  // Preço atual DEFINITIVO = o searchPrice do produto (o valor exibido na
+  // página). O último ponto GRAVADO pode estar defasado (gravação é diária no
+  // cron), então ele NÃO manda no fim da linha — quem manda é o preço da
+  // página. Assim o gráfico sempre termina no mesmo valor da legenda e do topo.
+  const currentPrice = currentPriceProp != null ? currentPriceProp : sorted[sorted.length - 1].price
 
   // Início do eixo: a janela escolhida, ou a entrada do produto se for mais
   // recente que a janela (não inventa período que ainda não existe).
@@ -50,7 +63,9 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
 
   // Série visível como degrau dentro de [t0, t1]: âncora inicial com o preço
   // vigente em t0 (carry-forward do último ponto <= t0), as mudanças dentro da
-  // janela, e o preço atual estendido até agora.
+  // janela, e o preço atual estendido até agora. Pontos gravados HOJE são
+  // ignorados: o preço de hoje é o currentPrice (searchPrice), não um registro
+  // que pode ter ficado defasado.
   const visible: PricePoint[] = []
   let carry = sorted[0].price
   for (const p of sorted) {
@@ -60,11 +75,13 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
       continue
     }
     if (ms > t1) break
+    if (p.date === todayIso) continue
     if (visible.length === 0) visible.push({ date: isoOf(t0), price: carry })
     visible.push(p)
   }
   if (visible.length === 0) visible.push({ date: isoOf(t0), price: carry })
-  if (visible[visible.length - 1].date !== isoOf(t1)) visible.push({ date: isoOf(t1), price: currentPrice })
+  // Âncora final: sempre o preço atual, estendido até agora.
+  visible.push({ date: todayIso, price: currentPrice })
 
   if (visible.length < 2) return null
 
