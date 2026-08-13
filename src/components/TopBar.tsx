@@ -118,8 +118,8 @@ export function TopBar() {
         <Gift size={22} />
       </span>
       <div className="topbar__text">
-        <strong>Não perca uma oferta!</strong>
-        <span>Cupons e as maiores quedas de preço no seu e-mail.</span>
+        <strong>Não pague mais caro sem saber.</strong>
+        <span>Cupons e as maiores quedas de preço da semana no seu e-mail.</span>
       </div>
       <form className="topbar__form" onSubmit={handleSubmit}>
         <div className="topbar__field">

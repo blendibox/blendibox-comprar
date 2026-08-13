@@ -122,11 +122,11 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
         <Heart size={22} fill="currentColor" />
       </span>
       <div className="pricedrop-bar__text">
-        <strong>{productMode ? 'Acompanhe o preço deste produto' : 'Avise-me quando baixar de preço'}</strong>
+        <strong>{productMode ? 'Acompanhe o preço deste produto' : 'Ative seu radar de preços'}</strong>
         <span>
           {productMode
             ? 'A gente favorita pra você e manda um e-mail quando ele baixar de preço.'
-            : `Um e-mail quando o preço de qualquer um dos seus ${count} ${plural} baixar.`}
+            : `Você salvou ${count} ${plural}. A gente te avisa quando algum ficar mais barato.`}
         </span>
       </div>
       <form className="pricedrop-bar__form" onSubmit={handleSubmit}>
@@ -143,7 +143,7 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
           />
         </div>
         <button type="submit" className="pricedrop-bar__submit" disabled={status === 'sending'}>
-          {status === 'sending' ? 'Enviando...' : productMode ? 'Favoritar e acompanhar' : 'Quero receber avisos'}
+          {status === 'sending' ? 'Enviando...' : productMode ? 'Favoritar e acompanhar' : 'Ativar meu radar'}
         </button>
         <div className="pricedrop-bar__meta">
           <span className="pricedrop-bar__trust">
