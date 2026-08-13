@@ -27,10 +27,16 @@ const ROOT = path.resolve(__dirname, '..')
 const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
 
 const MAX_ENTRIES = 24
-const LOOKBACK_DAYS = 30 // limite da API de transações da Awin é 31 dias; 30 dá folga
+const LOOKBACK_DAYS = 90 // total buscado (a API limita 31 dias por request)
+const WINDOW_DAYS = 30 // tamanho de cada janela (< 31 pra ter folga no limite)
+const REQUEST_INTERVAL_MS = 3200 // ~18/min, abaixo do limite de 20/min da Awin
 const PUBLISHER_ID = process.env.AWIN_PUBLISHER_ID || '2104315'
 const TOKEN = process.env.AWIN_PROMOTIONS_TOKEN
 const EXCLUDED_STATUS = new Set(['declined', 'deleted'])
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 async function fileExists(p) {
   try {
@@ -73,22 +79,37 @@ function toYmd(value) {
   return m ? m[0] : ''
 }
 
-// Busca transações na API da Awin e devolve linhas normalizadas
-// { merchant, productName, skuCode, date }. Cada produto do basket vira 1 linha.
-async function fetchRowsFromApi(merchantsById) {
-  const end = new Date()
-  const start = new Date(end.getTime() - LOOKBACK_DAYS * 24 * 60 * 60 * 1000)
-  const fmt = (d) => d.toISOString().slice(0, 19) // YYYY-MM-DDTHH:mm:ss
+// Busca UMA janela (≤31 dias) de transações na API da Awin.
+async function fetchTransactionsWindow(startIso, endIso) {
   const url =
     `https://api.awin.com/publishers/${PUBLISHER_ID}/transactions/` +
-    `?startDate=${fmt(start)}&endDate=${fmt(end)}&timezone=UTC&dateType=transaction&showBasketProducts=true`
-
+    `?startDate=${startIso}&endDate=${endIso}&timezone=UTC&dateType=transaction&showBasketProducts=true`
   const res = await fetch(url, { headers: { Authorization: `Bearer ${TOKEN}`, Accept: 'application/json' } })
   if (!res.ok) throw new Error(`Awin transactions API: HTTP ${res.status}`)
   const body = await res.json()
   // A API costuma devolver um array puro; alguns endpoints embrulham em {data}.
   const txns = Array.isArray(body) ? body : body?.data ?? body?.transactions ?? []
   if (!Array.isArray(txns)) throw new Error('Awin transactions API: formato de resposta inesperado')
+  return txns
+}
+
+// Busca LOOKBACK_DAYS de transações em janelas de WINDOW_DAYS (a API limita 31
+// dias/request) e devolve linhas normalizadas { merchant, productName,
+// productId, skuCode, date }. Cada produto do basket vira 1 linha.
+async function fetchRowsFromApi(merchantsById) {
+  const now = new Date()
+  const fmt = (d) => d.toISOString().slice(0, 19) // YYYY-MM-DDTHH:mm:ss
+  const windows = Math.ceil(LOOKBACK_DAYS / WINDOW_DAYS)
+  const txns = []
+  for (let i = 0; i < windows; i++) {
+    const end = new Date(now.getTime() - i * WINDOW_DAYS * 24 * 60 * 60 * 1000)
+    const startOffset = Math.min((i + 1) * WINDOW_DAYS, LOOKBACK_DAYS)
+    const start = new Date(now.getTime() - startOffset * 24 * 60 * 60 * 1000)
+    const part = await fetchTransactionsWindow(fmt(start), fmt(end))
+    txns.push(...part)
+    console.log(`[vendas] janela ${fmt(start).slice(0, 10)}..${fmt(end).slice(0, 10)}: ${part.length} transações`)
+    if (i < windows - 1) await sleep(REQUEST_INTERVAL_MS)
+  }
 
   // Amostra pra depurar o formato real (nomes de campos variam por conta/versão).
   if (txns[0]) {
