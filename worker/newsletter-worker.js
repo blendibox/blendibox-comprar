@@ -125,18 +125,34 @@ async function handleWatch(request, env, headers) {
   )
   if (!validItems.length) return jsonResponse({ error: 'Nenhum produto pra acompanhar' }, 400, headers)
 
+  // Índice dos produtos vigiados — o cron itera por ele pra buscar o preço
+  // atual de cada um (necessário pra a "meta de preço", que precisa do valor
+  // corrente mesmo quando o produto não caiu naquela rodada).
+  const indexKey = 'watch:index'
+  const indexRaw = await env.PRICE_WATCH.get(indexKey)
+  const indexSet = new Set(indexRaw ? JSON.parse(indexRaw) : [])
+
   for (const item of validItems) {
-    const key = `watch:${item.merchantSlug}/${item.slug}`
+    const productKey = `${item.merchantSlug}/${item.slug}`
+    const key = `watch:${productKey}`
     const raw = await env.PRICE_WATCH.get(key)
     const watchers = raw ? JSON.parse(raw) : []
-    if (!watchers.some((w) => w.email === email)) {
-      // priceAtWatch = baseline: só avisamos quando o preço cair ABAIXO disso,
-      // não por um desconto que já existia quando a pessoa começou a acompanhar.
-      const priceAtWatch = typeof item.price === 'number' ? item.price : null
-      watchers.push({ email, addedAt: new Date().toISOString(), priceAtWatch })
-      await env.PRICE_WATCH.put(key, JSON.stringify(watchers))
+    // priceAtWatch = baseline (preço quando começou a acompanhar); targetPrice =
+    // meta opcional. O aviso dispara na primeira queda abaixo do baseline OU ao
+    // atingir a meta — o que vier primeiro (a meta pode nunca ser atingida).
+    const priceAtWatch = typeof item.price === 'number' ? item.price : null
+    const targetPrice = typeof item.targetPrice === 'number' && item.targetPrice > 0 ? item.targetPrice : null
+    const idx = watchers.findIndex((w) => w.email === email)
+    if (idx >= 0) {
+      // Já acompanha: atualiza a meta, preserva baseline/addedAt originais.
+      watchers[idx] = { ...watchers[idx], targetPrice }
+    } else {
+      watchers.push({ email, addedAt: new Date().toISOString(), priceAtWatch, targetPrice })
     }
+    await env.PRICE_WATCH.put(key, JSON.stringify(watchers))
+    indexSet.add(productKey)
   }
+  await env.PRICE_WATCH.put(indexKey, JSON.stringify([...indexSet]))
 
   if (body.subscribeNewsletter) {
     // Best-effort: se a newsletter geral falhar, o aviso de queda (o que a
@@ -324,8 +340,15 @@ function buildPriceDropEmailHtml(products, siteUrl) {
                 <span style="display:block;font-size:14px;color:#111;margin:2px 0;">${escapeHtml(p.productName)}</span>
                 <span style="display:block;font-size:16px;font-weight:700;color:#0a7d3f;">
                   ${formatPrice(p.searchPrice, p.currency)}
-                  <span style="font-size:12px;font-weight:700;color:#db2777;">(-${p.priceDropPercent}%)</span>
+                  ${p.priceDropPercent != null ? `<span style="font-size:12px;font-weight:700;color:#db2777;">(-${p.priceDropPercent}%)</span>` : ''}
                 </span>
+                ${
+                  p.targetPrice != null
+                    ? p.reachedTarget
+                      ? `<span style="display:block;font-size:12px;font-weight:700;color:#0a7d3f;">✓ chegou à sua meta de ${formatPrice(p.targetPrice, p.currency)}!</span>`
+                      : `<span style="display:block;font-size:12px;color:#888;">Ainda não é a sua meta (${formatPrice(p.targetPrice, p.currency)}), mas o preço caiu — resolvemos te avisar mesmo assim.</span>`
+                    : ''
+                }
               </span>
             </a>
           </td>
@@ -352,7 +375,14 @@ function buildPriceDropEmailText(products, siteUrl) {
   const lines = ['O preço caiu!', '']
   for (const p of products) {
     lines.push(`${p.merchantDisplayName} — ${p.productName}`)
-    lines.push(`${formatPrice(p.searchPrice, p.currency)} (-${p.priceDropPercent}%)`)
+    lines.push(`${formatPrice(p.searchPrice, p.currency)}${p.priceDropPercent != null ? ` (-${p.priceDropPercent}%)` : ''}`)
+    if (p.targetPrice != null) {
+      lines.push(
+        p.reachedTarget
+          ? `✓ chegou à sua meta de ${formatPrice(p.targetPrice, p.currency)}!`
+          : `Ainda não é a sua meta (${formatPrice(p.targetPrice, p.currency)}), mas o preço caiu — avisamos mesmo assim.`
+      )
+    }
     lines.push(`${siteUrl}/${p.merchantSlug}/${p.slug}`)
     lines.push('')
   }
@@ -385,10 +415,9 @@ async function sendPriceDropEmail(email, products, env, siteUrl) {
   }
 }
 
-// Roda todo dia (DAILY_CRON): cruza public/data/price-drops.json (gerado a
-// cada build por scripts/update-price-history.mjs) com o KV PRICE_WATCH.
-// Agrupa por e-mail antes de enviar — quem acompanha vários produtos que
-// caíram no mesmo dia recebe um e-mail só, não um por produto.
+// Roda todo dia (DAILY_CRON): pra cada produto vigiado (índice `watch:index`),
+// busca o preço atual e avisa cada watcher na PRIMEIRA queda abaixo do baseline
+// OU ao atingir a meta (o que vier primeiro). Agrupa por e-mail antes de enviar.
 async function checkPriceDropsAndNotify(env) {
   if (!env.PRICE_WATCH) {
     console.error('checkPriceDropsAndNotify: binding PRICE_WATCH não configurado')
@@ -396,45 +425,98 @@ async function checkPriceDropsAndNotify(env) {
   }
 
   const siteUrl = (env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
-  const res = await fetch(`${siteUrl}/data/price-drops.json`)
-  if (!res.ok) {
-    console.error(`checkPriceDropsAndNotify: falha ao buscar price-drops.json (HTTP ${res.status})`)
-    return
+
+  const indexRaw = await env.PRICE_WATCH.get('watch:index')
+  const productKeys = indexRaw ? JSON.parse(indexRaw) : []
+  if (!productKeys.length) return
+
+  // Fallback pra watchers legados (sem baseline nem meta): usa a lista de quedas
+  // da rodada. Novos watchers não dependem disso (comparam com o preço atual).
+  const droppedSet = new Set()
+  try {
+    const dres = await fetch(`${siteUrl}/data/price-drops.json`)
+    if (dres.ok) for (const d of await dres.json()) droppedSet.add(`${d.merchantSlug}/${d.slug}`)
+  } catch {
+    // sem price-drops.json — segue (só afeta watcher legado)
   }
-  const drops = await res.json()
-  if (!drops.length) return
 
   const byEmail = new Map()
-  for (const product of drops) {
-    const key = `watch:${product.merchantSlug}/${product.slug}`
-    const raw = await env.PRICE_WATCH.get(key)
-    if (!raw) continue
+  const nextIndex = []
 
+  for (const productKey of productKeys) {
+    const key = `watch:${productKey}`
+    const raw = await env.PRICE_WATCH.get(key)
+    if (!raw) continue // sem watchers — sai do índice
     const watchers = JSON.parse(raw)
+
+    // Preço atual do produto (necessário pra a meta, que não depende de "queda
+    // na rodada"). Se não conseguir agora, mantém os watchers pra próxima vez.
+    const sep = productKey.indexOf('/')
+    const merchantSlug = productKey.slice(0, sep)
+    const slug = productKey.slice(sep + 1)
+    let product = null
+    try {
+      const pres = await fetch(`${siteUrl}/data/products/${merchantSlug}/${slug}.json`)
+      if (pres.ok) product = await pres.json()
+    } catch {
+      // ignora — tratado abaixo
+    }
+    if (!product || typeof product.searchPrice !== 'number') {
+      await env.PRICE_WATCH.put(key, JSON.stringify(watchers))
+      nextIndex.push(productKey)
+      continue
+    }
+    const current = product.searchPrice
+
     const remaining = []
-    for (const watcher of watchers) {
-      // Só avisa quem tem baseline maior que o preço atual (caiu DEPOIS que a
-      // pessoa começou a acompanhar). Sem baseline (watcher antigo) = avisa,
-      // mantendo o comportamento anterior. Quem ainda não caiu abaixo do seu
-      // preço continua na fila, sem ser avisado nem removido.
-      const baseline = typeof watcher.priceAtWatch === 'number' ? watcher.priceAtWatch : null
-      if (baseline == null || product.searchPrice < baseline) {
-        if (!byEmail.has(watcher.email)) byEmail.set(watcher.email, [])
-        byEmail.get(watcher.email).push(product)
+    for (const w of watchers) {
+      const baseline = typeof w.priceAtWatch === 'number' ? w.priceAtWatch : null
+      const target = typeof w.targetPrice === 'number' ? w.targetPrice : null
+      const reachedTarget = target != null && current <= target
+      const droppedBelowBaseline = baseline != null && current < baseline
+      const legacyDrop = baseline == null && target == null && droppedSet.has(productKey)
+
+      if (reachedTarget || droppedBelowBaseline || legacyDrop) {
+        const ref = baseline != null ? baseline : typeof product.previousPrice === 'number' ? product.previousPrice : null
+        const priceDropPercent = ref != null && ref > current ? Math.round(((ref - current) / ref) * 100) : null
+        const info = {
+          merchantSlug: product.merchantSlug,
+          slug: product.slug,
+          productName: product.productName,
+          merchantDisplayName: product.merchantDisplayName,
+          awImageUrl: product.awImageUrl,
+          searchPrice: current,
+          currency: product.currency,
+          previousPrice: ref,
+          priceDropPercent,
+          targetPrice: target,
+          reachedTarget,
+        }
+        if (!byEmail.has(w.email)) byEmail.set(w.email, [])
+        byEmail.get(w.email).push(info)
       } else {
-        remaining.push(watcher)
+        remaining.push(w)
       }
     }
-    // Aviso é único: quem foi avisado sai; quem ainda espera cair permanece.
-    if (remaining.length) await env.PRICE_WATCH.put(key, JSON.stringify(remaining))
-    else await env.PRICE_WATCH.delete(key)
+    // Aviso é único: quem foi avisado sai; quem ainda espera permanece (e o
+    // produto continua no índice enquanto tiver watcher).
+    if (remaining.length) {
+      await env.PRICE_WATCH.put(key, JSON.stringify(remaining))
+      nextIndex.push(productKey)
+    } else {
+      await env.PRICE_WATCH.delete(key)
+    }
   }
+
+  await env.PRICE_WATCH.put('watch:index', JSON.stringify(nextIndex))
 
   for (const [email, products] of byEmail) {
     await sendPriceDropEmail(email, products, env, siteUrl)
   }
 
-  console.log(`checkPriceDropsAndNotify: ${byEmail.size} e-mail(s) avisado(s) sobre ${drops.length} queda(s) de preço`)
+  console.log(
+    `checkPriceDropsAndNotify: ${byEmail.size} e-mail(s) enviado(s), ${productKeys.length} produto(s) vigiado(s).`
+  )
 }
 
 // ---------------------------------------------------------------------------

@@ -8,7 +8,7 @@ import type { CouponEntry, Product, ProductIndexEntry, SimilarRef } from '../typ
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
-import { PriceDropWatchForm } from '../components/PriceDropWatchForm'
+import { PriceTargetForm } from '../components/PriceTargetForm'
 import { Carousel } from '../components/Carousel'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -231,6 +231,17 @@ export function ProductPage() {
               {!isWhatsappReseller && product.merchantDisplayName}
             </a>
           </div>
+          <PriceTargetForm
+            product={{
+              merchantSlug: product.merchantSlug,
+              slug: product.slug,
+              productName: product.productName,
+              merchantDisplayName: product.merchantDisplayName,
+              awImageUrl: product.awImageUrl,
+              searchPrice: product.searchPrice,
+              currency: product.currency,
+            }}
+          />
           {isWhatsappReseller && (
             <p className="reseller-notice">
               <MessageCircle size={15} aria-hidden="true" />
@@ -321,18 +332,6 @@ export function ProductPage() {
           </Carousel>
         </section>
       )}
-
-      <PriceDropWatchForm
-        product={{
-          merchantSlug: product.merchantSlug,
-          slug: product.slug,
-          productName: product.productName,
-          merchantDisplayName: product.merchantDisplayName,
-          awImageUrl: product.awImageUrl,
-          searchPrice: product.searchPrice,
-          currency: product.currency,
-        }}
-      />
     </div>
   )
 }
