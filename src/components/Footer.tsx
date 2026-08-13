@@ -76,7 +76,7 @@ export function Footer() {
                 <li>
                   <TrendingDown className="footer__stat-arrow footer__stat-arrow--down" size={16} aria-hidden="true" />
                   <span>
-                    <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong> preços caíram esta semana
+                    <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong> preços em queda
                   </span>
                 </li>
               )}

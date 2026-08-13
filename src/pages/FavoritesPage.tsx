@@ -46,7 +46,13 @@ export function FavoritesPage() {
           <div className="load-more">
             <button onClick={clear}>Limpar favoritos</button>
           </div>
-          <PriceDropWatchForm items={items.map((item) => ({ merchantSlug: item.merchantSlug, slug: item.slug }))} />
+          <PriceDropWatchForm
+            items={items.map((item) => ({
+              merchantSlug: item.merchantSlug,
+              slug: item.slug,
+              price: item.searchPrice,
+            }))}
+          />
         </>
       )}
     </div>

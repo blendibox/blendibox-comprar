@@ -9,9 +9,10 @@ const PADDING = 8
 const DAY_MS = 24 * 60 * 60 * 1000
 const MAX_X_LABELS = 5
 
-// O histórico só é gravado ~1x por dia (ver scripts/update-price-history.mjs),
-// então "3 meses"/"6 meses" só mostram mais pontos do que "30 dias" conforme
-// dias reais forem passando — nunca extrapolamos ou inventamos ponto.
+// O histórico é gravado só quando o preço MUDA (ver update-price-history.mjs),
+// então a série é esparsa. O gráfico desenha uma função-DEGRAU num eixo X
+// TEMPORAL: o preço fica reto até a data em que mudou, aí "pula" pro novo
+// valor — refletindo com fidelidade que a mudança foi súbita, não gradual.
 const PERIODS = [
   { key: '30d', label: '30 dias', days: 30 },
   { key: '3m', label: '3 meses', days: 90 },
@@ -20,18 +21,12 @@ const PERIODS = [
 
 type PeriodKey = (typeof PERIODS)[number]['key']
 
+const dateMs = (iso: string) => new Date(`${iso}T00:00:00`).getTime()
+const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10)
+
 function formatShortDate(iso: string) {
   const [, month, day] = iso.split('-')
   return `${day}/${month}`
-}
-
-// Escolhe no máximo MAX_X_LABELS índices espalhados uniformemente (incluindo
-// sempre o primeiro e o último ponto) — evita amontoar uma data por ponto
-// quando o período tem dezenas/centenas de pontos.
-function pickLabelIndices(count: number, maxLabels: number) {
-  if (count <= maxLabels) return Array.from({ length: count }, (_, i) => i)
-  const step = (count - 1) / (maxLabels - 1)
-  return Array.from({ length: maxLabels }, (_, i) => Math.round(i * step))
 }
 
 export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; currency: string }) {
@@ -40,30 +35,77 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
   if (points.length < 2) return null
 
   const now = Date.now()
-  const selectedDays = PERIODS.find((p) => p.key === period)!.days
-  const filtered = points.filter((p) => (now - new Date(p.date).getTime()) / DAY_MS <= selectedDays)
-  // Se o período escolhido não tem pontos suficientes ainda (histórico recente
-  // demais), cai pra série completa em vez de mostrar um gráfico vazio/reto.
-  const visible = filtered.length >= 2 ? filtered : points
+  const days = PERIODS.find((p) => p.key === period)!.days
+  const windowStart = now - days * DAY_MS
+
+  const sorted = [...points].sort((a, b) => dateMs(a.date) - dateMs(b.date))
+  const firstMs = dateMs(sorted[0].date)
+  const currentPrice = sorted[sorted.length - 1].price
+
+  // Início do eixo: a janela escolhida, ou a entrada do produto se for mais
+  // recente que a janela (não inventa período que ainda não existe).
+  const t0 = Math.max(windowStart, firstMs)
+  const t1 = now
+  const span = t1 - t0 || 1
+
+  // Série visível como degrau dentro de [t0, t1]: âncora inicial com o preço
+  // vigente em t0 (carry-forward do último ponto <= t0), as mudanças dentro da
+  // janela, e o preço atual estendido até agora.
+  const visible: PricePoint[] = []
+  let carry = sorted[0].price
+  for (const p of sorted) {
+    const ms = dateMs(p.date)
+    if (ms <= t0) {
+      carry = p.price
+      continue
+    }
+    if (ms > t1) break
+    if (visible.length === 0) visible.push({ date: isoOf(t0), price: carry })
+    visible.push(p)
+  }
+  if (visible.length === 0) visible.push({ date: isoOf(t0), price: carry })
+  if (visible[visible.length - 1].date !== isoOf(t1)) visible.push({ date: isoOf(t1), price: currentPrice })
+
+  if (visible.length < 2) return null
 
   const prices = visible.map((p) => p.price)
   const min = Math.min(...prices)
   const max = Math.max(...prices)
   const range = max - min || 1
 
-  const xAt = (i: number) => PADDING + (i / (visible.length - 1)) * (WIDTH - PADDING * 2)
+  const xAt = (iso: string) => PADDING + ((dateMs(iso) - t0) / span) * (WIDTH - PADDING * 2)
   const yAt = (price: number) => HEIGHT - PADDING - ((price - min) / range) * (HEIGHT - PADDING * 2)
 
-  const coords = visible.map((p, i) => `${xAt(i).toFixed(1)},${yAt(p.price).toFixed(1)}`)
-  const areaPoints = `${xAt(0).toFixed(1)},${HEIGHT} ${coords.join(' ')} ${xAt(visible.length - 1).toFixed(1)},${HEIGHT}`
+  // Coordenadas em degrau: horizontal (preço anterior até a nova data), depois
+  // vertical (pulo pro novo preço).
+  const coords: string[] = []
+  visible.forEach((p, i) => {
+    const x = xAt(p.date)
+    if (i > 0) coords.push(`${x.toFixed(1)},${yAt(visible[i - 1].price).toFixed(1)}`)
+    coords.push(`${x.toFixed(1)},${yAt(p.price).toFixed(1)}`)
+  })
+  const x0 = xAt(visible[0].date)
+  const xLast = xAt(visible[visible.length - 1].date)
+  const areaPoints = `${x0.toFixed(1)},${HEIGHT} ${coords.join(' ')} ${xLast.toFixed(1)},${HEIGHT}`
 
-  const first = visible[0]
   const last = visible[visible.length - 1]
-  const changed = last.price !== first.price
-  const trendDown = last.price < first.price
+  // Preço distinto anterior ao atual (a última variação) — descreve o
+  // movimento mais recente, não só primeiro×último (que erra quando o preço
+  // sobe e volta pro mesmo valor).
+  let prevDistinct: number | null = null
+  for (let i = visible.length - 2; i >= 0; i--) {
+    if (visible[i].price !== last.price) {
+      prevDistinct = visible[i].price
+      break
+    }
+  }
+  const trendDown = prevDistinct != null && last.price < prevDistinct
   const lineColor = trendDown ? 'var(--color-green)' : 'var(--color-pink)'
 
-  const labelIndices = pickLabelIndices(visible.length, MAX_X_LABELS)
+  // Rótulos do eixo X: datas igualmente espaçadas no TEMPO (não por ponto).
+  const labels = Array.from({ length: MAX_X_LABELS }, (_, i) =>
+    isoOf(t0 + (span * i) / (MAX_X_LABELS - 1))
+  )
 
   return (
     <div className="price-history">
@@ -93,14 +135,14 @@ export function PriceHistoryChart({ points, currency }: { points: PricePoint[]; 
         </svg>
       </div>
       <div className="price-history__xaxis">
-        {labelIndices.map((i) => (
-          <span key={i}>{formatShortDate(visible[i].date)}</span>
+        {labels.map((iso, i) => (
+          <span key={i}>{formatShortDate(iso)}</span>
         ))}
       </div>
       <p className="price-history__caption">
-        {changed
-          ? `${trendDown ? 'Caiu' : 'Subiu'} de ${formatPrice(first.price, currency)} (${formatSimpleDateBr(first.date)}) para ${formatPrice(last.price, currency)} (${formatSimpleDateBr(last.date)}).`
-          : `Estável em ${formatPrice(last.price, currency)} desde ${formatSimpleDateBr(first.date)}.`}
+        {prevDistinct == null
+          ? `Estável em ${formatPrice(last.price, currency)}.`
+          : `${trendDown ? 'Caiu' : 'Subiu'} de ${formatPrice(prevDistinct, currency)} para ${formatPrice(last.price, currency)} (${formatSimpleDateBr(last.date)}).`}
       </p>
     </div>
   )

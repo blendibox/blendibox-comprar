@@ -18,50 +18,25 @@ const HISTORY_PATH = path.join(ROOT, 'data', 'price-history.json')
 // buscar direto, sem precisar do index.json inteiro (dezenas de MB).
 const PRICE_DROPS_PATH = path.join(DATA_DIR, 'price-drops.json')
 
-// Quantos pontos de histórico guardar por produto. O build roda todo dia
-// (deploy.yml, cron diário) e grava ~1 ponto por dia, então 180 pontos cobre
-// os 6 meses oferecidos no seletor de período do gráfico (PriceHistoryChart)
-// sem deixar o arquivo crescer indefinidamente. Como o histórico só começa a
-// contar a partir de quando cada limite entrou em vigor, os períodos mais
-// longos (3/6 meses) só mostram mais do que "30 dias" depois que dias reais
-// suficientes tiverem passado — nunca preenchemos com dado inventado.
+// Teto de pontos por produto (segurança). Como só gravamos quando o preço
+// MUDA (não 1 por dia), na prática cada produto tem pouquíssimos pontos — o
+// teto só protege contra um produto que mude de preço todo dia por muito tempo.
 const MAX_POINTS = 180
-
-// Janela de tolerância pra achar o ponto "de uma semana atrás": o cron roda
-// todo dia, então normalmente existe um ponto a exatos 7 dias, mas aceita de
-// 6 a 10 dias pra não perder o destaque só porque um dia de build falhou ou
-// atrasou. Dentro da janela, pega o ponto mais próximo de 7 dias.
-const MIN_LOOKBACK_DAYS = 6
-const MAX_LOOKBACK_DAYS = 10
-const DAY_MS = 24 * 60 * 60 * 1000
 
 // Abaixo disso é ruído de arredondamento/variação de câmbio, não uma queda
 // que valha destacar pro usuário.
 const MIN_DROP_PERCENT = 5
 
-function findWeekAgoPrice(series, todayMs) {
-  let best = null
-  let bestDiff = Infinity
-  for (const point of series) {
-    const ageDays = (todayMs - new Date(point.date).getTime()) / DAY_MS
-    if (ageDays < MIN_LOOKBACK_DAYS || ageDays > MAX_LOOKBACK_DAYS) continue
-    const diff = Math.abs(ageDays - 7)
-    if (diff < bestDiff) {
-      bestDiff = diff
-      best = point
-    }
+// Colapsa pontos consecutivos de mesmo preço, mantendo o 1o de cada "corrida"
+// (= o dia em que o preço passou a ser aquele). Transforma uma série de
+// snapshots diários numa função-degrau enxuta, sem perder quando cada preço
+// vigorou. Também compacta o histórico legado (que tinha 1 ponto/dia).
+function compactSeries(series) {
+  const out = []
+  for (const pt of series) {
+    if (out.length === 0 || out[out.length - 1].price !== pt.price) out.push(pt)
   }
-  return best
-}
-
-// Retorna { previousPrice, priceDropPercent }, ambos null quando não há dado
-// de referência de ~1 semana atrás ou o preço não caiu o suficiente.
-function computePriceDrop(series, currentPrice, todayMs) {
-  const weekAgo = findWeekAgoPrice(series, todayMs)
-  if (!weekAgo || weekAgo.price <= currentPrice) return { previousPrice: null, priceDropPercent: null }
-  const pct = ((weekAgo.price - currentPrice) / weekAgo.price) * 100
-  if (pct < MIN_DROP_PERCENT) return { previousPrice: null, priceDropPercent: null }
-  return { previousPrice: weekAgo.price, priceDropPercent: Math.round(pct * 10) / 10 }
+  return out
 }
 
 async function walkProductFiles(dir) {
@@ -85,7 +60,6 @@ async function main() {
 
   const now = new Date()
   const today = now.toISOString().slice(0, 10)
-  const todayMs = now.getTime()
   const productFiles = await walkProductFiles(path.join(DATA_DIR, 'products'))
 
   // index.json é gerado pelo fetch-feeds.mjs (que roda antes deste script) —
@@ -102,25 +76,56 @@ async function main() {
 
   let updated = 0
   let priceDrops = 0
+  let skipped = 0
   const droppedProducts = []
+  // Reconstrói o histórico do zero só com os produtos processados agora — assim
+  // chaves de produtos que saíram do catálogo (ou perderam a página) são
+  // podadas automaticamente, sem crescer o arquivo indefinidamente.
+  const nextHistory = {}
   for (const file of productFiles) {
     const product = JSON.parse(await readFile(file, 'utf-8'))
     if (product.searchPrice == null) continue
 
     const key = `${product.merchantSlug}/${product.slug}`
-    const series = history[key] ?? []
-    const last = series[series.length - 1]
+    const indexEntry = indexByKey.get(key)
 
-    // Só grava um ponto novo se o preço mudou ou já faz uma semana desde o
-    // último registro — evita reescrever a mesma linha reta toda semana.
-    if (!last || last.price !== product.searchPrice || last.date !== today) {
+    // Só rastreia produto ativo COM página estática (tem foto/dados suficientes).
+    // Produto isolado/sem página não vira gráfico e não precisa ocupar histórico.
+    if (!indexEntry?.eligibleForStaticPage) {
+      skipped++
+      continue
+    }
+
+    // Compacta o legado (1 ponto/dia) pra função-degrau e grava um ponto novo
+    // sempre que o preço MUDA (subida ou queda) — nunca repete o mesmo valor.
+    const series = compactSeries(history[key] ?? [])
+    // Último preço REGISTRADO antes de hoje = referência pra detectar a queda.
+    const prev = series[series.length - 1]
+    const previousPrice = prev ? prev.price : null
+    if (!prev || prev.price !== product.searchPrice) {
       series.push({ date: today, price: product.searchPrice })
     }
-    history[key] = series.slice(-MAX_POINTS)
+    nextHistory[key] = series.slice(-MAX_POINTS)
 
-    product.priceHistory = history[key]
-    const { previousPrice, priceDropPercent } = computePriceDrop(history[key], product.searchPrice, todayMs)
-    product.previousPrice = previousPrice
+    // Pro gráfico, garante um ponto "hoje" (a linha chega até agora) sem gravar
+    // isso no histórico — o storage continua só com as mudanças.
+    const stored = nextHistory[key]
+    product.priceHistory =
+      stored[stored.length - 1]?.date === today ? stored : [...stored, { date: today, price: product.searchPrice }]
+
+    // "Caiu de preço" = caiu em relação ao último registro anterior. Só marca no
+    // dia da mudança: no dia seguinte o preço estável já é o próprio último
+    // registro (atual == anterior), então não conta de novo (não persiste).
+    let priceDropPercent = null
+    let previousPriceForDrop = null
+    if (previousPrice != null && product.searchPrice < previousPrice) {
+      const pct = ((previousPrice - product.searchPrice) / previousPrice) * 100
+      if (pct >= MIN_DROP_PERCENT) {
+        priceDropPercent = Math.round(pct * 10) / 10
+        previousPriceForDrop = previousPrice
+      }
+    }
+    product.previousPrice = previousPriceForDrop
     product.priceDropPercent = priceDropPercent
     if (priceDropPercent != null) {
       priceDrops++
@@ -137,7 +142,6 @@ async function main() {
       })
     }
 
-    const indexEntry = indexByKey.get(key)
     if (indexEntry) {
       indexEntry.previousPrice = previousPrice
       indexEntry.priceDropPercent = priceDropPercent
@@ -147,11 +151,13 @@ async function main() {
     updated++
   }
 
-  await writeFile(HISTORY_PATH, JSON.stringify(history))
+  await writeFile(HISTORY_PATH, JSON.stringify(nextHistory))
   if (index.length) await writeFile(INDEX_PATH, JSON.stringify(index))
   await writeFile(PRICE_DROPS_PATH, JSON.stringify(droppedProducts))
   console.log(
-    `Histórico de preço: ${updated} produtos atualizados, ${Object.keys(history).length} chaves no total, ${priceDrops} com queda de preço na última semana.`
+    `Histórico de preço: ${updated} produtos atualizados, ${skipped} pulados (sem página), ` +
+      `${Object.keys(nextHistory).length} chaves no total (antes: ${Object.keys(history).length}), ` +
+      `${priceDrops} com preço em queda vs. o anterior.`
   )
 }
 

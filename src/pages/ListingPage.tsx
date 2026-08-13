@@ -197,7 +197,7 @@ export function ListingPage() {
                 </span>
                 <span className="home-stat__body">
                   <strong>{priceDropsCount.toLocaleString('pt-BR')}</strong>
-                  <span className="home-stat__label">preços caíram esta semana</span>
+                  <span className="home-stat__label">preços em queda</span>
                 </span>
               </div>
             )}

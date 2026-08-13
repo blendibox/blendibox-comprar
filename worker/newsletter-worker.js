@@ -130,7 +130,10 @@ async function handleWatch(request, env, headers) {
     const raw = await env.PRICE_WATCH.get(key)
     const watchers = raw ? JSON.parse(raw) : []
     if (!watchers.some((w) => w.email === email)) {
-      watchers.push({ email, addedAt: new Date().toISOString() })
+      // priceAtWatch = baseline: só avisamos quando o preço cair ABAIXO disso,
+      // não por um desconto que já existia quando a pessoa começou a acompanhar.
+      const priceAtWatch = typeof item.price === 'number' ? item.price : null
+      watchers.push({ email, addedAt: new Date().toISOString(), priceAtWatch })
       await env.PRICE_WATCH.put(key, JSON.stringify(watchers))
     }
   }
@@ -408,13 +411,23 @@ async function checkPriceDropsAndNotify(env) {
     if (!raw) continue
 
     const watchers = JSON.parse(raw)
+    const remaining = []
     for (const watcher of watchers) {
-      if (!byEmail.has(watcher.email)) byEmail.set(watcher.email, [])
-      byEmail.get(watcher.email).push(product)
+      // Só avisa quem tem baseline maior que o preço atual (caiu DEPOIS que a
+      // pessoa começou a acompanhar). Sem baseline (watcher antigo) = avisa,
+      // mantendo o comportamento anterior. Quem ainda não caiu abaixo do seu
+      // preço continua na fila, sem ser avisado nem removido.
+      const baseline = typeof watcher.priceAtWatch === 'number' ? watcher.priceAtWatch : null
+      if (baseline == null || product.searchPrice < baseline) {
+        if (!byEmail.has(watcher.email)) byEmail.set(watcher.email, [])
+        byEmail.get(watcher.email).push(product)
+      } else {
+        remaining.push(watcher)
+      }
     }
-    // Aviso é único — apaga assim que processado, não fica reavisando todo
-    // dia enquanto o preço permanecer baixo.
-    await env.PRICE_WATCH.delete(key)
+    // Aviso é único: quem foi avisado sai; quem ainda espera cair permanece.
+    if (remaining.length) await env.PRICE_WATCH.put(key, JSON.stringify(remaining))
+    else await env.PRICE_WATCH.delete(key)
   }
 
   for (const [email, products] of byEmail) {

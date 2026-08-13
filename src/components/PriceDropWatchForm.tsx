@@ -8,7 +8,10 @@ const DISMISSED_KEY = 'compare-ofertas:pricedrop-dismissed'
 const DONE_KEY = 'compare-ofertas:pricedrop-done'
 
 type Status = 'idle' | 'sending' | 'done' | 'error'
-type WatchItem = { merchantSlug: string; slug: string }
+// price = preço no momento em que a pessoa começou a acompanhar (baseline). O
+// worker só avisa quando o preço cair ABAIXO disso — não pra um desconto que
+// já existia antes de ela favoritar.
+type WatchItem = { merchantSlug: string; slug: string; price?: number | null }
 
 // Barra fixa no rodapé pra "avise-me quando baixar de preço".
 // - Em Favoritos: monitora todos os favoritos (passa `items`).
@@ -34,7 +37,7 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
   }, [])
 
   const watchItems: WatchItem[] = product
-    ? [{ merchantSlug: product.merchantSlug, slug: product.slug }]
+    ? [{ merchantSlug: product.merchantSlug, slug: product.slug, price: product.searchPrice }]
     : items ?? []
   const shown = NEWSLETTER_CONFIGURED && watchItems.length > 0 && visible
 
