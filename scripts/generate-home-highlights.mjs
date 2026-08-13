@@ -17,7 +17,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 
-const MAX_RECENT_SALES = 8
+const MAX_RECENT_SALES = 32
 const MAX_PRICE_DROPS = 10
 
 // Vivara, Centauro e Nike são, na prática, os merchants com melhor histórico

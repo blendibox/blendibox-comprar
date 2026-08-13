@@ -26,7 +26,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
 
-const MAX_ENTRIES = 24
+const MAX_ENTRIES = 40 // buffer no social-proof.json; a home mostra MAX_RECENT_SALES
 const LOOKBACK_DAYS = 90 // total buscado (a API limita 31 dias por request)
 const WINDOW_DAYS = 30 // tamanho de cada janela (< 31 pra ter folga no limite)
 const REQUEST_INTERVAL_MS = 3200 // ~18/min, abaixo do limite de 20/min da Awin
