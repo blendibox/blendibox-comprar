@@ -2116,47 +2116,182 @@ a {
 
 /* Aviso de queda de preço (FavoritesPage) — mesma estrutura de formulário da
    newsletter do rodapé, mas em tema claro (página normal, não o footer escuro). */
-.price-drop-watch {
-  margin-top: 32px;
-  padding: 20px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 12px;
-  max-width: 420px;
-}
-
-.price-drop-watch h3 {
-  margin: 0 0 6px;
-  font-size: 16px;
-  color: #0f172a;
-}
-
-.price-drop-watch__hint {
-  font-size: 13px;
-  color: #5f5f5f;
-  margin: 0 0 12px;
-}
-
-.price-drop-watch .newsletter__form input[type='email'] {
+/* Barra fixa "avise-me quando baixar de preço" (página de Favoritos) */
+.pricedrop-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 12px 48px 12px 20px;
   background: #fff;
-  border: 1px solid #cbd5e1;
-  color: #0f172a;
+  border-top: 1px solid #eef0f3;
+  box-shadow: 0 -12px 30px -20px rgba(17, 24, 39, 0.4);
+}
+.pricedrop-bar--done {
+  justify-content: center;
+  font-weight: 700;
 }
 
-.price-drop-watch .newsletter__consent {
-  color: #5f5f5f;
+.pricedrop-bar__badge {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #fce7f3;
+  color: var(--color-pink);
+  flex-shrink: 0;
+}
+.pricedrop-bar__text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.pricedrop-bar__text strong {
+  font-size: 15px;
+}
+.pricedrop-bar__text span {
+  font-size: 12.5px;
+  color: #666;
+}
+.pricedrop-bar__pitch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.pricedrop-bar__pitch svg {
+  color: #0a7d3f;
 }
 
-.price-drop-watch .newsletter__consent a {
+.pricedrop-bar__form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.pricedrop-bar__field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e2e5ea;
+  border-radius: 10px;
+  padding: 0 12px;
+  color: #9a9a9a;
+}
+.pricedrop-bar__input {
+  padding: 10px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  min-width: 180px;
+  color: var(--color-text);
+}
+.pricedrop-bar__submit {
+  padding: 11px 18px;
+  border-radius: 10px;
+  border: none;
+  background: var(--color-pink);
+  color: #fff;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pricedrop-bar__submit:hover {
+  background: #be185d;
+}
+.pricedrop-bar__submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.pricedrop-bar__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 11px;
+  color: #666;
+}
+.pricedrop-bar__trust {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 600;
+  color: #444;
+}
+.pricedrop-bar__trust svg {
+  color: #0a7d3f;
+}
+.pricedrop-bar__consent {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #666;
+}
+.pricedrop-bar__consent a {
   color: var(--color-teal-a11y);
+  text-decoration: underline;
 }
-
-.price-drop-watch .newsletter__error {
+.pricedrop-bar__consent--optional {
+  color: #888;
+}
+.pricedrop-bar__error {
+  font-size: 12px;
   color: #dc2626;
+  font-weight: 700;
+}
+.pricedrop-bar__close {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px;
 }
 
-.price-drop-watch .newsletter__soon {
-  color: #5f5f5f;
+@media (max-width: 760px) {
+  .pricedrop-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 40px 14px 16px;
+  }
+  .pricedrop-bar__badge {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+  }
+  .pricedrop-bar__text {
+    padding-left: 56px;
+    min-height: 44px;
+    justify-content: center;
+  }
+  .pricedrop-bar__form {
+    width: 100%;
+  }
+  .pricedrop-bar__field {
+    flex: 1;
+    min-width: 0;
+  }
+  .pricedrop-bar__input {
+    min-width: 0;
+    width: 100%;
+  }
+  .pricedrop-bar__meta {
+    flex-basis: 100%;
+  }
 }
 
 /* Páginas institucionais (sobre/termos/privacidade) */
@@ -2306,6 +2441,11 @@ a {
 }
 
 /* Roleta de cupons */
+/* Enquanto a barra fixa de aviso de preço está visível, esconde o FAB da
+   roleta pra não colidir no rodapé (a barra marca o body). */
+body.has-fixed-bottombar .coupon-wheel-fab {
+  display: none;
+}
 .coupon-wheel-fab {
   position: fixed;
   right: 20px;
