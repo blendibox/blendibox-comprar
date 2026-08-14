@@ -27,6 +27,11 @@ export const listaDeAmigoSecreto: BlogPost = {
       type: 'p',
       text: 'Antes do sorteio, cada participante do grupo cria a própria lista com o que gostaria de ganhar, dentro da faixa de valor combinada, e compartilha o link no grupo. Depois do sorteio, cada um já sabe exatamente onde olhar pra ver o que a pessoa sorteada gostaria — sem precisar perguntar diretamente (o que estragaria a surpresa) e sem chutar.',
     },
+    { type: 'h2', text: 'E o sorteio dos nomes, como fazer?' },
+    {
+      type: 'p',
+      text: 'Se o grupo ainda não sorteou quem tira quem, qualquer ferramenta gratuita de sorteio online resolve — a maioria manda um link individual por participante, sem revelar o resultado pros outros. Depois do sorteio é que a lista de presentes entra: cada um compartilha a própria, e quem tirou o nome já sabe onde olhar.',
+    },
     { type: 'h2', text: 'Passo a passo' },
     {
       type: 'ol',
@@ -49,6 +54,10 @@ export const listaDeAmigoSecreto: BlogPost = {
     },
   ],
   faq: [
+    {
+      q: 'O site faz o sorteio dos nomes do amigo secreto?',
+      a: 'Não — a lista organiza os presentes, não o sorteio. Pra sortear os nomes, use qualquer ferramenta gratuita de sorteio online e depois volte aqui pra montar sua lista.',
+    },
     {
       q: 'A lista de amigo secreto revela quem vai me presentear?',
       a: 'Não. A lista mostra só o que você gostaria de ganhar — quem acessa o link não aparece identificado pra você, então o sorteio continua secreto.',
