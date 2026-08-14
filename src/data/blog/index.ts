@@ -4,6 +4,9 @@ import { comoDizerOQueQueroDePresente } from './como-dizer-o-que-quero-de-presen
 import { listaDeCasamentoOnline } from './lista-de-casamento-online'
 import { comparativoSitesListaDeCasamento } from './comparativo-sites-lista-de-casamento'
 import { listaDePresentesDeBodas } from './lista-de-presentes-de-bodas'
+import { listaDePresentesDeNatal } from './lista-de-presentes-de-natal'
+import { blackFridayListaDeCasamento } from './black-friday-lista-de-casamento'
+import { listaDeAmigoSecreto } from './lista-de-amigo-secreto'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -13,6 +16,9 @@ export const blogPosts: BlogPost[] = [
   listaDeCasamentoOnline,
   comparativoSitesListaDeCasamento,
   listaDePresentesDeBodas,
+  listaDePresentesDeNatal,
+  blackFridayListaDeCasamento,
+  listaDeAmigoSecreto,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
