@@ -5,6 +5,7 @@ export type BlogContentBlock =
   | { type: 'ul'; items: string[] }
   | { type: 'ol'; items: string[] }
   | { type: 'quote'; text: string }
+  | { type: 'table'; headers: string[]; rows: string[][] }
 
 export type BlogFaqItem = { q: string; a: string }
 

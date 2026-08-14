@@ -4791,6 +4791,37 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   color: #444;
 }
 
+.blog-post__table-wrap {
+  overflow-x: auto;
+  margin: 0 0 20px;
+  border: 1px solid #e7e9ee;
+  border-radius: 12px;
+}
+
+.blog-post__table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+.blog-post__table-wrap th,
+.blog-post__table-wrap td {
+  padding: 10px 14px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid #eee;
+}
+
+.blog-post__table-wrap thead th {
+  background: var(--color-band);
+  color: var(--color-navy);
+  font-weight: 700;
+}
+
+.blog-post__table-wrap tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .blog-post__faq {
   margin-top: 28px;
 }

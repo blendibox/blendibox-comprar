@@ -32,6 +32,29 @@ function Block({ block }: { block: BlogContentBlock }) {
       )
     case 'quote':
       return <blockquote>{block.text}</blockquote>
+    case 'table':
+      return (
+        <div className="blog-post__table-wrap">
+          <table>
+            <thead>
+              <tr>
+                {block.headers.map((h) => (
+                  <th key={h}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {block.rows.map((row, i) => (
+                <tr key={i}>
+                  {row.map((cell, j) => (
+                    <td key={j}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )
   }
 }
 

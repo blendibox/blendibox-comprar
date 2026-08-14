@@ -12,6 +12,7 @@ export const listaDeCasamentoOnline: BlogPost = {
   excerpt:
     'Como montar a lista de casamento, quando enviar aos convidados, como evitar presente repetido e como reunir produtos de lojas diferentes numa lista só.',
   relatedSlugs: [
+    'comparativo-sites-lista-de-casamento',
     'como-dizer-o-que-quero-de-presente',
     'lista-de-presentes-online-gratis',
     'como-evitar-presentes-repetidos',
