@@ -3,6 +3,7 @@ import { listaDePresentesOnlineGratis } from './lista-de-presentes-online-gratis
 import { comoDizerOQueQueroDePresente } from './como-dizer-o-que-quero-de-presente'
 import { listaDeCasamentoOnline } from './lista-de-casamento-online'
 import { comparativoSitesListaDeCasamento } from './comparativo-sites-lista-de-casamento'
+import { listaDePresentesDeBodas } from './lista-de-presentes-de-bodas'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -11,6 +12,7 @@ export const blogPosts: BlogPost[] = [
   comoDizerOQueQueroDePresente,
   listaDeCasamentoOnline,
   comparativoSitesListaDeCasamento,
+  listaDePresentesDeBodas,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
