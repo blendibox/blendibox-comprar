@@ -8,6 +8,9 @@ import { listaDePresentesDeNatal } from './lista-de-presentes-de-natal'
 import { blackFridayListaDeCasamento } from './black-friday-lista-de-casamento'
 import { listaDeAmigoSecreto } from './lista-de-amigo-secreto'
 import { ideiasDePresenteDeNatal } from './ideias-de-presente-de-natal'
+import { presenteDiaDasCriancas } from './presente-dia-das-criancas'
+import { presenteDiaDasMaes } from './presente-dia-das-maes'
+import { presenteDiaDosNamorados } from './presente-dia-dos-namorados'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -21,6 +24,9 @@ export const blogPosts: BlogPost[] = [
   blackFridayListaDeCasamento,
   listaDeAmigoSecreto,
   ideiasDePresenteDeNatal,
+  presenteDiaDasCriancas,
+  presenteDiaDasMaes,
+  presenteDiaDosNamorados,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {

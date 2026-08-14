@@ -11,7 +11,7 @@ export const ideiasDePresenteDeNatal: BlogPost = {
   publishedAt: '2026-08-14',
   excerpt:
     'Tênis, joias, perfumes, maquiagem, brinquedos e mais — ideias de presente de Natal por categoria e por pessoa, com onde encontrar cada uma.',
-  relatedSlugs: ['lista-de-presentes-de-natal', 'lista-de-amigo-secreto', 'como-dizer-o-que-quero-de-presente'],
+  relatedSlugs: ['presente-dia-das-maes', 'presente-dia-dos-namorados', 'presente-dia-das-criancas', 'lista-de-presentes-de-natal'],
   blocks: [
     {
       type: 'p',
