@@ -11,7 +11,7 @@ export const blackFridayListaDeCasamento: BlogPost = {
   publishedAt: '2026-08-14',
   excerpt:
     'Tem uma lista de presentes ou de casamento aberta? Veja como usar a Black Friday a seu favor — e como checar se o desconto anunciado é real antes de comprar.',
-  relatedSlugs: ['lista-de-casamento-online', 'lista-de-presentes-online-gratis', 'comparativo-sites-lista-de-casamento'],
+  relatedSlugs: ['quando-e-a-black-friday', 'lista-de-casamento-online', 'comparativo-sites-lista-de-casamento'],
   blocks: [
     {
       type: 'p',
