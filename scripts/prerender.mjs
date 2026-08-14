@@ -33,7 +33,7 @@ async function buildEntryServer() {
   const tmpFile = path.join(__dirname, '.entry-server.generated.mjs')
   await writeFile(tmpFile, result.outputFiles[0].text)
   const mod = await import(`${pathToFileURL(tmpFile).href}?t=${Date.now()}`)
-  return mod.renderRoute
+  return mod
 }
 
 function escapeHtml(value) {
@@ -207,6 +207,45 @@ function couponsMerchantJsonLd(displayName, canonical) {
   return [breadcrumb, faq]
 }
 
+// Article + Breadcrumb (+ FAQ quando o post tem) pros artigos do blog. O FAQ
+// só entra se tiver conteúdo visível correspondente na página (BlogPostPage
+// renderiza post.faq), mesma disciplina do couponFaq acima.
+function blogPostJsonLd(post, canonical) {
+  const articleLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: post.title,
+    description: post.metaDescription,
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt || post.publishedAt,
+    author: { '@type': 'Organization', name: 'Compare Ofertas' },
+    publisher: { '@type': 'Organization', name: 'Compare Ofertas' },
+    mainEntityOfPage: canonical,
+  }
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: `${SITE_URL}/blog/` },
+      { '@type': 'ListItem', position: 3, name: post.title, item: canonical },
+    ],
+  }
+  const jsonLd = [articleLd, breadcrumbLd]
+  if (post.faq && post.faq.length) {
+    jsonLd.push({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: post.faq.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    })
+  }
+  return jsonLd
+}
+
 function inlineJson(value) {
   // Evita que o JSON quebre a tag <script> caso algum texto contenha "</script>".
   return JSON.stringify(value).replace(/</g, '\\u003c')
@@ -253,7 +292,7 @@ async function walkProductFiles(dir) {
 
 async function main() {
   const template = await readFile(path.join(DIST_DIR, 'index.html'), 'utf-8')
-  const renderRoute = await buildEntryServer()
+  const { renderRoute, blogPosts } = await buildEntryServer()
 
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
@@ -505,6 +544,39 @@ async function main() {
       },
     })
     generatedUrls.push({ url, changefreq: 'daily', priority: 0.6 })
+  }
+
+  // --- Blog: listagem + um artigo por post (fonte: src/data/blog, a mesma do
+  // cliente, reexportada via entry-server — nunca duplica conteúdo). ---
+  const blogListUrl = await renderPage({
+    template,
+    renderRoute,
+    routePath: '/blog',
+    initialData: undefined,
+    head: {
+      title: 'Blog | Compare Ofertas',
+      description: 'Dicas práticas pra organizar lista de presentes, casamento, chá de bebê e casa nova.',
+      canonical: `${SITE_URL}/blog/`,
+    },
+  })
+  generatedUrls.push({ url: blogListUrl, changefreq: 'weekly', priority: 0.5 })
+
+  for (const post of blogPosts) {
+    const routePath = `/blog/${post.slug}`
+    const canonical = `${SITE_URL}${routePath}/`
+    const url = await renderPage({
+      template,
+      renderRoute,
+      routePath,
+      initialData: undefined,
+      head: {
+        title: post.metaTitle,
+        description: post.metaDescription,
+        canonical,
+        jsonLd: blogPostJsonLd(post, canonical),
+      },
+    })
+    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.6 })
   }
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))

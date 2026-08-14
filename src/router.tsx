@@ -17,6 +17,8 @@ import { CreateRegistryPage } from './pages/CreateRegistryPage'
 import { RegistryPublicPage } from './pages/RegistryPublicPage'
 import { RegistryManagePage } from './pages/RegistryManagePage'
 import { WalkthroughPage } from './pages/WalkthroughPage'
+import { BlogPage } from './pages/BlogPage'
+import { BlogPostPage } from './pages/BlogPostPage'
 
 export function AppRoutes() {
   return (
@@ -33,6 +35,8 @@ export function AppRoutes() {
         <Route path="privacidade" element={<PrivacyPage />} />
         <Route path="lista-de-presentes" element={<RegistryLandingPage />} />
         <Route path="como-funciona" element={<WalkthroughPage />} />
+        <Route path="blog" element={<BlogPage />} />
+        <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="listas/nova" element={<CreateRegistryPage />} />
         <Route path="lista/:id" element={<RegistryPublicPage />} />
         <Route path="lista/:id/editar" element={<RegistryManagePage />} />

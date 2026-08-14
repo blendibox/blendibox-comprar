@@ -10,9 +10,11 @@ import { CouponCard } from '../components/CouponCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { PriceTargetForm } from '../components/PriceTargetForm'
 import { Carousel } from '../components/Carousel'
+import { ShareBar } from '../components/ShareBar'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { formatIsoDateBr, formatSimpleDateBr, parseBrDate } from '../lib/date'
+import { SITE_URL } from '../config/site'
 
 type LoadState = 'loading' | 'ready' | 'error'
 
@@ -247,6 +249,11 @@ export function ProductPage() {
               : 'na data de publicação'}
             {'. Oferta válida enquanto durarem os estoques.'}
           </p>
+
+          <ShareBar
+            url={`${SITE_URL}/${product.merchantSlug}/${product.slug}/`}
+            title={`${product.productName} por ${formatPrice(product.searchPrice, product.currency)} na ${product.merchantDisplayName}`}
+          />
 
           {product.priceHistory && product.priceHistory.length > 1 && (
             <PriceHistoryChart
