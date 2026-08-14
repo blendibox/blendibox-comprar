@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CalendarDays, Gift } from 'lucide-react'
 import { getBlogPost, getRelatedPosts } from '../data/blog'
@@ -6,6 +7,27 @@ import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
 import type { BlogContentBlock } from '../types/blog'
 
+// Suporte a link interno dentro do texto: [rótulo](/caminho). Deixa o artigo
+// referenciar páginas reais do site (categoria, loja) sem precisar de um tipo
+// de bloco à parte pra cada frase com link.
+const INLINE_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
+
+function renderInline(text: string): ReactNode {
+  const parts: ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let key = 0
+  INLINE_LINK.lastIndex = 0
+  while ((match = INLINE_LINK.exec(text))) {
+    if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
+    const [, label, href] = match
+    parts.push(<Link key={key++} to={href}>{label}</Link>)
+    lastIndex = match.index + match[0].length
+  }
+  if (lastIndex < text.length) parts.push(text.slice(lastIndex))
+  return parts.length > 1 ? parts : text
+}
+
 function Block({ block }: { block: BlogContentBlock }) {
   switch (block.type) {
     case 'h2':
@@ -13,12 +35,12 @@ function Block({ block }: { block: BlogContentBlock }) {
     case 'h3':
       return <h3>{block.text}</h3>
     case 'p':
-      return <p>{block.text}</p>
+      return <p>{renderInline(block.text)}</p>
     case 'ul':
       return (
         <ul>
           {block.items.map((item) => (
-            <li key={item}>{item}</li>
+            <li key={item}>{renderInline(item)}</li>
           ))}
         </ul>
       )
@@ -26,7 +48,7 @@ function Block({ block }: { block: BlogContentBlock }) {
       return (
         <ol>
           {block.items.map((item) => (
-            <li key={item}>{item}</li>
+            <li key={item}>{renderInline(item)}</li>
           ))}
         </ol>
       )

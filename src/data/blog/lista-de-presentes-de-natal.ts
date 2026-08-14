@@ -11,7 +11,7 @@ export const listaDePresentesDeNatal: BlogPost = {
   publishedAt: '2026-08-14',
   excerpt:
     'Como montar uma lista de presentes de Natal grátis — pra família, amigo secreto ou amigo oculto — com produtos de qualquer loja, sem presente repetido.',
-  relatedSlugs: ['lista-de-amigo-secreto', 'como-dizer-o-que-quero-de-presente', 'lista-de-presentes-online-gratis'],
+  relatedSlugs: ['ideias-de-presente-de-natal', 'lista-de-amigo-secreto', 'como-dizer-o-que-quero-de-presente'],
   blocks: [
     {
       type: 'p',
