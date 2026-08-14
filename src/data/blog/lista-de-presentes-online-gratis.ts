@@ -12,6 +12,7 @@ export const listaDePresentesOnlineGratis: BlogPost = {
   excerpt:
     'Monte uma lista de presentes online de graça, sem criar conta, com produtos de qualquer loja — e evite presente repetido com um link só pra compartilhar.',
   relatedSlugs: [
+    'lista-de-casamento-online',
     'como-dizer-o-que-quero-de-presente',
     'lista-de-presentes-varias-lojas',
     'como-evitar-presentes-repetidos',

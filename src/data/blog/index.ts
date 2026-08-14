@@ -1,12 +1,15 @@
 import type { BlogPost } from '../../types/blog'
 import { listaDePresentesOnlineGratis } from './lista-de-presentes-online-gratis'
 import { comoDizerOQueQueroDePresente } from './como-dizer-o-que-quero-de-presente'
+import { listaDeCasamentoOnline } from './lista-de-casamento-online'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
-export const blogPosts: BlogPost[] = [listaDePresentesOnlineGratis, comoDizerOQueQueroDePresente].sort((a, b) =>
-  a.publishedAt < b.publishedAt ? 1 : -1
-)
+export const blogPosts: BlogPost[] = [
+  listaDePresentesOnlineGratis,
+  comoDizerOQueQueroDePresente,
+  listaDeCasamentoOnline,
+].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug)

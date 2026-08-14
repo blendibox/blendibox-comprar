@@ -11,7 +11,12 @@ export const comoDizerOQueQueroDePresente: BlogPost = {
   publishedAt: '2026-08-14',
   excerpt:
     '7 dicas pra sugerir presente sem constrangimento — com modelo de mensagem pronto e como usar o histórico de preço a seu favor.',
-  relatedSlugs: ['lista-de-presentes-online-gratis', 'como-evitar-presentes-repetidos', 'compartilhar-lista-de-presentes-whatsapp'],
+  relatedSlugs: [
+    'lista-de-casamento-online',
+    'lista-de-presentes-online-gratis',
+    'como-evitar-presentes-repetidos',
+    'compartilhar-lista-de-presentes-whatsapp',
+  ],
   blocks: [
     {
       type: 'p',
