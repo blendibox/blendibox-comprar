@@ -43,11 +43,15 @@ const AUDIO_PATH = 'C:\\Users\\blendibox\\Downloads\\paulyudin-promo-promo-music
 const AUDIO_VOLUME = 0.7
 const AUDIO_FADE_SECONDS = 1.5
 
-// Paleta REAL do site (src/index.css), não uma aproximação.
+// Paleta REAL do site (src/index.css) — com uma exceção: o verde do site
+// (#0a7d3f) é escuro demais contra o fundo azul-marinho escuro do vídeo
+// (baixo contraste, difícil de ler no preço/estatísticas). Usamos uma
+// variante mais clara SÓ no vídeo, pro texto ficar legível; o site em si
+// não muda.
 const COLORS = {
   navy: '#0f172a',
   navyLight: '#1b2947',
-  green: '#0a7d3f',
+  green: '#22c55e',
   pink: '#db2777',
   teal: '#14b8a6',
   white: '#ffffff',
