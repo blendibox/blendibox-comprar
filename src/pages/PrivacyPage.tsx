@@ -17,6 +17,17 @@ export function PrivacyPage() {
       </section>
 
       <section>
+        <h2>Analytics e comportamento de navegação</h2>
+        <p>
+          Usamos o Microsoft Clarity pra entender como as pessoas navegam pelo site — ele grava
+          sessões de uso (cliques, rolagem, movimento do mouse) e gera mapas de calor, de forma
+          agregada, pra identificar problemas de usabilidade. O Clarity roda em todas as páginas do
+          site e é fornecido pela Microsoft, que trata esses dados conforme a própria política de
+          privacidade dela.
+        </p>
+      </section>
+
+      <section>
         <h2>Como usamos seu e-mail</h2>
         <p>
           Se você se cadastrar na newsletter, usamos seu e-mail para enviar cupons e ofertas
