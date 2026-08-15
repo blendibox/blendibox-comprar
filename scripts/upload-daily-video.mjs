@@ -6,6 +6,7 @@
 import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { refreshAccessToken } from './lib/youtube-auth-token.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -31,22 +32,6 @@ const CATEGORY_ID = process.env.YOUTUBE_CATEGORY_ID || '22'
 // manual antes de o pipeline estar validado. Trocar pra "public" (ou
 // "unlisted") via env var quando tiver confiança no resultado.
 const PRIVACY_STATUS = process.env.YOUTUBE_PRIVACY_STATUS || 'private'
-
-async function getAccessToken() {
-  const res = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      client_id: CLIENT_ID,
-      client_secret: CLIENT_SECRET,
-      refresh_token: REFRESH_TOKEN,
-      grant_type: 'refresh_token',
-    }),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(`Falha renovando access token: ${JSON.stringify(data)}`)
-  return data.access_token
-}
 
 async function uploadVideo({ accessToken, videoBuffer, title, description, tags }) {
   const metadata = {
@@ -94,7 +79,7 @@ async function main() {
   const tags = (metadata.tags || []).map((t) => t.replace(/^#/, ''))
 
   console.log(`Renovando access token...`)
-  const accessToken = await getAccessToken()
+  const accessToken = await refreshAccessToken({ clientId: CLIENT_ID, clientSecret: CLIENT_SECRET, refreshToken: REFRESH_TOKEN })
 
   console.log(`Enviando "${metadata.title}" (${(videoBuffer.length / 1024 / 1024).toFixed(1)} MB, privacyStatus=${PRIVACY_STATUS})...`)
   const result = await uploadVideo({ accessToken, videoBuffer, title: metadata.title, description: metadata.description, tags })

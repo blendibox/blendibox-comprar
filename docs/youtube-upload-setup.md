@@ -57,6 +57,23 @@ node scripts/youtube-auth.mjs
 O script abre uma aba no navegador — faça login com a conta dona do canal e
 clique em **Permitir**. O terminal imprime o `YOUTUBE_REFRESH_TOKEN`.
 
+> **Conta Google com vários canais?** O Google *não* deixa você escolher o
+> canal no meio desse fluxo — o token fica associado ao "canal padrão" da
+> conta na hora da autorização. Se você já tinha autorizado esse app antes
+> (mesmo que pra testar), revogue o acesso em
+> https://myaccount.google.com/permissions (procure "Compare Ofertas —
+> upload script") antes de rodar `youtube-auth.mjs` de novo — assim você
+> força o Google a te deixar escolher o canal correto na tela de consulta.
+> Depois, **antes de publicar de verdade**, confirme qual canal o token
+> pegou:
+> ```powershell
+> node scripts/youtube-whoami.mjs
+> ```
+> Esse comando só lê, não publica nada — mostra o nome e o ID do canal
+> autorizado. Se não bater com o canal que você queria, troque o canal
+> padrão em https://www.youtube.com/account_advanced (ou gerencie qual
+> canal está ativo em https://myaccount.google.com/) e repita o passo 4.
+
 ## 5. Guardar os três segredos
 
 - **Local** (pra testar com `node scripts/upload-daily-video.mjs`):
