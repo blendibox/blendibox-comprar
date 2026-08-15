@@ -22,6 +22,12 @@ const FINAL_PATH = path.join(ROOT, 'daily-video.mp4')
 const WIDTH = 1080
 const HEIGHT = 1920
 const TOP_N = 5
+// Posição/tamanho do card branco de foto do produto — compartilhado entre
+// productFrameSvg (desenha o card) e renderProductSlide (compõe a foto e o
+// selo de desconto por cima, nessa ordem, pra o selo não ficar atrás da foto).
+const CARD_X = 150
+const CARD_Y = 420
+const CARD_SIZE = 780
 // Mesmo domínio usado em todo o resto do projeto (ver src/config/site.ts,
 // scripts/prerender.mjs) — sem "www", sem nome de marca inventado.
 const SITE_DOMAIN = 'comprar.blendibox.com.br'
@@ -34,6 +40,8 @@ const CLOSING_SECONDS = 5
 // um pouco mais longo, pra segurar a expectativa do "grand finale".
 const ANNOUNCE_SECONDS = 1.1
 const ANNOUNCE_SECONDS_FINAL = 1.8
+// Duração das duas telas finais (CTA de newsletter + stats/link do site).
+const NEWSLETTER_SECONDS = 4
 
 // Trilha de fundo (royalty-free, baixada localmente pelo usuário). Caminho
 // fixo da máquina local só pra teste — pra automatizar no CI, precisa virar
@@ -123,13 +131,15 @@ function wordmark(x, y, anchor = 'start') {
 
 function openingSlideSvg(dateLabel) {
   return `${svgHeader()}${backgroundDecor()}
-    <text x="${WIDTH / 2}" y="720" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="${COLORS.pink}">↓ %</text>
-    <text x="${WIDTH / 2}" y="880" text-anchor="middle" font-family="Arial, sans-serif" font-size="86" font-weight="900" fill="${COLORS.white}">MAIORES QUEDAS</text>
-    <text x="${WIDTH / 2}" y="980" text-anchor="middle" font-family="Arial, sans-serif" font-size="86" font-weight="900" fill="${COLORS.pink}">DE PREÇO</text>
-    <rect x="${WIDTH / 2 - 180}" y="1030" width="360" height="90" rx="45" fill="${COLORS.green}" />
-    <text x="${WIDTH / 2}" y="1090" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="800" fill="${COLORS.white}">DO DIA</text>
-    <text x="${WIDTH / 2}" y="1190" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="${COLORS.gray}">Ofertas reais. Descontos de verdade.</text>
-    <text x="${WIDTH / 2}" y="1240" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="${COLORS.teal}">${escapeXml(SITE_DOMAIN)} · ${escapeXml(dateLabel)}</text>
+    <circle cx="${WIDTH / 2}" cy="340" r="100" fill="${COLORS.pink}" />
+    <text x="${WIDTH / 2}" y="377" text-anchor="middle" font-family="Arial, sans-serif" font-size="96" font-weight="900" fill="${COLORS.white}">%</text>
+    <text x="${WIDTH / 2}" y="660" text-anchor="middle" font-family="Arial, sans-serif" font-size="96" font-weight="900" fill="${COLORS.white}">MAIORES</text>
+    <text x="${WIDTH / 2}" y="820" text-anchor="middle" font-family="Arial, sans-serif" font-size="96" font-weight="900" fill="${COLORS.pink}">QUEDAS</text>
+    <text x="${WIDTH / 2}" y="980" text-anchor="middle" font-family="Arial, sans-serif" font-size="96" font-weight="900" fill="${COLORS.white}">DE PREÇO</text>
+    <rect x="${WIDTH / 2 - 190}" y="1040" width="380" height="100" rx="50" fill="${COLORS.green}" />
+    <text x="${WIDTH / 2}" y="1108" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" font-weight="800" fill="${COLORS.white}">DO DIA</text>
+    <text x="${WIDTH / 2}" y="1440" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="${COLORS.white}">Ofertas <tspan fill="${COLORS.pink}" font-weight="700">reais</tspan>. Descontos de <tspan fill="${COLORS.green}" font-weight="700">verdade</tspan>.</text>
+    <text x="${WIDTH / 2}" y="1492" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="${COLORS.teal}">${escapeXml(SITE_DOMAIN)} · ${escapeXml(dateLabel)}</text>
     ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
   </svg>`
 }
@@ -150,9 +160,9 @@ function rankAnnounceSvg(rank) {
 
 function productFrameSvg({ rank, merchant, name, previousPrice, price, currency, dropPercent }) {
   const nameLines = wrapText(name, 24, 2)
-  const cardX = 150
-  const cardY = 420
-  const cardSize = 780
+  const cardX = CARD_X
+  const cardY = CARD_Y
+  const cardSize = CARD_SIZE
   return `${svgHeader()}${backgroundDecor()}
     ${wordmark(WIDTH - 50, 110, 'end')}
     <circle cx="150" cy="150" r="95" fill="${COLORS.navy}" stroke="${COLORS.green}" stroke-width="10" />
@@ -163,14 +173,50 @@ function productFrameSvg({ rank, merchant, name, previousPrice, price, currency,
     <text x="${WIDTH / 2}" y="1370" text-anchor="middle" font-family="Arial, sans-serif" font-size="42" font-weight="800" fill="${COLORS.white}">
       ${nameLines.map((l, i) => `<tspan x="${WIDTH / 2}" dy="${i === 0 ? 0 : 52}">${escapeXml(l)}</tspan>`).join('')}
     </text>
-    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1500 : 1460}" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="${COLORS.gray}" text-decoration="line-through">DE ${escapeXml(formatPrice(previousPrice, currency))}</text>
-    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1590 : 1550}" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="900" fill="${COLORS.green}">${escapeXml(formatPrice(price, currency))}</text>
-    <rect x="${WIDTH / 2 - 170}" y="${nameLines.length > 1 ? 1630 : 1590}" width="340" height="86" rx="43" fill="${COLORS.pink}" />
-    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1685 : 1645}" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="${COLORS.white}">↓ ${dropPercent}% OFF</text>
+    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1490 : 1450}" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="${COLORS.gray}" text-decoration="line-through">DE: ${escapeXml(formatPrice(previousPrice, currency))}</text>
+    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1535 : 1495}" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="${COLORS.teal}">POR</text>
+    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1615 : 1575}" text-anchor="middle" font-family="Arial, sans-serif" font-size="72" font-weight="900" fill="${COLORS.green}">${escapeXml(formatPrice(price, currency))}</text>
+    <rect x="${WIDTH / 2 - 170}" y="${nameLines.length > 1 ? 1650 : 1610}" width="340" height="86" rx="43" fill="${COLORS.pink}" />
+    <text x="${WIDTH / 2}" y="${nameLines.length > 1 ? 1705 : 1665}" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="800" fill="${COLORS.white}">↓ ${dropPercent}% de desconto</text>
   </svg>`
 }
 
-function closingSlideSvg({ totalProducts, merchantsCount, priceDropsCount }) {
+// Sino estilizado (silhueta simples, sem depender de fonte de emoji/ícone
+// externo — sharp/resvg não garante emoji colorido).
+function bellIcon(cx, cy, color) {
+  return `<g transform="translate(${cx},${cy})">
+    <rect x="-7" y="-78" width="14" height="20" rx="7" fill="${color}" />
+    <path d="M0,-62 C-38,-62 -55,-30 -55,8 L-68,46 L68,46 L55,8 C55,-30 38,-62 0,-62 Z" fill="${color}" />
+    <circle cx="0" cy="62" r="15" fill="${color}" />
+  </g>`
+}
+
+// Tela "encerramento": CTA pra newsletter, reaproveitando a copy real já
+// usada no site (TopBar.tsx) e os benefícios reais do Footer.tsx — nada de
+// "cupons exclusivos" (cupons vêm do feed público da Awin, não são
+// exclusivos nossos).
+function newsletterCtaSlideSvg() {
+  const benefit = (y, title, text, color) => `
+    <circle cx="180" cy="${y}" r="14" fill="${color}" />
+    <text x="230" y="${y + 8}" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="${COLORS.white}">${escapeXml(title)}</text>
+    <text x="230" y="${y + 42}" font-family="Arial, sans-serif" font-size="24" fill="${COLORS.gray}">${escapeXml(text)}</text>`
+  return `${svgHeader()}${backgroundDecor()}
+    <circle cx="${WIDTH / 2}" cy="440" r="140" fill="${COLORS.navyLight}" stroke="${COLORS.pink}" stroke-width="10" />
+    ${bellIcon(WIDTH / 2, 440, COLORS.white)}
+    <text x="${WIDTH / 2}" y="700" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="900" fill="${COLORS.white}">Não perca as</text>
+    <text x="${WIDTH / 2}" y="770" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="900" fill="${COLORS.pink}">próximas ofertas!</text>
+    <text x="${WIDTH / 2}" y="870" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="${COLORS.gray}">Cupons e as maiores quedas de</text>
+    <text x="${WIDTH / 2}" y="912" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="${COLORS.gray}">preço da semana no seu e-mail.</text>
+    ${benefit(1040, 'Atualizado diariamente', 'Preços monitorados todo dia', COLORS.teal)}
+    ${benefit(1150, 'Cupons oficiais', 'Direto das lojas parceiras', COLORS.green)}
+    ${benefit(1260, 'Histórico de preço', 'Veja se a oferta é boa de verdade', COLORS.pink)}
+    <text x="${WIDTH / 2}" y="1440" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="${COLORS.gray}">Sem spam · cancele quando quiser</text>
+    ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
+  </svg>`
+}
+
+// Tela "fechamento": números reais do dia + link do site.
+function statsCtaSlideSvg({ totalProducts, merchantsCount, priceDropsCount }) {
   const stat = (y, value, label) => `
     <text x="${WIDTH / 2}" y="${y}" text-anchor="middle" font-family="Arial, sans-serif" font-size="64" font-weight="900" fill="${COLORS.green}">${escapeXml(value)}</text>
     <text x="${WIDTH / 2}" y="${y + 46}" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="${COLORS.gray}">${escapeXml(label)}</text>`
@@ -184,6 +230,19 @@ function closingSlideSvg({ totalProducts, merchantsCount, priceDropsCount }) {
     <text x="${WIDTH / 2}" y="1410" text-anchor="middle" font-family="Arial, sans-serif" font-size="36" font-weight="800" fill="${COLORS.white}">${SITE_DOMAIN}</text>
     <text x="${WIDTH / 2}" y="1500" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="${COLORS.gray}">Contém links de afiliado</text>
     ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
+  </svg>`
+}
+
+// Selo de desconto rosa, renderizado à parte pra ser composto POR CIMA da
+// foto do produto (se ficasse dentro do frame base, a foto — composta depois
+// — cobriria o pedaço do selo que invade a área da imagem).
+function discountBadgeSvg(dropPercent) {
+  const label = `-${dropPercent}%`
+  const fontSize = label.length > 6 ? 32 : 40
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+    <circle cx="110" cy="110" r="100" fill="${COLORS.pink}" stroke="${COLORS.navy}" stroke-width="8" />
+    <text x="110" y="90" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="900" fill="${COLORS.white}">↓</text>
+    <text x="110" y="152" text-anchor="middle" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="900" fill="${COLORS.white}">${label}</text>
   </svg>`
 }
 
@@ -216,7 +275,16 @@ async function renderProductSlide(item, rank, outPath) {
     console.warn(`  [aviso] falhou baixar imagem de "${item.productName}": ${err.message} — segue sem foto`)
   }
 
-  const composite = photoBuffer ? [{ input: photoBuffer, left: 190, top: 460 }] : []
+  const badgeBuffer = await sharp(Buffer.from(discountBadgeSvg(item.priceDropPercent))).png().toBuffer()
+  const badgeCx = CARD_X + CARD_SIZE
+  const badgeCy = CARD_Y + 130
+
+  // Ordem importa: a foto vai primeiro, o selo por cima — senão a foto
+  // (composta depois) cobriria o pedaço do selo que invade o card.
+  const composite = [
+    ...(photoBuffer ? [{ input: photoBuffer, left: 190, top: 460 }] : []),
+    { input: badgeBuffer, left: badgeCx - 110, top: badgeCy - 110 },
+  ]
   await sharp(framePng).composite(composite).png().toFile(outPath)
 }
 
@@ -225,7 +293,17 @@ async function main() {
   const meta = JSON.parse(await readFile(path.join(DATA_DIR, 'meta.json'), 'utf-8'))
   const merchants = JSON.parse(await readFile(path.join(DATA_DIR, 'merchants.json'), 'utf-8'))
 
-  const drops = (highlights.priceDrops ?? []).slice(0, TOP_N)
+  // Evita mostrar dois produtos com o mesmo preço final lado a lado no vídeo
+  // (fica estranho no ranking) — pula duplicatas de preço, mantendo a ordem
+  // original (já vem ordenado por priceDropPercent desc).
+  const seenPrices = new Set()
+  const drops = []
+  for (const item of highlights.priceDrops ?? []) {
+    if (drops.length >= TOP_N) break
+    if (seenPrices.has(item.searchPrice)) continue
+    seenPrices.add(item.searchPrice)
+    drops.push(item)
+  }
   if (drops.length === 0) {
     console.log('Sem quedas de preço hoje — nada pra gerar.')
     return
@@ -262,10 +340,14 @@ async function main() {
     slides.push({ file, seconds: PRODUCT_SECONDS })
   }
 
+  const newsletterPath = path.join(OUT_DIR, 'slide-98-newsletter.png')
+  await sharp(Buffer.from(newsletterCtaSlideSvg())).png().toFile(newsletterPath)
+  slides.push({ file: newsletterPath, seconds: NEWSLETTER_SECONDS })
+
   const closingPath = path.join(OUT_DIR, 'slide-99-closing.png')
   await sharp(
     Buffer.from(
-      closingSlideSvg({
+      statsCtaSlideSvg({
         totalProducts: meta.totalProducts,
         merchantsCount: merchants.length,
         priceDropsCount: highlights.priceDropsCount ?? drops.length,
