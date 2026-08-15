@@ -23,7 +23,9 @@ export function PrivacyPage() {
           sessões de uso (cliques, rolagem, movimento do mouse) e gera mapas de calor, de forma
           agregada, pra identificar problemas de usabilidade. O Clarity roda em todas as páginas do
           site e é fornecido pela Microsoft, que trata esses dados conforme a própria política de
-          privacidade dela.
+          privacidade dela. Também usamos o Google Analytics (Google tag/gtag.js), que coleta dados
+          agregados de navegação (páginas visitadas, origem do acesso, dispositivo) pra entendermos o
+          desempenho do site — o tratamento desses dados segue a política de privacidade do Google.
         </p>
       </section>
 
