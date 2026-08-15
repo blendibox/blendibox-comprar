@@ -12,6 +12,7 @@ import { presenteDiaDasCriancas } from './presente-dia-das-criancas'
 import { presenteDiaDasMaes } from './presente-dia-das-maes'
 import { presenteDiaDosNamorados } from './presente-dia-dos-namorados'
 import { quandoEABlackFriday } from './quando-e-a-black-friday'
+import { kitDePresente } from './kit-de-presente'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -29,6 +30,7 @@ export const blogPosts: BlogPost[] = [
   presenteDiaDasMaes,
   presenteDiaDosNamorados,
   quandoEABlackFriday,
+  kitDePresente,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {

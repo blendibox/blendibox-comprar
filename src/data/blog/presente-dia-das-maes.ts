@@ -11,7 +11,7 @@ export const presenteDiaDasMaes: BlogPost = {
   publishedAt: '2026-08-14',
   excerpt:
     'Perfumes, joias, maquiagem e outras ideias de presente para o Dia das Mães, com onde encontrar cada categoria pra comparar preço antes de comprar.',
-  relatedSlugs: ['ideias-de-presente-de-natal', 'presente-dia-dos-namorados', 'lista-de-presentes-online-gratis'],
+  relatedSlugs: ['kit-de-presente', 'ideias-de-presente-de-natal', 'presente-dia-dos-namorados'],
   blocks: [
     {
       type: 'p',
