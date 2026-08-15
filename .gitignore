@@ -25,3 +25,4 @@ public/data/
 .video-tmp/
 /daily-video.mp4
 /daily-video.metadata.json
+upload_youtube.bat
