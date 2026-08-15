@@ -24,3 +24,4 @@ public/data/
 # build, não versionado (regenerado todo dia com dado fresco).
 .video-tmp/
 /daily-video.mp4
+/daily-video.metadata.json

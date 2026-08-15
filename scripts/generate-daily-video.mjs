@@ -18,6 +18,7 @@ const ROOT = path.resolve(__dirname, '..')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 const OUT_DIR = path.join(ROOT, '.video-tmp')
 const FINAL_PATH = path.join(ROOT, 'daily-video.mp4')
+const METADATA_PATH = path.join(ROOT, 'daily-video.metadata.json')
 
 const WIDTH = 1080
 const HEIGHT = 1920
@@ -288,6 +289,41 @@ async function renderProductSlide(item, rank, outPath) {
   await sharp(framePng).composite(composite).png().toFile(outPath)
 }
 
+// Título/descrição pro upload no YouTube — só com números e marcas reais do
+// dia. Nunca cita uma marca que não apareceu no vídeo, nem um total de
+// produtos desatualizado (armadilhas fáceis de cair copiando um texto
+// genérico pronto).
+function buildVideoMetadata({ drops, shortDate, dateLabel, totalProducts, merchantsCount }) {
+  const uniqueMerchants = [...new Map(drops.map((d) => [d.merchantSlug, d.merchantDisplayName])).values()]
+  const soleMerchant = uniqueMerchants.length === 1 ? uniqueMerchants[0] : null
+
+  const title = soleMerchant
+    ? `🔥 ${soleMerchant}: as ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
+    : `🔥 As ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
+
+  const merchantTags = [...new Set(drops.map((d) => `#${d.merchantSlug}`))]
+  const tags = ['#ofertas', '#promocao', '#desconto', '#precobaixo', ...merchantTags]
+
+  const description = `🔥 Confira as maiores quedas de preço encontradas hoje pelo Compare Ofertas.
+
+Monitoramos mais de ${Math.floor(totalProducts / 1000)} mil produtos em ${merchantsCount} lojas parceiras pra encontrar ofertas reais — o preço que baixou de verdade, com base no nosso histórico de monitoramento (não uma etiqueta "promoção" qualquer).
+
+Neste vídeo você vê:
+✓ Os produtos com maior desconto do dia (${dateLabel})
+✓ Preço anterior e preço atual
+✓ Percentual de queda real
+
+🔎 Compare preços: https://${SITE_DOMAIN}
+🎁 Lista de presentes: https://${SITE_DOMAIN}/lista-de-presentes
+🎟️ Cupons oficiais: https://${SITE_DOMAIN}/cupons
+
+⚠️ Contém links de afiliado.
+
+${tags.join(' ')}`
+
+  return { title, description, tags }
+}
+
 async function main() {
   const highlights = JSON.parse(await readFile(path.join(DATA_DIR, 'home-highlights.json'), 'utf-8'))
   const meta = JSON.parse(await readFile(path.join(DATA_DIR, 'meta.json'), 'utf-8'))
@@ -313,6 +349,7 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true })
 
   const dateLabel = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  const shortDate = new Date().toLocaleDateString('pt-BR')
 
   const slides = []
 
@@ -402,7 +439,18 @@ async function main() {
     FINAL_PATH,
   ])
 
+  const metadata = buildVideoMetadata({
+    drops,
+    shortDate,
+    dateLabel,
+    totalProducts: meta.totalProducts,
+    merchantsCount: merchants.length,
+  })
+  await writeFile(METADATA_PATH, JSON.stringify(metadata, null, 2))
+
   console.log(`\nVídeo gerado: ${FINAL_PATH} (~${totalSeconds}s, ${slides.length} slides, ${hasAudio ? 'com' : 'sem'} áudio).`)
+  console.log(`Metadados (título/descrição) gravados em: ${METADATA_PATH}`)
+  console.log(`\nTítulo: ${metadata.title}`)
 }
 
 main().catch((err) => {
