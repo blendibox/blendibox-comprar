@@ -29,6 +29,11 @@ const SITE_DOMAIN = 'comprar.blendibox.com.br'
 const OPENING_SECONDS = 3
 const PRODUCT_SECONDS = 4
 const CLOSING_SECONDS = 5
+// Slide de "X° lugar" rápido antes de revelar o produto — cria a pausa de
+// suspense (contagem regressiva) que prende a pessoa até o #1. O do #1 fica
+// um pouco mais longo, pra segurar a expectativa do "grand finale".
+const ANNOUNCE_SECONDS = 1.1
+const ANNOUNCE_SECONDS_FINAL = 1.8
 
 // Trilha de fundo (royalty-free, baixada localmente pelo usuário). Caminho
 // fixo da máquina local só pra teste — pra automatizar no CI, precisa virar
@@ -121,6 +126,20 @@ function openingSlideSvg(dateLabel) {
     <text x="${WIDTH / 2}" y="1090" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="800" fill="${COLORS.white}">DO DIA</text>
     <text x="${WIDTH / 2}" y="1190" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" fill="${COLORS.gray}">Ofertas reais. Descontos de verdade.</text>
     <text x="${WIDTH / 2}" y="1240" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" fill="${COLORS.teal}">${escapeXml(SITE_DOMAIN)} · ${escapeXml(dateLabel)}</text>
+    ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
+  </svg>`
+}
+
+// Slide rápido de "X° lugar" — só o número, sem produto ainda. É a pausa de
+// suspense entre uma revelação e outra (contagem regressiva #5 → #1).
+function rankAnnounceSvg(rank) {
+  const isFinal = rank === 1
+  const teaser = isFinal ? 'E O MAIOR DESCONTO DE HOJE É...' : 'Qual foi o desconto?'
+  return `${svgHeader()}${backgroundDecor()}
+    <circle cx="${WIDTH / 2}" cy="820" r="220" fill="${COLORS.navyLight}" stroke="${isFinal ? COLORS.pink : COLORS.green}" stroke-width="14" />
+    <text x="${WIDTH / 2}" y="870" text-anchor="middle" font-family="Arial, sans-serif" font-size="220" font-weight="900" fill="${COLORS.white}">${rank}º</text>
+    <text x="${WIDTH / 2}" y="1140" text-anchor="middle" font-family="Arial, sans-serif" font-size="60" font-weight="900" fill="${isFinal ? COLORS.pink : COLORS.white}">LUGAR</text>
+    <text x="${WIDTH / 2}" y="1220" text-anchor="middle" font-family="Arial, sans-serif" font-size="${isFinal ? 36 : 32}" font-weight="${isFinal ? 800 : 400}" fill="${COLORS.gray}">${escapeXml(teaser)}</text>
     ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
   </svg>`
 }
@@ -221,11 +240,19 @@ async function main() {
 
   // Ranking em contagem regressiva: o maior desconto por último (#1), pra
   // gerar expectativa — mesma lógica que o storyboard de referência sugeriu.
+  // Cada posição ganha um slide de "X° lugar" (só o número, suspense) antes
+  // da revelação do produto em si.
   const ranked = [...drops].reverse()
   for (let i = 0; i < ranked.length; i++) {
     const rank = ranked.length - i
     const item = ranked[i]
-    const file = path.join(OUT_DIR, `slide-${String(i + 1).padStart(2, '0')}-rank${rank}.png`)
+    const isFinal = rank === 1
+
+    const announcePath = path.join(OUT_DIR, `slide-${String(i + 1).padStart(2, '0')}a-announce${rank}.png`)
+    await sharp(Buffer.from(rankAnnounceSvg(rank))).png().toFile(announcePath)
+    slides.push({ file: announcePath, seconds: isFinal ? ANNOUNCE_SECONDS_FINAL : ANNOUNCE_SECONDS })
+
+    const file = path.join(OUT_DIR, `slide-${String(i + 1).padStart(2, '0')}b-rank${rank}.png`)
     console.log(`Gerando slide #${rank}: ${item.productName} (${item.merchantDisplayName}, -${item.priceDropPercent}%)...`)
     await renderProductSlide(item, rank, file)
     slides.push({ file, seconds: PRODUCT_SECONDS })
