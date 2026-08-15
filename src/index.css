@@ -4945,3 +4945,83 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
+/* Produto não encontrado */
+.product-not-found__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 480px;
+  margin: 12px auto 32px;
+  gap: 6px;
+}
+
+.product-not-found__header h1 {
+  font-size: 22px;
+  margin: 4px 0 0;
+}
+
+.product-not-found__header p {
+  color: #666;
+  margin: 0 0 10px;
+}
+
+.product-not-found__header .cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.product-not-found__illustration {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin-bottom: 8px;
+}
+
+.product-not-found__blob {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: 150px;
+  height: 150px;
+  background: var(--color-band);
+  border-radius: 42% 58% 63% 37% / 45% 40% 60% 55%;
+}
+
+/* Ícone Search de verdade como a lupa — garante a orientação certa da alça
+   (girar um retângulo à mão errava o ângulo). */
+.product-not-found__glass-icon {
+  position: relative;
+  color: var(--color-green);
+}
+
+.product-not-found__bag-icon {
+  position: absolute;
+  top: 33px;
+  left: 33px;
+  color: var(--color-green);
+}
+
+.product-not-found__badge {
+  position: absolute;
+  /* Perto da borda inferior-direita da lente (não na ponta da alça). */
+  top: 58px;
+  left: 58px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--color-pink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  border: 3px solid var(--color-bg);
+}
+
+.product-not-found__stats {
+  justify-content: center;
+  margin-bottom: 28px;
+}

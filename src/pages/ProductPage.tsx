@@ -11,6 +11,7 @@ import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { PriceTargetForm } from '../components/PriceTargetForm'
 import { Carousel } from '../components/Carousel'
 import { ShareBar } from '../components/ShareBar'
+import { ProductNotFound } from '../components/ProductNotFound'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { formatIsoDateBr, formatSimpleDateBr, parseBrDate } from '../lib/date'
@@ -80,7 +81,7 @@ export function ProductPage() {
   const { isFavorite, toggle: toggleFavorite } = useFavorites()
 
   if (state === 'loading') return <p className="status">Carregando produto...</p>
-  if (state === 'error' || !product) return <p className="status status--error">Produto não encontrado.</p>
+  if (state === 'error' || !product) return <ProductNotFound />
 
   const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
   const selected = isSelected(product.merchantSlug, product.slug)
