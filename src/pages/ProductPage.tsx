@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from 'lucide-react'
-import { fetchCoupons, fetchProduct } from '../lib/api'
+import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { getGalleryImages } from '../lib/images'
 import type { CouponEntry, Product, ProductIndexEntry, SimilarRef } from '../types/product'
@@ -56,6 +56,11 @@ export function ProductPage() {
   const consumedPathRef = useRef<string | null>(initialProduct ? path : null)
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
   const [activeImage, setActiveImage] = useState<string | null>(null)
+  // Quando o produto não é encontrado, verifica se a LOJA ainda existe entre
+  // as parceiras: se existir, a intenção original do visitante era ver algo
+  // daquela loja — manda pra página dela em vez do recuperável genérico. Só
+  // cai no genérico se a loja também não existir mais.
+  const [merchantCheck, setMerchantCheck] = useState<'idle' | 'checking' | 'exists' | 'not-exists'>('idle')
 
   useEffect(() => {
     clearInitialData(path)
@@ -65,6 +70,7 @@ export function ProductPage() {
     }
     setState('loading')
     setActiveImage(null)
+    setMerchantCheck('idle')
     fetchProduct(merchant, slug)
       .then((data) => {
         setProduct(data)
@@ -74,6 +80,14 @@ export function ProductPage() {
   }, [path, merchant, slug])
 
   useEffect(() => {
+    if (state !== 'error') return
+    setMerchantCheck('checking')
+    fetchMerchants()
+      .then((list) => setMerchantCheck(list.some((m) => m.slug === merchant) ? 'exists' : 'not-exists'))
+      .catch(() => setMerchantCheck('not-exists'))
+  }, [state, merchant])
+
+  useEffect(() => {
     fetchCoupons().then(setCoupons).catch(() => setCoupons([]))
   }, [])
 
@@ -81,7 +95,11 @@ export function ProductPage() {
   const { isFavorite, toggle: toggleFavorite } = useFavorites()
 
   if (state === 'loading') return <p className="status">Carregando produto...</p>
-  if (state === 'error' || !product) return <ProductNotFound />
+  if (state === 'error' || !product) {
+    if (merchantCheck === 'exists') return <Navigate to={`/${merchant}`} replace />
+    if (merchantCheck !== 'not-exists') return <p className="status">Carregando...</p>
+    return <ProductNotFound />
+  }
 
   const isWhatsappReseller = product.awDeepLink?.startsWith('https://wa.me/')
   const selected = isSelected(product.merchantSlug, product.slug)
