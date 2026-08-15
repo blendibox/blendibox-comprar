@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { PricePoint } from '../types/product'
 import { formatPrice } from './ProductCard'
 import { formatSimpleDateBr } from '../lib/date'
@@ -39,10 +39,21 @@ export function PriceHistoryChart({
   currentPrice?: number | null
 }) {
   const [period, setPeriod] = useState<PeriodKey>('30d')
+  // "Agora" só é definido depois de montado no cliente. No servidor
+  // (prerender) e na primeira renderização do cliente (hidratação) não existe
+  // um "agora" estável — Date.now() muda entre o momento do build e o
+  // carregamento da página, e como o eixo do gráfico depende disso, os pixels
+  // calculados no cliente divergiam do HTML do servidor e quebravam a
+  // hidratação (erro #418) em praticamente toda página de produto. Adiando
+  // pro useEffect, servidor e a 1a renderização do cliente concordam em "sem
+  // gráfico ainda" — ele aparece um instante depois, já com o tempo real.
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+  }, [])
 
-  if (points.length < 2) return null
+  if (points.length < 2 || now == null) return null
 
-  const now = Date.now()
   const days = PERIODS.find((p) => p.key === period)!.days
   const windowStart = now - days * DAY_MS
 

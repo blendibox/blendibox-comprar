@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Check, Copy, Share2 } from 'lucide-react'
 
 // Barra de compartilhamento do blog: visível, com link funcional de verdade
@@ -6,7 +6,15 @@ import { Check, Copy, Share2 } from 'lucide-react'
 // celular quando o navegador suporta, + copiar link com feedback visual.
 export function ShareBar({ url, title }: { url: string; title: string }) {
   const [copied, setCopied] = useState(false)
-  const canNativeShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  // Começa sempre false (igual ao servidor, que não tem `navigator.share`) e
+  // só liga depois de montado — decidir isso direto no render fazia o HTML
+  // do cliente (em celulares com suporte) divergir do HTML pré-renderizado
+  // no servidor e disparar erro de hidratação (#425).
+  const [canNativeShare, setCanNativeShare] = useState(false)
+
+  useEffect(() => {
+    setCanNativeShare(typeof navigator.share === 'function')
+  }, [])
 
   const encodedUrl = encodeURIComponent(url)
   const encodedText = encodeURIComponent(title)

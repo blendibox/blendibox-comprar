@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { PricePoint } from '../types/product'
 import { formatPrice } from './ProductCard'
 
@@ -38,13 +38,22 @@ export type CompareSeries = {
 
 export function CompareChart({ series, currency }: { series: CompareSeries[]; currency: string }) {
   const [period, setPeriod] = useState<PeriodKey>('30d')
+  // Mesmo motivo do gráfico individual (PriceHistoryChart): Date.now() direto
+  // no corpo do componente divergiria entre o servidor e a hidratação do
+  // cliente. Aqui na prática o `series` já chega vazio nos dois lados (só
+  // popula depois de um fetch em useEffect na página Comparar), então o risco
+  // é baixo — mas manter o mesmo padrão evita reintroduzir o bug se isso
+  // mudar no futuro.
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+  }, [])
 
   // Só entra na comparação quem tem pelo menos 2 pontos de histórico — os
   // demais aparecem só como preço atual nos cards, sem entrar no gráfico.
   const usable = series.filter((s) => s.points.length > 1)
-  if (usable.length === 0) return null
+  if (usable.length === 0 || now == null) return null
 
-  const now = Date.now()
   const days = PERIODS.find((p) => p.key === period)!.days
   const windowStart = now - days * DAY_MS
   const t1 = now
