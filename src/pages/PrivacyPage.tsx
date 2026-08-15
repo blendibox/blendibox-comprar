@@ -78,11 +78,6 @@ export function PrivacyPage() {
           <a href="mailto:atendimento@blendibox.com.br">atendimento@blendibox.com.br</a>.
         </p>
       </section>
-
-      <p className="legal-disclaimer">
-        Este texto é um modelo geral e não substitui uma revisão jurídica específica para o seu
-        negócio.
-      </p>
     </div>
   )
 }
