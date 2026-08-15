@@ -221,7 +221,16 @@ export function ProductPage() {
             <span className="product-card__merchant">{product.merchantDisplayName}</span>
             <RatingBadge rating={product.rating ?? product.averageRating} />
           </div>
-          <h1>{product.productName}</h1>
+          <h1>
+            <a
+              href={product.awDeepLink}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              className="product-detail__title-link"
+            >
+              {product.productName}
+            </a>
+          </h1>
           <div className="product-detail__price">
             <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
             {formatPrice(product.searchPrice, product.currency)}

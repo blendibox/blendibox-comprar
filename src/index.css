@@ -5025,3 +5025,15 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   justify-content: center;
   margin-bottom: 28px;
 }
+
+/* Título da página de produto agora também é o link de afiliado (junto com a
+   imagem principal e o botão) — mantém a aparência de título normal, só
+   ganha sublinhado no hover como indício de que é clicável. */
+.product-detail__title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.product-detail__title-link:hover {
+  text-decoration: underline;
+}
