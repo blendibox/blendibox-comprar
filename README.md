@@ -65,11 +65,15 @@ e D1.
    - **só rastreia** produtos ativos com página estática (`eligibleForStaticPage`).
 
    Cada produto ganha um campo `priceHistory` (usado pro gráfico em degrau na
-   página do produto) e, quando o preço cai **em relação ao último registro
-   anterior**, `priceDropPercent`/`previousPrice`. A queda é marcada **no dia da
-   mudança** e não persiste (no dia seguinte, estável, o preço atual já é o
-   último registro). Também gera `public/data/price-drops.json` (lista enxuta
-   pro Worker de e-mail — ver "Aviso de queda de preço").
+   página do produto) e, quando o preço atual é menor que o preço de **~7 dias
+   atrás** (não só o último registro, que pode ser de semanas atrás se o preço
+   ficou parado), `priceDropPercent`/`previousPrice` — é o selo "X% essa
+   semana" nos cards (`ProductCard.tsx`). Comparar contra uma janela fixa em
+   vez do último ponto faz o selo continuar valendo a semana inteira em que a
+   queda aconteceu (não só o dia exato), e sumir sozinho quando o preço volta a
+   subir ou quando a queda sai da janela de 7 dias. Também gera
+   `public/data/price-drops.json` (lista enxuta pro Worker de e-mail — ver
+   "Aviso de queda de preço").
 
 8. **`scripts/parse-sales-highlights.mjs`** monta a seção "Comprado
    recentemente" da home a partir das transações reais da **API de Transações
@@ -333,7 +337,8 @@ O comando imprime um `id` — cole ele em `worker/wrangler.toml`, no lugar de
 Ao pedir o aviso, o Worker guarda no KV, por produto, o e-mail **e o preço
 naquele momento** (`priceAtWatch`, o baseline). Todo dia
 `scripts/update-price-history.mjs` gera `public/data/price-drops.json` com todo
-produto que caiu de preço nessa rodada (vs. o último registro anterior). O
+produto mais barato que ~7 dias atrás (não só vs. o último registro anterior —
+ver seção do histórico de preço acima). O
 Worker tem um segundo Cron Trigger (09h UTC, `wrangler.toml`) que lê esse
 arquivo, cruza com o KV `PRICE_WATCH` e só avisa quem tem **baseline maior que
 o preço atual** — ou seja, caiu **depois** que a pessoa começou a acompanhar,

@@ -30,6 +30,15 @@ const MAX_POINTS = 180
 // que valha destacar pro usuário.
 const MIN_DROP_PERCENT = 5
 
+// Janela do selo "caiu de preço" (badge diz "X% essa semana" — ver
+// ProductCard.tsx). Comparar só contra o último ponto REGISTRADO (que podia
+// ser de semanas atrás, se o preço ficou parado) fazia o selo sumir no dia
+// seguinte à queda mesmo com o produto ainda mais barato que na semana
+// anterior. Comparando sempre contra o preço de ~7 dias atrás, o selo continua
+// aparecendo enquanto a queda for recente E o preço não subir de novo.
+const DAY_MS = 24 * 60 * 60 * 1000
+const WEEKLY_LOOKBACK_DAYS = 7
+
 // Colapsa pontos consecutivos de mesmo preço, mantendo o 1o de cada "corrida"
 // (= o dia em que o preço passou a ser aquele). Transforma uma série de
 // snapshots diários numa função-degrau enxuta, sem perder quando cada preço
@@ -52,6 +61,17 @@ function dedupeByDate(series) {
   const byDate = new Map()
   for (const pt of series) byDate.set(pt.date, pt)
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
+}
+
+// Preço vigente numa data X = carry-forward do último ponto <= X (a série só
+// grava mudança, então o preço fica valendo até o próximo ponto).
+function priceAtDate(series, iso) {
+  let price = null
+  for (const pt of series) {
+    if (pt.date > iso) break
+    price = pt.price
+  }
+  return price
 }
 
 async function walkProductFiles(dir) {
@@ -156,16 +176,22 @@ async function main() {
     product.priceHistory =
       stored[stored.length - 1]?.date === today ? stored : [...stored, { date: today, price: product.searchPrice }]
 
-    // "Caiu de preço" = caiu em relação ao último registro anterior. Só marca no
-    // dia da mudança: no dia seguinte o preço estável já é o próprio último
-    // registro (atual == anterior), então não conta de novo (não persiste).
+    // "Caiu de preço" = mais barato que o preço de ~7 dias atrás (não o último
+    // registro, que pode ser de semanas atrás se o preço ficou parado — nesse
+    // caso previousPrice e o preço de 7 dias atrás são o mesmo valor, então dá
+    // no mesmo). Comparando contra uma janela fixa em vez do último ponto, o
+    // selo continua valendo a semana inteira em que a queda aconteceu, não só
+    // no dia exato — e some sozinho quando o preço volta a subir ou quando a
+    // queda "sai" da janela de 7 dias.
+    const weekAgoIso = new Date(now.getTime() - WEEKLY_LOOKBACK_DAYS * DAY_MS).toISOString().slice(0, 10)
+    const priceWeekAgo = priceAtDate(stored, weekAgoIso)
     let priceDropPercent = null
     let previousPriceForDrop = null
-    if (previousPrice != null && product.searchPrice < previousPrice) {
-      const pct = ((previousPrice - product.searchPrice) / previousPrice) * 100
+    if (priceWeekAgo != null && product.searchPrice < priceWeekAgo) {
+      const pct = ((priceWeekAgo - product.searchPrice) / priceWeekAgo) * 100
       if (pct >= MIN_DROP_PERCENT) {
         priceDropPercent = Math.round(pct * 10) / 10
-        previousPriceForDrop = previousPrice
+        previousPriceForDrop = priceWeekAgo
       }
     }
     product.previousPrice = previousPriceForDrop
