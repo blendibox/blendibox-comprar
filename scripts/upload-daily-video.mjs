@@ -7,11 +7,15 @@ import { readFile, stat } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { refreshAccessToken } from './lib/youtube-auth-token.mjs'
+import { setThumbnail } from './lib/youtube-thumbnail.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const VIDEO_PATH = path.join(ROOT, 'daily-video.mp4')
 const METADATA_PATH = path.join(ROOT, 'daily-video.metadata.json')
+// Primeiro slide (abertura) gerado por generate-daily-video.mjs — mesmo
+// frame usado como miniatura em todo vídeo publicado por este script.
+const THUMBNAIL_PATH = path.join(ROOT, '.video-tmp', 'slide-00-opening.png')
 
 const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID
 const CLIENT_SECRET = process.env.YOUTUBE_CLIENT_SECRET
@@ -85,6 +89,19 @@ async function main() {
   const result = await uploadVideo({ accessToken, videoBuffer, title: metadata.title, description: metadata.description, tags })
 
   console.log(`\n✅ Vídeo publicado: https://youtu.be/${result.id}`)
+
+  // Miniatura é um "nice to have" — se falhar (ex: canal sem verificação de
+  // telefone), não desfaz a publicação, só avisa.
+  try {
+    await stat(THUMBNAIL_PATH)
+    console.log('Definindo miniatura a partir do slide de abertura...')
+    const thumbnailBuffer = await readFile(THUMBNAIL_PATH)
+    await setThumbnail({ accessToken, videoId: result.id, imageBuffer: thumbnailBuffer })
+    console.log('✅ Miniatura definida.')
+  } catch (err) {
+    console.warn(`  [aviso] não deu pra definir a miniatura: ${err.message}`)
+    console.warn(`  Pode ajustar depois com: node scripts/set-youtube-thumbnail.mjs ${result.id}`)
+  }
 }
 
 main().catch((err) => {

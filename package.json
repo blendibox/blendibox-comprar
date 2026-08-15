@@ -21,6 +21,7 @@
     "daily-video": "node scripts/generate-daily-video.mjs",
     "youtube-auth": "node scripts/youtube-auth.mjs",
     "youtube-whoami": "node scripts/youtube-whoami.mjs",
+    "youtube-thumbnail": "node scripts/set-youtube-thumbnail.mjs",
     "upload-video": "node scripts/upload-daily-video.mjs",
     "build": "node scripts/fetch-feeds.mjs && node scripts/update-price-history.mjs && node scripts/fetch-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-home-highlights.mjs && node scripts/generate-digest.mjs && node scripts/generate-banners.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-google-merchant-feed.mjs",
     "build:no-fetch": "node scripts/fetch-coupons.mjs && node scripts/parse-sales-highlights.mjs && node scripts/generate-home-highlights.mjs && node scripts/generate-digest.mjs && node scripts/generate-banners.mjs && node scripts/fetch-blendibox-feed.mjs && tsc -b && vite build && node scripts/prerender.mjs && node scripts/generate-redirects.mjs && node scripts/generate-sitemap.mjs && node scripts/generate-google-merchant-feed.mjs",

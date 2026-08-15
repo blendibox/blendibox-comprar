@@ -102,6 +102,12 @@ node scripts/upload-daily-video.mjs
 Quando estiver satisfeito com a qualidade, publique de verdade rodando com
 `$env:YOUTUBE_PRIVACY_STATUS = "public"` (ou `"unlisted"`) antes do upload.
 
+**Miniatura:** todo upload já define automaticamente o slide de abertura do
+vídeo (o card "MAIORES QUEDAS DE PREÇO DO DIA") como miniatura — não precisa
+fazer nada extra. Se isso falhar (canal sem verificação de telefone, por
+exemplo) o upload continua normalmente, só avisa no terminal; nesse caso dá
+pra ajustar depois com `node scripts/set-youtube-thumbnail.mjs <videoId>`.
+
 ## Pendências pra automatizar no GitHub Actions
 
 - `AUDIO_PATH` em `generate-daily-video.mjs` ainda aponta pra um arquivo
