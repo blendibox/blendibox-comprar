@@ -52,10 +52,16 @@ jobs:
           SITE_URL: https://comprar.blendibox.com.br
         run: npm run build
 
+      # Só no cron diário (ou disparo manual) — NUNCA em push. Sem essa
+      # restrição, qualquer commit em main (várias vezes ao dia durante
+      # desenvolvimento normal) geraria e publicaria um vídeo novo no
+      # YouTube, além do vídeo do cron. Um vídeo por dia é o objetivo.
       - name: Gerar vídeo diário
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         run: npm run daily-video
 
       - name: Publicar vídeo no YouTube
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
