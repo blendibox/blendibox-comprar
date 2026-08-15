@@ -4917,3 +4917,31 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   background: #fce7f3;
   color: #be185d;
 }
+
+/* Gráfico comparativo (página Comparar) */
+.compare-chart {
+  margin-top: 24px;
+}
+
+.compare-chart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.compare-chart__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #444;
+  max-width: 220px;
+}
+
+.compare-chart__legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}

@@ -1,9 +1,41 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useComparator } from '../context/ComparatorContext'
 import { formatPrice } from '../components/ProductCard'
+import { CompareChart, type CompareSeries } from '../components/CompareChart'
+import { fetchProduct } from '../lib/api'
 
 export function ComparePage() {
   const { items, remove, clear } = useComparator()
+  // Os itens do comparador guardam só dado leve (preço atual) — pra desenhar
+  // o gráfico de variação precisa do histórico completo de cada produto, que
+  // só existe no JSON individual (não no index). Busca sob demanda, igual a
+  // página de produto já faz na navegação client-side.
+  const [series, setSeries] = useState<CompareSeries[]>([])
+
+  useEffect(() => {
+    let cancelled = false
+    Promise.all(
+      items.map(async (item) => {
+        try {
+          const product = await fetchProduct(item.merchantSlug, item.slug)
+          return {
+            key: `${item.merchantSlug}/${item.slug}`,
+            label: item.productName,
+            currentPrice: item.searchPrice ?? 0,
+            points: product.priceHistory ?? [],
+          }
+        } catch {
+          return null
+        }
+      })
+    ).then((results) => {
+      if (!cancelled) setSeries(results.filter((s): s is CompareSeries => s !== null))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [items])
 
   return (
     <div className="page">
@@ -42,6 +74,7 @@ export function ComparePage() {
               </div>
             ))}
           </div>
+          <CompareChart series={series} currency={items[0]?.currency ?? 'BRL'} />
           <div className="load-more">
             <button onClick={clear}>Limpar comparador</button>
           </div>
