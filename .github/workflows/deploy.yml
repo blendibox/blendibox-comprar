@@ -52,6 +52,22 @@ jobs:
           SITE_URL: https://comprar.blendibox.com.br
         run: npm run build
 
+      - name: Gerar vídeo diário
+        run: npm run daily-video
+
+      - name: Publicar vídeo no YouTube
+        env:
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_PRIVACY_STATUS: public
+        run: |
+          if [ -z "$YOUTUBE_CLIENT_ID" ]; then
+            echo "Secrets do YouTube ainda não configurados (Settings > Secrets and variables > Actions) — pulando upload."
+            exit 0
+          fi
+          npm run upload-video
+
       - name: Commitar histórico de preços atualizado
         run: |
           git config user.name "github-actions[bot]"

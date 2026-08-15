@@ -108,12 +108,25 @@ fazer nada extra. Se isso falhar (canal sem verificação de telefone, por
 exemplo) o upload continua normalmente, só avisa no terminal; nesse caso dá
 pra ajustar depois com `node scripts/set-youtube-thumbnail.mjs <videoId>`.
 
-## Pendências pra automatizar no GitHub Actions
+## 7. Automação diária (GitHub Actions)
 
-- `AUDIO_PATH` em `generate-daily-video.mjs` ainda aponta pra um arquivo
-  local (`Downloads/...mp3`) — pra rodar no CI, a trilha precisa virar um
-  arquivo versionado no repo (com a licença confirmada) ou buscado de algum
-  storage acessível pelo Actions.
-- Ainda não existe um step no `.github/workflows/deploy.yml` chamando esses
-  dois scripts — precisa ser adicionado (rodando depois do build, só se
-  houver `priceDrops` no dia).
+O `.github/workflows/deploy.yml` já roda `npm run daily-video` e
+`npm run upload-video` todo dia, logo após o build — usando
+`scripts/assets/daily-video-audio.mp3` (versionado no repo, licença
+confirmada) como trilha, e publicando direto como **público**, sem revisão
+manual (decisão explícita — se um dia quiser voltar a revisar antes, troque
+`YOUTUBE_PRIVACY_STATUS: public` pra `private` nesse arquivo).
+
+Falta só um passo pra isso funcionar de verdade: criar os três secrets no
+repositório (**Settings → Secrets and variables → Actions**):
+`YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REFRESH_TOKEN` (os
+mesmos valores gerados no passo 4). Até isso ser configurado, o step de
+upload só imprime um aviso e não falha o resto do deploy.
+
+Dias sem `priceDrops` não geram vídeo — `generate-daily-video.mjs` e
+`upload-daily-video.mjs` tratam isso como não-operação, não como erro.
+
+> Assumi que o runner `ubuntu-latest` do GitHub Actions já vem com `ffmpeg`
+> instalado (é o padrão nas imagens hospedadas do GitHub) — não testei
+> rodando de verdade no CI ainda. Se o step "Gerar vídeo diário" falhar
+> reclamando de `ffmpeg` não encontrado, é só isso que precisa de ajuste.

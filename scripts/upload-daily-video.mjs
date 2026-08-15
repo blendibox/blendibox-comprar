@@ -73,10 +73,16 @@ async function uploadVideo({ accessToken, videoBuffer, title, description, tags 
 }
 
 async function main() {
-  await stat(VIDEO_PATH).catch(() => {
-    console.error(`Erro: ${VIDEO_PATH} não existe. Rode antes: node scripts/generate-daily-video.mjs`)
-    process.exit(1)
-  })
+  // Não é erro: dias sem queda de preço não geram vídeo (ver
+  // generate-daily-video.mjs) — não tem o que publicar, tudo certo.
+  const videoExists = await stat(VIDEO_PATH).then(
+    () => true,
+    () => false
+  )
+  if (!videoExists) {
+    console.log(`Nada pra publicar hoje — ${VIDEO_PATH} não existe (sem quedas de preço, ou generate-daily-video.mjs não rodou).`)
+    return
+  }
 
   const metadata = JSON.parse(await readFile(METADATA_PATH, 'utf-8'))
   const videoBuffer = await readFile(VIDEO_PATH)

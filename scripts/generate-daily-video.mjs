@@ -44,11 +44,9 @@ const ANNOUNCE_SECONDS_FINAL = 1.8
 // Duração das duas telas finais (CTA de newsletter + stats/link do site).
 const NEWSLETTER_SECONDS = 4
 
-// Trilha de fundo (royalty-free, baixada localmente pelo usuário). Caminho
-// fixo da máquina local só pra teste — pra automatizar no CI, precisa virar
-// um arquivo versionado no repo (com a licença confirmada) ou buscado de
-// algum storage acessível pelo GitHub Actions, não um caminho local.
-const AUDIO_PATH = 'C:\\Users\\blendibox\\Downloads\\paulyudin-promo-promo-music-574008.mp3'
+// Trilha de fundo (royalty-free, licença confirmada pra esse uso) —
+// versionada no repo pra funcionar tanto localmente quanto no GitHub Actions.
+const AUDIO_PATH = path.join(ROOT, 'scripts', 'assets', 'daily-video-audio.mp3')
 const AUDIO_VOLUME = 0.7
 const AUDIO_FADE_SECONDS = 1.5
 
