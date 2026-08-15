@@ -19,3 +19,8 @@ public/data/
 # dado comercial sensível (valor de venda, comissão, país do cliente, IDs de
 # pagamento). Nunca deve ir pro repo, mesmo que baixado/colado aqui por engano.
 /transa*.csv
+
+# Vídeo diário gerado por scripts/generate-daily-video.mjs — artefato de
+# build, não versionado (regenerado todo dia com dado fresco).
+.video-tmp/
+/daily-video.mp4
