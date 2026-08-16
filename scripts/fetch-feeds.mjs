@@ -55,7 +55,10 @@ const CROSS_CHANNEL_PAIRS = [
 // feeds de marketplace/nicho com risco maior de título impróprio). Lista
 // única, compartilhada entre todos os merchants habilitados.
 // ("facista" corrigido pra "fascista" — grafia correta em português.)
-const TITLE_BLACKLIST = ['penis', 'vagina', 'orgasmo', 'masturbador', 'excitante', 'comunista', 'fascista', 'sexo', 'vibrador']
+const TITLE_BLACKLIST = [
+  'penis', 'vagina', 'orgasmo', 'masturbador', 'excitante', 'comunista', 'fascista', 'sexo', 'vibrador',
+  'vibratoria', 'sugador', 'sexy',
+]
 
 function stripAccents(str) {
   return String(str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
