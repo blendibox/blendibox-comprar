@@ -56,12 +56,24 @@ jobs:
       # restrição, qualquer commit em main (várias vezes ao dia durante
       # desenvolvimento normal) geraria e publicaria um vídeo novo no
       # YouTube, além do vídeo do cron. Um vídeo por dia é o objetivo.
+      #
+      # continue-on-error em todos os três: o site (build + deploy no Pages)
+      # é o núcleo do projeto e não pode ficar refém de um problema no
+      # pipeline de vídeo/YouTube — se algo falhar aqui, os steps seguintes
+      # (commit do histórico, deploy do site) continuam normalmente.
+      - name: Instalar ffmpeg
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
       - name: Gerar vídeo diário
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         run: npm run daily-video
 
       - name: Publicar vídeo no YouTube
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}

@@ -126,7 +126,7 @@ upload só imprime um aviso e não falha o resto do deploy.
 Dias sem `priceDrops` não geram vídeo — `generate-daily-video.mjs` e
 `upload-daily-video.mjs` tratam isso como não-operação, não como erro.
 
-> Assumi que o runner `ubuntu-latest` do GitHub Actions já vem com `ffmpeg`
-> instalado (é o padrão nas imagens hospedadas do GitHub) — não testei
-> rodando de verdade no CI ainda. Se o step "Gerar vídeo diário" falhar
-> reclamando de `ffmpeg` não encontrado, é só isso que precisa de ajuste.
+O step "Instalar ffmpeg" (`apt-get install ffmpeg`) roda antes da geração —
+o runner `ubuntu-latest` não vem com `ffmpeg` pré-instalado por padrão
+(confirmado rodando de verdade: a primeira tentativa falhou com
+`spawn ffmpeg ENOENT` antes desse step existir).
