@@ -16,7 +16,7 @@ import { parse } from 'csv-parse/sync'
 // — categorias que não aparecem aqui são ignoradas de propósito (build loga
 // quais foram puladas, pra facilitar estender esta tabela depois em vez de
 // importar tudo de uma vez). Categorias sem vertical correspondente hoje
-// (autopeças, alimentos, papelaria, mom & baby, viagem...) ficam de fora até existir um
+// (autopeças, alimentos, papelaria, mom & baby...) ficam de fora até existir um
 // vertical pra elas — não force-encaixar num bucket que não bate.
 const CATEGORY_TO_VERTICAL = {
   Beauty: 'beleza',
@@ -29,6 +29,9 @@ const CATEGORY_TO_VERTICAL = {
   'Men Bags': 'moda',
   'Fashion Accessories': 'moda',
   'Baby & Kids Fashion': 'moda',
+  // Na prática é mala, necessaire e organizador de bagagem — não
+  // equipamento de viagem em si. Mesmo bucket de Women/Men Bags.
+  'Travel & Luggage': 'moda',
   Watches: 'joias',
   'Jewelry & Accessories': 'joias',
   'Sports & Outdoors': 'esporte',
