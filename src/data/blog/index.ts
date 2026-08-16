@@ -13,6 +13,10 @@ import { presenteDiaDasMaes } from './presente-dia-das-maes'
 import { presenteDiaDosNamorados } from './presente-dia-dos-namorados'
 import { quandoEABlackFriday } from './quando-e-a-black-friday'
 import { kitDePresente } from './kit-de-presente'
+import { listaDeChaDeBebe } from './lista-de-cha-de-bebe'
+import { oQuePedirNoChaRevelacao } from './o-que-pedir-no-cha-revelacao'
+import { melhoresPresentesParaRecemNascido } from './melhores-presentes-para-recem-nascido'
+import { quantoCustaMontarUmEnxovalDeBebe } from './quanto-custa-montar-um-enxoval-de-bebe'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -31,6 +35,10 @@ export const blogPosts: BlogPost[] = [
   presenteDiaDosNamorados,
   quandoEABlackFriday,
   kitDePresente,
+  listaDeChaDeBebe,
+  oQuePedirNoChaRevelacao,
+  melhoresPresentesParaRecemNascido,
+  quantoCustaMontarUmEnxovalDeBebe,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
