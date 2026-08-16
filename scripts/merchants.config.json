@@ -1,19 +1,19 @@
 {
-  "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais.",
+  "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais. 'titleBlacklistEnabled' = descarta o produto se o título bater com alguma palavra de TITLE_BLACKLIST em scripts/fetch-feeds.mjs (lista única, compartilhada — reservado pra feeds de marketplace/nicho com risco maior de título impróprio).",
   "merchants": {
     "17780": { "slug": "mac", "displayName": "MAC Cosmeticos BR", "vertical": "beleza", "active": true },
     "17619": { "slug": "foreverliss", "displayName": "Forever Liss BR", "vertical": "beleza", "active": true, "verifyImages": true },
     "17837": { "slug": "eudora", "displayName": "Eudora BR", "vertical": "beleza", "active": true },
     "21055": { "slug": "vult", "displayName": "Vult BR", "vertical": "beleza", "active": true },
     "100869": { "slug": "amobeleza", "displayName": "AMOBELEZA BR", "vertical": "beleza", "active": true, "verifyImages": true },
-    "127159": { "slug": "oceane", "displayName": "Oceane BR", "vertical": "beleza", "active": true },
+    "127159": { "slug": "oceane", "displayName": "Oceane BR", "vertical": "beleza", "active": true, "titleBlacklistEnabled": true },
     "17662": { "slug": "vivara", "displayName": "Vivara BR", "vertical": "joias", "active": true, "priority": true },
     "ouiparis": { "slug": "ouiparis", "displayName": "O.U.i Paris", "vertical": "beleza", "active": true, "priority": true },
     "eudora-revenda": { "slug": "eudora-revenda", "displayName": "Eudora (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "boticario-revenda": { "slug": "boticario-revenda", "displayName": "O Boticário (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "qdb-revenda": { "slug": "qdb-revenda", "displayName": "Quem Disse, Berenice?", "vertical": "beleza", "active": true, "priority": true },
     "amazon": { "slug": "amazon", "displayName": "Amazon BR", "vertical": "livros", "active": true, "priority": true },
-    "shopee": { "slug": "shopee", "displayName": "Shopee Oficial BR", "vertical": "geral", "active": true },
+    "shopee": { "slug": "shopee", "displayName": "Shopee Oficial BR", "vertical": "geral", "active": true, "titleBlacklistEnabled": true },
 
     "17652": { "slug": "nike", "displayName": "Nike BR", "vertical": "esporte", "active": true, "priority": true },
     "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": true },

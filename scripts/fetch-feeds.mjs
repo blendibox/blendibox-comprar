@@ -49,6 +49,23 @@ const CROSS_CHANNEL_PAIRS = [
   ['oboticario', 'boticario-revenda'],
 ]
 
+// Palavras-chave que derrubam um produto do catálogo (case/acento-insensitive,
+// casamento por substring) — só aplicado nos merchants com
+// "titleBlacklistEnabled" em merchants.config.json (hoje: Shopee e Oceane,
+// feeds de marketplace/nicho com risco maior de título impróprio). Lista
+// única, compartilhada entre todos os merchants habilitados.
+// ("facista" corrigido pra "fascista" — grafia correta em português.)
+const TITLE_BLACKLIST = ['penis', 'vagina', 'orgasmo', 'masturbador', 'excitante', 'comunista', 'fascista', 'sexo', 'vibrador']
+
+function stripAccents(str) {
+  return String(str ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+}
+
+function hasBlacklistedWord(title) {
+  const normalized = stripAccents(title).toLowerCase()
+  return TITLE_BLACKLIST.some((word) => normalized.includes(stripAccents(word).toLowerCase()))
+}
+
 const NUMERIC_FIELDS = new Set([
   'searchPrice',
   'storePrice',
@@ -227,6 +244,7 @@ async function main() {
   const merchantsUsed = new Map()
   let skippedNoImage = 0
   let skippedBrokenLiveImage = 0
+  let skippedBlacklistedTitle = 0
 
   function finalizeProduct(mapped, merchant, realImage) {
     mapped.awImageUrl = realImage
@@ -277,6 +295,10 @@ async function main() {
   for (const row of rawRows) {
     const mapped = mapRow(row)
     const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
+    if (merchant.titleBlacklistEnabled && hasBlacklistedWord(mapped.productName)) {
+      skippedBlacklistedTitle++
+      continue
+    }
     const candidates = getRealImageCandidates(mapped)
     if (!candidates.length) {
       skippedNoImage++
@@ -331,6 +353,9 @@ async function main() {
       `[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)` +
         (skippedBrokenLiveImage > 0 ? `, ${skippedBrokenLiveImage} deles confirmados via checagem ao vivo` : '')
     )
+  }
+  if (skippedBlacklistedTitle > 0) {
+    console.log(`[blacklist] ${skippedBlacklistedTitle} produtos ignorados por palavra bloqueada no título`)
   }
 
   {
