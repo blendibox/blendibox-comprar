@@ -16,7 +16,7 @@ import { parse } from 'csv-parse/sync'
 // — categorias que não aparecem aqui são ignoradas de propósito (build loga
 // quais foram puladas, pra facilitar estender esta tabela depois em vez de
 // importar tudo de uma vez). Categorias sem vertical correspondente hoje
-// (autopeças, alimentos, pet, papelaria...) ficam de fora até existir um
+// (autopeças, alimentos, papelaria, mom & baby, viagem...) ficam de fora até existir um
 // vertical pra elas — não force-encaixar num bucket que não bate.
 const CATEGORY_TO_VERTICAL = {
   Beauty: 'beleza',
@@ -42,6 +42,8 @@ const CATEGORY_TO_VERTICAL = {
   'Books & Magazines': 'livros',
   'Toys, Kids & Babies': 'brinquedos',
   'Baby & Toys': 'brinquedos',
+  'Gaming & Consoles': 'eletronicos',
+  Pets: 'pet',
 }
 
 // Casos em que o vertical certo depende da subcategoria (global_category3),
