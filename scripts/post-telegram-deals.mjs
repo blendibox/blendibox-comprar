@@ -16,6 +16,7 @@
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -67,6 +68,111 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function escapeXml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+}
+
+function truncate(text, max) {
+  const s = String(text ?? '')
+  return s.length > max ? `${s.slice(0, max - 1)}…` : s
+}
+
+async function fetchImageBuffer(url) {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  return Buffer.from(await res.arrayBuffer())
+}
+
+// Mesmas cores do vídeo diário (scripts/generate-daily-video.mjs) — verde
+// mais vivo que o real do site, só pra contrastar em fundo escuro.
+const IMG_COLORS = { navy: '#0f172a', green: '#22c55e', pink: '#db2777', teal: '#14b8a6', white: '#ffffff', gray: '#94a3b8' }
+const IMG_WIDTH = 1080
+const ROW_H = 210
+const HEADER_H = 150
+const FOOTER_H = 100
+const THUMB = 170
+const PAD = 40
+const RANK_W = 90
+
+// Imagem única listando as ofertas do resumo — sem isso o post "digest"
+// (sendMessage) saía só com texto e link, nenhuma imagem (o motivo do
+// usuário ter reportado "ofertas do dia sem imagem"). Compõe as fotos reais
+// de cada produto numa única imagem, mesma técnica SVG+sharp do vídeo.
+async function buildDigestImage(items) {
+  const height = HEADER_H + ROW_H * items.length + FOOTER_H
+
+  const rowsSvg = items
+    .map((item, i) => {
+      const y = HEADER_H + ROW_H * i
+      const rowMid = y + ROW_H / 2
+      const thumbTop = y + (ROW_H - THUMB) / 2
+      const thumbLeft = PAD + RANK_W
+      const textX = thumbLeft + THUMB + 30
+      return `
+        <circle cx="${PAD + RANK_W / 2}" cy="${rowMid}" r="30" fill="${IMG_COLORS.pink}" />
+        <text x="${PAD + RANK_W / 2}" y="${rowMid + 11}" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="900" fill="${IMG_COLORS.white}">${i + 1}</text>
+        <rect x="${thumbLeft}" y="${thumbTop}" width="${THUMB}" height="${THUMB}" rx="14" fill="${IMG_COLORS.white}" />
+        <text x="${textX}" y="${rowMid - 32}" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="${IMG_COLORS.white}">${escapeXml(truncate(item.productName, 34))}</text>
+        <text x="${textX}" y="${rowMid + 4}" font-family="Arial, sans-serif" font-size="24" fill="${IMG_COLORS.teal}">${escapeXml(item.merchantDisplayName)}</text>
+        <text x="${textX}" y="${rowMid + 42}" font-family="Arial, sans-serif" font-size="26" fill="${IMG_COLORS.gray}" text-decoration="line-through">${escapeXml(formatPrice(item.previousPrice, item.currency))}</text>
+        <text x="${textX + 150}" y="${rowMid + 44}" font-family="Arial, sans-serif" font-size="32" font-weight="900" fill="${IMG_COLORS.green}">${escapeXml(formatPrice(item.searchPrice, item.currency))}</text>
+        <text x="${IMG_WIDTH - PAD}" y="${rowMid + 10}" text-anchor="end" font-family="Arial, sans-serif" font-size="30" font-weight="800" fill="${IMG_COLORS.pink}">-${item.priceDropPercent}%</text>
+        ${i < items.length - 1 ? `<line x1="${PAD}" y1="${y + ROW_H}" x2="${IMG_WIDTH - PAD}" y2="${y + ROW_H}" stroke="${IMG_COLORS.gray}" stroke-width="1" opacity="0.2" />` : ''}
+      `
+    })
+    .join('')
+
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${IMG_WIDTH}" height="${height}" viewBox="0 0 ${IMG_WIDTH} ${height}">
+    <rect width="${IMG_WIDTH}" height="${height}" fill="${IMG_COLORS.navy}" />
+    <text x="${IMG_WIDTH / 2}" y="95" text-anchor="middle" font-family="Arial, sans-serif" font-size="56" font-weight="900" fill="${IMG_COLORS.white}">🔥 Ofertas do dia</text>
+    ${rowsSvg}
+    <text x="${IMG_WIDTH / 2}" y="${height - 35}" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" font-weight="700">
+      <tspan fill="${IMG_COLORS.white}">Compare </tspan><tspan fill="${IMG_COLORS.green}">Ofertas</tspan><tspan fill="${IMG_COLORS.pink}"> ✱</tspan>
+    </text>
+  </svg>`
+
+  const framePng = await sharp(Buffer.from(svg)).png().toBuffer()
+
+  const composites = []
+  for (let i = 0; i < items.length; i++) {
+    const y = HEADER_H + ROW_H * i
+    const thumbTop = y + (ROW_H - THUMB) / 2
+    try {
+      const raw = await fetchImageBuffer(items[i].awImageUrl)
+      const thumb = await sharp(raw)
+        .resize(THUMB - 16, THUMB - 16, { fit: 'contain', background: '#ffffff' })
+        .png()
+        .toBuffer()
+      composites.push({ input: thumb, left: PAD + RANK_W + 8, top: thumbTop + 8 })
+    } catch (err) {
+      console.warn(`  [aviso] falhou baixar imagem de "${items[i].productName}": ${err.message} — segue sem foto nessa linha`)
+    }
+  }
+
+  return sharp(framePng).composite(composites).png().toBuffer()
+}
+
+// sendPhoto com um Buffer local precisa de multipart/form-data (a versão
+// JSON de telegramCall só aceita URL). FormData/Blob globais do Node 18+
+// cobrem isso sem dependência extra.
+async function sendPhotoBuffer({ buffer, caption, replyMarkup }) {
+  const form = new FormData()
+  form.append('chat_id', CHAT_ID)
+  form.append('caption', caption)
+  form.append('parse_mode', 'HTML')
+  if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup))
+  form.append('photo', new Blob([buffer], { type: 'image/png' }), 'ofertas-do-dia.png')
+
+  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: form })
+  const data = await res.json()
+  if (!data.ok) throw new Error(JSON.stringify(data))
+  return data
+}
+
 async function telegramCall(method, body) {
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
     method: 'POST',
@@ -110,22 +216,20 @@ async function postSingle(item) {
 }
 
 async function postDigest(items) {
-  const numberEmoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟']
-  const lines = items.map((item, i) => {
-    const emoji = VERTICAL_EMOJI[item.vertical] || '🛍️'
-    return (
-      `${numberEmoji[i] || `${i + 1}.`} ${emoji} <a href="${productLink(item)}">${escapeHtml(item.productName)}</a>\n` +
-      `De: <s>${escapeHtml(formatPrice(item.previousPrice, item.currency))}</s> por <b>${escapeHtml(formatPrice(item.searchPrice, item.currency))}</b> (-${item.priceDropPercent}%)`
-    )
-  })
-
-  const text =
+  // Nome/preço/desconto de cada item já aparecem na imagem (buildDigestImage)
+  // — a legenda fica curta de propósito (limite de 1024 caracteres em foto,
+  // bem menor que o de mensagem de texto). O clique em cada oferta vem do
+  // teclado inline, um botão por produto, não de link dentro do texto.
+  const caption =
     `🔥 <b>Ofertas do dia</b>\n\n` +
-    lines.join('\n\n') +
-    `\n\n👉 <a href="${SITE_URL}/">Ver todas as ofertas</a>\n` +
+    `As maiores quedas de preço que encontramos hoje.\n\n` +
     `🔎 Monitorado pelo Compare Ofertas`
 
-  await telegramCall('sendMessage', { text, parse_mode: 'HTML', disable_web_page_preview: true })
+  const buttons = items.map((item, i) => [{ text: `${i + 1}. ${truncate(item.productName, 40)}`, url: productLink(item) }])
+  buttons.push([{ text: 'Ver todas as ofertas', url: `${SITE_URL}/` }])
+
+  const image = await buildDigestImage(items)
+  await sendPhotoBuffer({ buffer: image, caption, replyMarkup: { inline_keyboard: buttons } })
 }
 
 async function main() {
