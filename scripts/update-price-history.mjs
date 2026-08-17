@@ -20,6 +20,10 @@ const HISTORY_PATH = path.join(ROOT, 'data', 'price-history.json')
 // pequena o suficiente pro Worker de e-mail (ver worker/newsletter-worker.js)
 // buscar direto, sem precisar do index.json inteiro (dezenas de MB).
 const PRICE_DROPS_PATH = path.join(DATA_DIR, 'price-drops.json')
+// Mesmo formato do arquivo acima, mas só produtos que caíram de preço HOJE
+// de verdade (não a janela de 7 dias) — usado por scripts/generate-daily-video.mjs
+// pra evitar repetir o mesmo produto em dias seguidos.
+const PRICE_DROPS_TODAY_PATH = path.join(DATA_DIR, 'price-drops-today.json')
 
 // Teto de pontos por produto (segurança). Como só gravamos quando o preço
 // MUDA (não 1 por dia), na prática cada produto tem pouquíssimos pontos — o
@@ -135,6 +139,7 @@ async function main() {
   let priceDrops = 0
   let skipped = 0
   const droppedProducts = []
+  const droppedTodayProducts = []
   // Reconstrói o histórico do zero só com os produtos processados agora — assim
   // chaves de produtos que saíram do catálogo (ou perderam a página) são
   // podadas automaticamente, sem crescer o arquivo indefinidamente.
@@ -211,6 +216,28 @@ async function main() {
       })
     }
 
+    // Queda "de verdade hoje" (mudou desde o último ponto registrado, não só
+    // dentro da janela de 7 dias) — só pro vídeo diário, pra reduzir o risco
+    // de repetir o mesmo produto em dias seguidos (algo que caiu há 3 dias e
+    // ficou parado desde então continua contando pro selo semanal do site,
+    // de propósito, mas não deveria voltar a aparecer no vídeo de hoje).
+    if (previousPrice != null && product.searchPrice < previousPrice) {
+      const pctToday = ((previousPrice - product.searchPrice) / previousPrice) * 100
+      if (pctToday >= MIN_DROP_PERCENT) {
+        droppedTodayProducts.push({
+          merchantSlug: product.merchantSlug,
+          slug: product.slug,
+          productName: product.productName,
+          merchantDisplayName: product.merchantDisplayName,
+          awImageUrl: product.awImageUrl,
+          searchPrice: product.searchPrice,
+          previousPrice,
+          priceDropPercent: Math.round(pctToday * 10) / 10,
+          currency: product.currency,
+        })
+      }
+    }
+
     if (indexEntry) {
       // Mesmo valor gravado em product.previousPrice (linha acima) — precisa
       // ser o preço de referência do cálculo (previousPriceForDrop), não a
@@ -230,10 +257,12 @@ async function main() {
   await writeFile(HISTORY_PATH, JSON.stringify(nextHistory))
   if (index.length) await writeFile(INDEX_PATH, JSON.stringify(index))
   await writeFile(PRICE_DROPS_PATH, JSON.stringify(droppedProducts))
+  droppedTodayProducts.sort((a, b) => b.priceDropPercent - a.priceDropPercent)
+  await writeFile(PRICE_DROPS_TODAY_PATH, JSON.stringify(droppedTodayProducts))
   console.log(
     `Histórico de preço: ${updated} produtos atualizados, ${skipped} pulados (sem página), ` +
       `${Object.keys(nextHistory).length} chaves no total (antes: ${Object.keys(history).length}), ` +
-      `${priceDrops} com preço em queda vs. o anterior.`
+      `${priceDrops} com preço em queda vs. o anterior (${droppedTodayProducts.length} caíram hoje de verdade).`
   )
 }
 

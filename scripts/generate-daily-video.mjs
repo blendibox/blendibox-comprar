@@ -323,7 +323,12 @@ ${tags.join(' ')}`
 }
 
 async function main() {
-  const highlights = JSON.parse(await readFile(path.join(DATA_DIR, 'home-highlights.json'), 'utf-8'))
+  // price-drops-today.json (não home-highlights.json) — só produtos que
+  // caíram de preço HOJE de verdade (comparado ao último preço conhecido),
+  // não a janela de 7 dias usada pelo selo do site. Evita repetir o mesmo
+  // produto em dias seguidos, já que algo que caiu há 3 dias e ficou parado
+  // desde então não entra aqui, mesmo ainda "em queda" pra janela semanal.
+  const priceDropsToday = JSON.parse(await readFile(path.join(DATA_DIR, 'price-drops-today.json'), 'utf-8'))
   const meta = JSON.parse(await readFile(path.join(DATA_DIR, 'meta.json'), 'utf-8'))
   const merchants = JSON.parse(await readFile(path.join(DATA_DIR, 'merchants.json'), 'utf-8'))
 
@@ -332,7 +337,7 @@ async function main() {
   // original (já vem ordenado por priceDropPercent desc).
   const seenPrices = new Set()
   const drops = []
-  for (const item of highlights.priceDrops ?? []) {
+  for (const item of priceDropsToday) {
     if (drops.length >= TOP_N) break
     if (seenPrices.has(item.searchPrice)) continue
     seenPrices.add(item.searchPrice)
@@ -385,7 +390,7 @@ async function main() {
       statsCtaSlideSvg({
         totalProducts: meta.totalProducts,
         merchantsCount: merchants.length,
-        priceDropsCount: highlights.priceDropsCount ?? drops.length,
+        priceDropsCount: priceDropsToday.length,
       })
     )
   )
