@@ -61,9 +61,10 @@ dois horários fixos (horário de Brasília):
 
 - **12h15** — modo `single`: publica 1 oferta avulsa (a maior queda do dia),
   com foto.
-- **19h30** — modo `digest`: publica um resumo em texto com as próximas
-  ofertas do dia (pula a #1, já publicada às 12h15 — evita repetir o mesmo
-  produto duas vezes).
+- **19h30** — modo `digest`: publica uma imagem com as próximas ofertas do
+  dia (foto real de cada produto, nome, preço e desconto), um botão por
+  oferta no teclado inline — pula a #1, já publicada às 12h15, pra não
+  repetir o mesmo produto duas vezes.
 
 Pra testar cada modo manualmente:
 
@@ -75,3 +76,12 @@ node scripts/post-telegram-deals.mjs
 `TELEGRAM_DIGEST_SIZE` (padrão 5) controla quantas ofertas entram no resumo
 das 19h30. Também dá pra disparar manualmente pelo GitHub (aba **Actions** →
 "Publicar ofertas no Telegram" → **Run workflow**, escolhendo o modo).
+
+## 7. Vídeo diário
+
+Diferente das ofertas (12h15/19h30), o vídeo é publicado no Telegram no
+**mesmo momento em que é gerado** — dentro do próprio `deploy.yml`, logo
+depois do upload pro YouTube, usando o `daily-video.mp4` que já está em
+disco naquela run (sem esperar os horários do canal). Script:
+`scripts/post-telegram-video.mjs` (`npm run telegram-video`), usa os mesmos
+`TELEGRAM_BOT_TOKEN`/`TELEGRAM_CHAT_ID`.
