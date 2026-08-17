@@ -50,6 +50,11 @@ function escapeHtml(value) {
 // versionada no repo. Sem isso, compartilhar um link de artigo no WhatsApp/X
 // não mostrava nenhuma prévia visual.
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+// Logo quadrado (1254x1254) pro publisher.logo do JSON-LD de Article/
+// BlogPosting — o Google recomenda pra rich results, mas exige formato
+// quadrado/próximo disso; a imagem padrão de OG acima é 1200x630 (larga
+// demais) e não servia pra isso.
+const LOGO_IMAGE = `${SITE_URL}/logo.png`
 
 function buildHead({ title, description, canonical, image, jsonLd, article, product }) {
   const resolvedImage = image || DEFAULT_OG_IMAGE
@@ -284,7 +289,11 @@ function blogPostJsonLd(post, canonical) {
     datePublished: post.publishedAt,
     dateModified: post.updatedAt || post.publishedAt,
     author: { '@type': 'Organization', name: 'Compare Ofertas' },
-    publisher: { '@type': 'Organization', name: 'Compare Ofertas' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Compare Ofertas',
+      logo: { '@type': 'ImageObject', url: LOGO_IMAGE, width: 1254, height: 1254 },
+    },
     mainEntityOfPage: canonical,
   }
   const breadcrumbLd = {
