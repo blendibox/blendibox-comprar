@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Clock, Heart, Info, Link2, RefreshCw, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
+import { Clock, Heart, Info, Link2, Play, RefreshCw, Send, ShieldCheck, Tag, TrendingDown, TrendingUp } from 'lucide-react'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import { timeAgo } from '../lib/timeAgo'
 import { NewsletterSignup } from './NewsletterSignup'
 import { BlendiboxCarousel } from './BlendiboxCarousel'
+import { TELEGRAM_URL, YOUTUBE_URL } from '../config/site'
 
 const SAFE_BROWSING_URL =
   'https://transparencyreport.google.com/safe-browsing/search?url=comprar.blendibox.com.br'
@@ -116,6 +117,15 @@ export function Footer() {
             <Link to="/perguntas-frequentes">Perguntas frequentes</Link>
             <Link to="/termos">Termos de Uso</Link>
             <Link to="/privacidade">Privacidade</Link>
+          </div>
+          <div>
+            <h3>Siga a gente</h3>
+            <a href={TELEGRAM_URL} target="_blank" rel="noopener noreferrer" className="footer__social-link">
+              <Send size={16} aria-hidden="true" /> Telegram — ofertas em tempo real
+            </a>
+            <a href={YOUTUBE_URL} target="_blank" rel="noopener noreferrer" className="footer__social-link">
+              <Play size={16} aria-hidden="true" /> YouTube — vídeo diário
+            </a>
           </div>
           <NewsletterSignup />
         </div>

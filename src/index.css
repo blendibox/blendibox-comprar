@@ -330,7 +330,7 @@ a {
   margin: 0 auto;
   padding: 40px 16px;
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+  grid-template-columns: 1.4fr 0.9fr 0.9fr 0.9fr 1.4fr;
   gap: 24px;
 }
 
@@ -352,6 +352,12 @@ a {
   text-decoration: none;
   color: #cbd5e1;
   margin-bottom: 6px;
+}
+
+.footer a.footer__social-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .footer__brand p {
