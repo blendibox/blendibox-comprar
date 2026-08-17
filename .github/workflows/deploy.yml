@@ -86,6 +86,21 @@ jobs:
           fi
           npm run upload-video
 
+      # Mesma restrição de "só no cron/manual" — publicar no Telegram a
+      # cada push spamaria o canal.
+      - name: Publicar ofertas no Telegram
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "Secrets do Telegram ainda não configurados (Settings > Secrets and variables > Actions) — pulando."
+            exit 0
+          fi
+          npm run telegram-deals
+
       - name: Commitar histórico de preços atualizado
         run: |
           git config user.name "github-actions[bot]"
