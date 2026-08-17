@@ -19,7 +19,7 @@ const PERIODS = [
   { key: '6m', label: '6 meses', days: 180 },
 ] as const
 
-type PeriodKey = (typeof PERIODS)[number]['key']
+type PeriodKey = (typeof PERIODS)[number]['key'] | 'all'
 
 const dateMs = (iso: string) => new Date(`${iso}T00:00:00`).getTime()
 const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10)
@@ -54,11 +54,25 @@ export function PriceHistoryChart({
 
   if (points.length < 2 || now == null) return null
 
-  const days = PERIODS.find((p) => p.key === period)!.days
-  const windowStart = now - days * DAY_MS
-
   const sorted = [...points].sort((a, b) => dateMs(a.date) - dateMs(b.date))
   const firstMs = dateMs(sorted[0].date)
+  const fullSpanDays = (now - firstMs) / DAY_MS
+
+  // Só oferece as abas fixas (30/90/180 dias) que realmente cortariam algo do
+  // que já temos rastreado — evita mostrar "3 meses" e "6 meses" idênticos a
+  // "30 dias" quando o produto ainda tem pouco histórico (visto em gravações
+  // de sessão: gente clicando entre as abas tentando achar uma diferença que
+  // não existe). "Tudo" só aparece junto quando há pelo menos um corte
+  // significativo pra comparar — sem isso, não faz sentido nenhuma aba.
+  const truncatingPeriods = PERIODS.filter((p) => p.days < fullSpanDays)
+  const showPeriodSwitcher = truncatingPeriods.length > 0
+  const periodTabs: { key: PeriodKey; label: string }[] = showPeriodSwitcher
+    ? [...truncatingPeriods, { key: 'all', label: 'Tudo' }]
+    : []
+
+  const days = period === 'all' ? null : PERIODS.find((p) => p.key === period)?.days ?? 30
+  const windowStart = days == null ? -Infinity : now - days * DAY_MS
+
   const todayIso = isoOf(now)
   // Preço atual DEFINITIVO = o searchPrice do produto (o valor exibido na
   // página). O último ponto GRAVADO pode estar defasado (gravação é diária no
@@ -139,18 +153,20 @@ export function PriceHistoryChart({
     <div className="price-history">
       <div className="price-history__header">
         <h2>Histórico de preço</h2>
-        <div className="price-history__periods">
-          {PERIODS.map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              className={`price-history__period${period === p.key ? ' price-history__period--active' : ''}`}
-              onClick={() => setPeriod(p.key)}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        {showPeriodSwitcher && (
+          <div className="price-history__periods">
+            {periodTabs.map((p) => (
+              <button
+                key={p.key}
+                type="button"
+                className={`price-history__period${period === p.key ? ' price-history__period--active' : ''}`}
+                onClick={() => setPeriod(p.key)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       <div className="price-history__chart">
         <div className="price-history__yaxis">
