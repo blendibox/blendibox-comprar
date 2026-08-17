@@ -1391,6 +1391,16 @@ a {
   font-size: 16px;
 }
 
+.product-detail__lowest-price {
+  font-size: 13px;
+  color: #555;
+  margin: 0 0 10px;
+}
+
+.product-detail__lowest-price strong {
+  color: var(--color-green);
+}
+
 .freshness-badge {
   display: flex;
   width: fit-content;

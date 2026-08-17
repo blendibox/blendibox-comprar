@@ -69,8 +69,12 @@ async function main() {
     'Meta-ExternalAgent',
     'Bytespider',
   ]
-  const aiRules = aiCrawlers.map((ua) => `User-agent: ${ua}\nAllow: /\n`).join('\n')
-  const robotsTxt = `User-agent: *\nAllow: /\n\n${aiRules}\nSitemap: ${SITE_URL}/sitemap.xml\n`
+  // /data/ é o JSON bruto que alimenta o app (index.json sozinho tem dezenas
+  // de MB) — nunca é o conteúdo final (esse já está pré-renderizado em HTML
+  // de verdade nas páginas de produto/hub) nem está em nenhum sitemap. Deixar
+  // crawler gastar orçamento de rastreamento nele é desperdício puro.
+  const aiRules = aiCrawlers.map((ua) => `User-agent: ${ua}\nAllow: /\nDisallow: /data/\n`).join('\n')
+  const robotsTxt = `User-agent: *\nAllow: /\nDisallow: /data/\n\n${aiRules}\nSitemap: ${SITE_URL}/sitemap.xml\n`
   await writeFile(path.join(DIST_DIR, 'robots.txt'), robotsTxt)
 
   // O manifesto só serve pra esse script montar o sitemap — não faz sentido

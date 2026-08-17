@@ -14,7 +14,7 @@ import { ShareBar } from '../components/ShareBar'
 import { ProductNotFound } from '../components/ProductNotFound'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
-import { formatIsoDateBr, formatSimpleDateBr, parseBrDate } from '../lib/date'
+import { formatSimpleDateBr, parseBrDate } from '../lib/date'
 import { SITE_URL } from '../config/site'
 
 type LoadState = 'loading' | 'ready' | 'error'
@@ -110,6 +110,15 @@ export function ProductPage() {
   // scripts/update-price-history.mjs, que roda a cada build) — reflete a
   // realidade (build diário) em vez de uma alegação genérica de frequência.
   const lastPriceCheck = product.priceHistory?.length ? product.priceHistory[product.priceHistory.length - 1].date : null
+  // Menor preço já registrado no histórico rastreado (product.priceHistory,
+  // já limitado a MAX_POINTS em update-price-history.mjs) — texto visível e
+  // renderizado no servidor (sem depender do useEffect/"agora" do gráfico),
+  // pra ter conteúdo indexável de verdade sobre o histórico, não só o
+  // gráfico SVG (que só aparece depois de hidratar no cliente).
+  const lowestPricePoint =
+    product.priceHistory && product.priceHistory.length > 1
+      ? product.priceHistory.reduce((min, p) => (p.price < min.price ? p : min))
+      : null
 
   const now = new Date()
   const merchantCoupons = coupons.filter((c) => {
@@ -270,14 +279,6 @@ export function ProductPage() {
               {'preenchidos — é só confirmar o pedido por lá.'}
             </p>
           )}
-          <p className="disclaimer">
-            {'* Valor '}
-            {formatIsoDateBr(product.lastUpdated)
-              ? `atualizado em ${formatIsoDateBr(product.lastUpdated)}`
-              : 'na data de publicação'}
-            {'. Oferta válida enquanto durarem os estoques.'}
-          </p>
-
           <ShareBar
             url={`${SITE_URL}/${product.merchantSlug}/${product.slug}/`}
             title={`${product.productName} por ${formatPrice(product.searchPrice, product.currency)} na ${product.merchantDisplayName}`}
@@ -289,6 +290,12 @@ export function ProductPage() {
               currency={product.currency}
               currentPrice={product.searchPrice}
             />
+          )}
+          {lowestPricePoint && (
+            <p className="product-detail__lowest-price">
+              Menor preço já registrado: <strong>{formatPrice(lowestPricePoint.price, product.currency)}</strong> em{' '}
+              {formatSimpleDateBr(lowestPricePoint.date)}
+            </p>
           )}
           <PriceTargetForm
             product={{
