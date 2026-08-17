@@ -4732,6 +4732,25 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   max-width: 720px;
 }
 
+.blog-post__breadcrumb {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 14px;
+}
+
+.blog-post__breadcrumb a {
+  color: #888;
+  text-decoration: none;
+}
+
+.blog-post__breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.blog-post__breadcrumb [aria-current='page'] {
+  color: #555;
+}
+
 .blog-post__header {
   margin-bottom: 4px;
 }

@@ -44,16 +44,31 @@ function escapeHtml(value) {
     .replace(/"/g, '&quot;')
 }
 
-function buildHead({ title, description, canonical, image, jsonLd }) {
+// Imagem padrão pra og:image/twitter:image quando a página não tem foto
+// própria (institucionais, blog) — gerada por scripts/generate-og-image.mjs,
+// versionada no repo. Sem isso, compartilhar um link de artigo no WhatsApp/X
+// não mostrava nenhuma prévia visual.
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
+
+function buildHead({ title, description, canonical, image, jsonLd, article }) {
+  const resolvedImage = image || DEFAULT_OG_IMAGE
   const tags = [
     `<meta name="description" content="${escapeHtml(description)}" />`,
     `<link rel="canonical" href="${canonical}" />`,
     `<meta property="og:title" content="${escapeHtml(title)}" />`,
     `<meta property="og:description" content="${escapeHtml(description)}" />`,
     `<meta property="og:url" content="${canonical}" />`,
-    `<meta property="og:type" content="website" />`,
+    `<meta property="og:type" content="${article ? 'article' : 'website'}" />`,
+    `<meta property="og:image" content="${escapeHtml(resolvedImage)}" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+    `<meta name="twitter:title" content="${escapeHtml(title)}" />`,
+    `<meta name="twitter:description" content="${escapeHtml(description)}" />`,
+    `<meta name="twitter:image" content="${escapeHtml(resolvedImage)}" />`,
   ]
-  if (image) tags.push(`<meta property="og:image" content="${escapeHtml(image)}" />`)
+  if (article) {
+    tags.push(`<meta property="article:published_time" content="${escapeHtml(article.publishedTime)}" />`)
+    if (article.modifiedTime) tags.push(`<meta property="article:modified_time" content="${escapeHtml(article.modifiedTime)}" />`)
+  }
   for (const entry of jsonLd ?? []) {
     tags.push(`<script type="application/ld+json">${JSON.stringify(entry)}</script>`)
   }
@@ -207,15 +222,16 @@ function couponsMerchantJsonLd(displayName, canonical) {
   return [breadcrumb, faq]
 }
 
-// Article + Breadcrumb (+ FAQ quando o post tem) pros artigos do blog. O FAQ
-// só entra se tiver conteúdo visível correspondente na página (BlogPostPage
-// renderiza post.faq), mesma disciplina do couponFaq acima.
+// BlogPosting + Breadcrumb (+ FAQ quando o post tem) pros artigos do blog. O
+// FAQ só entra se tiver conteúdo visível correspondente na página
+// (BlogPostPage renderiza post.faq), mesma disciplina do couponFaq acima.
 function blogPostJsonLd(post, canonical) {
   const articleLd = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'BlogPosting',
     headline: post.title,
     description: post.metaDescription,
+    image: [DEFAULT_OG_IMAGE],
     datePublished: post.publishedAt,
     dateModified: post.updatedAt || post.publishedAt,
     author: { '@type': 'Organization', name: 'Compare Ofertas' },
@@ -310,6 +326,10 @@ async function main() {
     readFile(path.join(DATA_DIR, 'meta.json'), 'utf-8').then(JSON.parse),
     readFile(path.join(DATA_DIR, 'home-highlights.json'), 'utf-8').then(JSON.parse),
   ])
+  // Data real do build (do próprio feed, não "agora") — usado como lastmod no
+  // sitemap pra páginas que a gente sabe que revalidam todo dia (preço), sem
+  // inventar uma data mais precisa do que realmente temos.
+  const buildDate = typeof homeMeta.generatedAt === 'string' ? homeMeta.generatedAt.slice(0, 10) : new Date().toISOString().slice(0, 10)
   const homeUrl = await renderPage({
     template,
     renderRoute,
@@ -321,7 +341,7 @@ async function main() {
       canonical: `${SITE_URL}/`,
     },
   })
-  generatedUrls.push({ url: homeUrl, changefreq: 'daily', priority: 1.0 })
+  generatedUrls.push({ url: homeUrl, changefreq: 'daily', priority: 1.0, lastmod: buildDate })
 
   // DEBUG_LIMIT=N: processa só N produtos e pula os hubs — só pra iterar
   // rápido em debug local (o gargalo real do build é o volume de arquivos).
@@ -548,6 +568,18 @@ async function main() {
 
   // --- Blog: listagem + um artigo por post (fonte: src/data/blog, a mesma do
   // cliente, reexportada via entry-server — nunca duplica conteúdo). ---
+  const blogListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Blog | Compare Ofertas',
+    url: `${SITE_URL}/blog/`,
+    blogPost: blogPosts.map((post) => ({
+      '@type': 'BlogPosting',
+      headline: post.title,
+      url: `${SITE_URL}/blog/${post.slug}/`,
+      datePublished: post.publishedAt,
+    })),
+  }
   const blogListUrl = await renderPage({
     template,
     renderRoute,
@@ -557,9 +589,10 @@ async function main() {
       title: 'Blog | Compare Ofertas',
       description: 'Dicas práticas pra organizar lista de presentes, casamento, chá de bebê e casa nova.',
       canonical: `${SITE_URL}/blog/`,
+      jsonLd: [blogListJsonLd],
     },
   })
-  generatedUrls.push({ url: blogListUrl, changefreq: 'weekly', priority: 0.5 })
+  generatedUrls.push({ url: blogListUrl, changefreq: 'weekly', priority: 0.5, lastmod: buildDate })
 
   for (const post of blogPosts) {
     const routePath = `/blog/${post.slug}`
@@ -574,9 +607,10 @@ async function main() {
         description: post.metaDescription,
         canonical,
         jsonLd: blogPostJsonLd(post, canonical),
+        article: { publishedTime: post.publishedAt, modifiedTime: post.updatedAt },
       },
     })
-    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.6 })
+    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.6, lastmod: post.updatedAt || post.publishedAt })
   }
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))

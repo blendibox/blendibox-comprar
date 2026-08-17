@@ -98,6 +98,10 @@ export function BlogPostPage() {
 
   return (
     <article className="page blog-post">
+      <nav className="blog-post__breadcrumb" aria-label="Breadcrumb">
+        <Link to="/">Início</Link> <span aria-hidden="true">›</span> <Link to="/blog">Blog</Link>{' '}
+        <span aria-hidden="true">›</span> <span aria-current="page">{post.title}</span>
+      </nav>
       <header className="blog-post__header">
         <span className="blog-post__date">
           <CalendarDays size={13} aria-hidden="true" /> {formatSimpleDateBr(post.publishedAt)}

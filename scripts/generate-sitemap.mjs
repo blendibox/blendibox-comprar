@@ -34,7 +34,7 @@ async function main() {
     const body = chunks[i]
       .map(
         (r) =>
-          `  <url><loc>${escapeXml(r.url)}</loc><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`
+          `  <url><loc>${escapeXml(r.url)}</loc>${r.lastmod ? `<lastmod>${r.lastmod}</lastmod>` : ''}<changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`
       )
       .join('\n')
     const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${body}\n</urlset>\n`
