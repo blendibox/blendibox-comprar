@@ -205,14 +205,21 @@ async function main() {
         merchantDisplayName: product.merchantDisplayName,
         awImageUrl: product.awImageUrl,
         searchPrice: product.searchPrice,
-        previousPrice,
+        previousPrice: previousPriceForDrop,
         priceDropPercent,
         currency: product.currency,
       })
     }
 
     if (indexEntry) {
-      indexEntry.previousPrice = previousPrice
+      // Mesmo valor gravado em product.previousPrice (linha acima) — precisa
+      // ser o preço de referência do cálculo (previousPriceForDrop), não a
+      // variável `previousPrice` (último ponto do histórico antes de hoje).
+      // Bug real: quando o preço cai e fica estável desde então, o histórico
+      // não grava ponto novo (só grava em mudança), então "último ponto"
+      // acaba sendo igual ao preço atual — DE: e POR: saíam iguais no vídeo
+      // mesmo com priceDropPercent correto (calculado contra os 7 dias atrás).
+      indexEntry.previousPrice = previousPriceForDrop
       indexEntry.priceDropPercent = priceDropPercent
     }
 
