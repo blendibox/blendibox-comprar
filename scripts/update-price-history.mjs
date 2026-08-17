@@ -224,16 +224,23 @@ async function main() {
     if (previousPrice != null && product.searchPrice < previousPrice) {
       const pctToday = ((previousPrice - product.searchPrice) / previousPrice) * 100
       if (pctToday >= MIN_DROP_PERCENT) {
+        // Só marca "menor preço já registrado" quando é verdade de fato —
+        // comparado contra TODO o histórico rastreado (stored), não só a
+        // janela recente. Usado pra não inventar esse selo em canais de
+        // divulgação (Telegram etc.) quando não é real.
+        const isAllTimeLow = product.searchPrice <= Math.min(...stored.map((p) => p.price))
         droppedTodayProducts.push({
           merchantSlug: product.merchantSlug,
           slug: product.slug,
           productName: product.productName,
           merchantDisplayName: product.merchantDisplayName,
+          vertical: product.vertical,
           awImageUrl: product.awImageUrl,
           searchPrice: product.searchPrice,
           previousPrice,
           priceDropPercent: Math.round(pctToday * 10) / 10,
           currency: product.currency,
+          isAllTimeLow,
         })
       }
     }

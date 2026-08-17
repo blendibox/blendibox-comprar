@@ -39,6 +39,22 @@ function formatPrice(value, currency) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: currency || 'BRL' }).format(value)
 }
 
+// Emoji por vertical, só cosmético (título do post) — não é dado que possa
+// estar "errado", é só um enfeite visual.
+const VERTICAL_EMOJI = {
+  moda: '👗',
+  esporte: '👟',
+  eletronicos: '📱',
+  casa: '🍳',
+  joias: '💍',
+  beleza: '💄',
+  brinquedos: '🧸',
+  livros: '📚',
+  pet: '🐾',
+  automotivo: '🚗',
+  geral: '🛍️',
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
@@ -86,11 +102,23 @@ async function main() {
   let posted = 0
   for (const item of selected) {
     const link = `https://${SITE_DOMAIN}/${item.merchantSlug}/${item.slug}/`
+    const emoji = VERTICAL_EMOJI[item.vertical] || '🛍️'
+    // "Menor preço já registrado" só entra quando é verdade de fato
+    // (isAllTimeLow, calculado contra TODO o histórico rastreado em
+    // update-price-history.mjs) — nunca uma frase de efeito genérica tipo
+    // "menor preço da semana" sem checar o dado.
+    const priceLine = item.isAllTimeLow
+      ? 'Menor preço que já vimos pra esse produto.'
+      : `Queda de ${item.priceDropPercent}% detectada hoje.`
+
     const caption =
-      `🔥 <b>${escapeHtml(item.productName)}</b>\n` +
+      `📉 <b>Caiu de preço</b>\n\n` +
+      `${emoji} <b>${escapeHtml(item.productName)}</b>\n` +
       `${escapeHtml(item.merchantDisplayName)}\n\n` +
       `De: <s>${escapeHtml(formatPrice(item.previousPrice, item.currency))}</s>\n` +
-      `Por: <b>${escapeHtml(formatPrice(item.searchPrice, item.currency))}</b> (-${item.priceDropPercent}%)`
+      `Por: <b>${escapeHtml(formatPrice(item.searchPrice, item.currency))}</b>\n\n` +
+      `${priceLine}\n\n` +
+      `🔎 Monitorado pelo Compare Ofertas`
 
     try {
       await sendPhoto({ photoUrl: item.awImageUrl, caption, link })
