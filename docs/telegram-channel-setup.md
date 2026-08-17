@@ -40,8 +40,9 @@ do YouTube (sem OAuth) — é só um bot token.
 
 ## 5. Testar
 
-Precisa de `public/data/price-drops-today.json` fresco (gerado durante o
-build, por `update-price-history.mjs`):
+Precisa de `data/price-drops-today.json` fresco (gerado durante o build, por
+`update-price-history.mjs` — é a cópia pequena e versionada de
+`public/data/price-drops-today.json`, pensada pra rodar sem rebuscar o feed):
 
 ```powershell
 npm run fetch-feed
@@ -49,5 +50,28 @@ npm run price-history
 node scripts/post-telegram-deals.mjs
 ```
 
-Por padrão publica até 10 ofertas (`TELEGRAM_TOP_N` muda esse número), uma
-a cada ~1,5s. Dias sem queda de preço não publicam nada — não é erro.
+Dias sem queda de preço não publicam nada — não é erro.
+
+## 6. Dois horários, dois modos
+
+O post de madrugada (cron principal, `deploy.yml`) não é um bom horário pra
+divulgar — ninguém está olhando Telegram às 3h. Por isso a publicação em si
+roda num workflow separado, **`.github/workflows/telegram-deals.yml`**, com
+dois horários fixos (horário de Brasília):
+
+- **12h15** — modo `single`: publica 1 oferta avulsa (a maior queda do dia),
+  com foto.
+- **19h30** — modo `digest`: publica um resumo em texto com as próximas
+  ofertas do dia (pula a #1, já publicada às 12h15 — evita repetir o mesmo
+  produto duas vezes).
+
+Pra testar cada modo manualmente:
+
+```powershell
+$env:TELEGRAM_MODE = "single"   # ou "digest"
+node scripts/post-telegram-deals.mjs
+```
+
+`TELEGRAM_DIGEST_SIZE` (padrão 5) controla quantas ofertas entram no resumo
+das 19h30. Também dá pra disparar manualmente pelo GitHub (aba **Actions** →
+"Publicar ofertas no Telegram" → **Run workflow**, escolhendo o modo).

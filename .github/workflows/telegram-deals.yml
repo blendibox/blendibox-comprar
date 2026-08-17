@@ -1,0 +1,43 @@
+name: Publicar ofertas no Telegram
+
+# Workflow separado (não o deploy.yml) de propósito: o cron principal roda
+# de madrugada (busca de feed + build), horário ruim pra postar — as pessoas
+# não estão olhando Telegram às 3h. Aqui só faz checkout (sem rebuscar feed
+# nem rebuildar o site) e lê data/price-drops-today.json, que o deploy.yml
+# já deixou commitado mais cedo no mesmo dia.
+on:
+  schedule:
+    # 12h15 (horário de Brasília, UTC-3) — 1 oferta avulsa.
+    - cron: '15 15 * * *'
+    # 19h30 (horário de Brasília, UTC-3) — resumo com as próximas ofertas do
+    # dia (pula a #1, já publicada no post das 12h15).
+    - cron: '30 22 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'single (1 oferta avulsa) ou digest (resumo)'
+        required: true
+        default: single
+        type: choice
+        options: [single, digest]
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Publicar
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # Cron das 19h30 vira "digest"; qualquer outro disparo (12h15,
+          # workflow_dispatch) usa o modo escolhido, com "single" de padrão.
+          TELEGRAM_MODE: ${{ github.event.schedule == '30 22 * * *' && 'digest' || github.event.inputs.mode || 'single' }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ]; then
+            echo "Secrets do Telegram ainda não configurados (Settings > Secrets and variables > Actions) — pulando."
+            exit 0
+          fi
+          node scripts/post-telegram-deals.mjs

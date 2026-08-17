@@ -24,6 +24,12 @@ const PRICE_DROPS_PATH = path.join(DATA_DIR, 'price-drops.json')
 // de verdade (não a janela de 7 dias) — usado por scripts/generate-daily-video.mjs
 // pra evitar repetir o mesmo produto em dias seguidos.
 const PRICE_DROPS_TODAY_PATH = path.join(DATA_DIR, 'price-drops-today.json')
+// Cópia do arquivo acima em data/ (pequeno, versionado no git — mesmo padrão
+// de price-history.json) — public/data/ inteiro é gitignored, então sem essa
+// cópia scripts/post-telegram-deals.mjs não teria acesso ao dado do dia numa
+// run separada do GitHub Actions mais tarde (só faz checkout, sem rebuscar o
+// feed inteiro pra postar num horário melhor que o do cron principal).
+const PRICE_DROPS_TODAY_COMMITTED_PATH = path.join(ROOT, 'data', 'price-drops-today.json')
 
 // Teto de pontos por produto (segurança). Como só gravamos quando o preço
 // MUDA (não 1 por dia), na prática cada produto tem pouquíssimos pontos — o
@@ -266,6 +272,7 @@ async function main() {
   await writeFile(PRICE_DROPS_PATH, JSON.stringify(droppedProducts))
   droppedTodayProducts.sort((a, b) => b.priceDropPercent - a.priceDropPercent)
   await writeFile(PRICE_DROPS_TODAY_PATH, JSON.stringify(droppedTodayProducts))
+  await writeFile(PRICE_DROPS_TODAY_COMMITTED_PATH, JSON.stringify(droppedTodayProducts))
   console.log(
     `Histórico de preço: ${updated} produtos atualizados, ${skipped} pulados (sem página), ` +
       `${Object.keys(nextHistory).length} chaves no total (antes: ${Object.keys(history).length}), ` +
