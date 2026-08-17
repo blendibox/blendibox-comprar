@@ -7,6 +7,7 @@ import { readFile, writeFile, mkdir, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
+import { getRealImageCandidates } from './lib/images.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -50,15 +51,16 @@ function escapeHtml(value) {
 // não mostrava nenhuma prévia visual.
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`
 
-function buildHead({ title, description, canonical, image, jsonLd, article }) {
+function buildHead({ title, description, canonical, image, jsonLd, article, product }) {
   const resolvedImage = image || DEFAULT_OG_IMAGE
+  const ogType = article ? 'article' : product ? 'product' : 'website'
   const tags = [
     `<meta name="description" content="${escapeHtml(description)}" />`,
     `<link rel="canonical" href="${canonical}" />`,
     `<meta property="og:title" content="${escapeHtml(title)}" />`,
     `<meta property="og:description" content="${escapeHtml(description)}" />`,
     `<meta property="og:url" content="${canonical}" />`,
-    `<meta property="og:type" content="${article ? 'article' : 'website'}" />`,
+    `<meta property="og:type" content="${ogType}" />`,
     `<meta property="og:image" content="${escapeHtml(resolvedImage)}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
     `<meta name="twitter:title" content="${escapeHtml(title)}" />`,
@@ -68,6 +70,14 @@ function buildHead({ title, description, canonical, image, jsonLd, article }) {
   if (article) {
     tags.push(`<meta property="article:published_time" content="${escapeHtml(article.publishedTime)}" />`)
     if (article.modifiedTime) tags.push(`<meta property="article:modified_time" content="${escapeHtml(article.modifiedTime)}" />`)
+  }
+  if (product) {
+    // Convenção do Open Graph pra comércio (Facebook/Pinterest) — só emite
+    // quando o preço é real (product.price nunca é inventado).
+    if (product.price != null) {
+      tags.push(`<meta property="product:price:amount" content="${product.price}" />`)
+      tags.push(`<meta property="product:price:currency" content="${escapeHtml(product.currency || 'BRL')}" />`)
+    }
   }
   for (const entry of jsonLd ?? []) {
     tags.push(`<script type="application/ld+json">${JSON.stringify(entry)}</script>`)
@@ -95,11 +105,29 @@ function availabilityFor(product) {
   return 'https://schema.org/InStock'
 }
 
+// GTIN só entra no schema quando parece um código real (só dígitos, no
+// comprimento padrão de um GTIN) — um valor mal formado do feed gera erro
+// no Search Console em vez de ajudar. Aceita gtin8/12/13/14 sem tentar
+// adivinhar qual variante é (schema.org aceita "gtin" genérico desde 2021).
+function validGtin(raw) {
+  if (!raw) return null
+  const s = String(raw).trim()
+  if (!/^\d+$/.test(s)) return null
+  return [8, 12, 13, 14].includes(s.length) ? s : null
+}
+
 function productJsonLd(product, canonical) {
   const offer = {
     '@type': 'Offer',
     url: canonical,
     priceCurrency: product.currency || 'BRL',
+    // Quem vende (a loja parceira) — distinto de "brand" (fabricante).
+    seller: { '@type': 'Organization', name: product.merchantDisplayName },
+    // Todo produto vem de feed de loja/varejo estabelecida (não é uma
+    // plataforma de usado/recondicionado) — condição nova é verdadeira pra
+    // praticamente 100% do catálogo, sem depender de um campo que o feed
+    // não informa.
+    itemCondition: 'https://schema.org/NewCondition',
     // Disponibilidade a partir do estoque real do feed (in_stock/stock_quantity);
     // só assume "disponível" quando não há nenhum sinal (feed ativo do lojista).
     availability: availabilityFor(product),
@@ -146,12 +174,33 @@ function productJsonLd(product, canonical) {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.productName,
-    image: [product.awImageUrl || product.merchantImageUrl].filter(Boolean),
+    // Todas as fotos reais do produto (mesma fonte que alimenta a galeria
+    // visível na página — ver src/lib/images.ts), não só a principal.
+    image: getRealImageCandidates(product),
     sku: product.merchantProductId || product.awProductId,
     brand: { '@type': 'Brand', name: product.merchantDisplayName },
     offers: offer,
   }
   if (product.description) productLd.description = product.description
+
+  const category = product.merchantCategory || product.categoryName
+  if (category) productLd.category = category
+
+  const gtin = validGtin(product.productGtin)
+  if (gtin) productLd.gtin = gtin
+
+  // aggregateRating só entra quando o feed tem os DOIS dados reais (nota E
+  // contagem de avaliações) — uma nota sem contagem não é um sinal válido
+  // pro Google, e nunca inventamos nenhum dos dois.
+  const ratingValue = product.averageRating ?? product.rating
+  const reviewCount = product.reviews
+  if (ratingValue && reviewCount) {
+    productLd.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue,
+      reviewCount,
+    }
+  }
 
   const breadcrumbLd = {
     '@context': 'https://schema.org',
@@ -371,9 +420,15 @@ async function main() {
         canonical,
         image: product.awImageUrl || product.merchantImageUrl,
         jsonLd: productJsonLd(product, canonical),
+        product: { price: product.searchPrice, currency: product.currency },
       },
     })
-    generatedUrls.push({ url, changefreq: 'weekly', priority: 0.7 })
+    generatedUrls.push({
+      url,
+      changefreq: 'weekly',
+      priority: 0.7,
+      lastmod: /^\d{4}-\d{2}-\d{2}/.test(product.lastUpdated || '') ? product.lastUpdated.slice(0, 10) : buildDate,
+    })
     productPageCount++
   }
 
