@@ -9,6 +9,7 @@
     "127159": { "slug": "oceane", "displayName": "Oceane BR", "vertical": "beleza", "active": true, "titleBlacklistEnabled": true },
     "17662": { "slug": "vivara", "displayName": "Vivara BR", "vertical": "joias", "active": true, "priority": true },
     "ouiparis": { "slug": "ouiparis", "displayName": "O.U.i Paris", "vertical": "beleza", "active": true, "priority": true },
+    "84621": { "slug": "oui", "displayName": "OUI BR", "vertical": "beleza", "active": true },
     "eudora-revenda": { "slug": "eudora-revenda", "displayName": "Eudora (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "boticario-revenda": { "slug": "boticario-revenda", "displayName": "O Boticário (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "qdb-revenda": { "slug": "qdb-revenda", "displayName": "Quem Disse, Berenice?", "vertical": "beleza", "active": true, "priority": true },
@@ -65,6 +66,7 @@
     "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": true, "verifyImages": true  },
 
     "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false },
+    "17854": { "slug": "eotica", "displayName": "Eotica BR", "vertical": "moda", "active": true },
 
     "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true }
   }
