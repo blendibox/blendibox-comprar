@@ -22,12 +22,17 @@ const ROOT = path.resolve(__dirname, '..', '..')
 // cupons): a PA-API exige 3 vendas qualificadas nos últimos 180 dias pra
 // liberar acesso, então enquanto isso não acontece (ou pros livros que as
 // buscas fixas não cobrem), esse CSV cobre os produtos escolhidos à mão.
-// Colunas: asin|title|price|image|description (as duas últimas são
-// opcionais). Delimitador é "|", não vírgula — sinopse de livro tem vírgula
-// o tempo todo, e cada vírgula sem aspas desalinhava as colunas seguintes
-// (bug real: preço/imagem/descrição foram parar no campo errado até essa
-// mudança). "|" praticamente nunca aparece em texto corrido, então dá pra
-// colar a sinopse direto sem escapar nada.
+// Colunas: asin|title|price|image|description|rating|reviews (as últimas
+// quatro são opcionais). Delimitador é "|", não vírgula — sinopse de livro
+// tem vírgula o tempo todo, e cada vírgula sem aspas desalinhava as colunas
+// seguintes (bug real: preço/imagem/descrição foram parar no campo errado
+// até essa mudança). "|" praticamente nunca aparece em texto corrido, então
+// dá pra colar a sinopse direto sem escapar nada.
+// rating/reviews: copiados manualmente da página do produto na Amazon
+// (nota em formato "4.8", com ponto — não vírgula; contagem de avaliação
+// sem separador de milhar, ex: "85328"). Deixa em branco quando o produto
+// ainda não tem avaliação (comum em lançamento/edição limitada) — nunca
+// inventa nota nem contagem.
 // O link de afiliado é sempre gerado a partir do ASIN + AMAZON_PARTNER_TAG —
 // nunca precisa colar o link do SiteStripe inteiro, só o ASIN do produto.
 const MANUAL_CSV_PATH = path.join(ROOT, 'data', 'amazon-books.csv')
@@ -215,6 +220,8 @@ function mapManualRow(row, partnerTag) {
   const asin = row.asin?.trim()
   const price = row.price ? Number(String(row.price).replace(',', '.')) : ''
   const deepLink = `https://www.amazon.com.br/dp/${asin}?tag=${partnerTag}`
+  const rating = row.rating ? Number(String(row.rating).replace(',', '.')) : ''
+  const reviews = row.reviews ? Number(String(row.reviews).replace(/\./g, '').replace(',', '.')) : ''
 
   return {
     aw_deep_link: deepLink,
@@ -239,9 +246,9 @@ function mapManualRow(row, partnerTag) {
     display_price: price,
     data_feed_id: 'amazon-books-manual',
     alternate_image_two: '',
-    reviews: '',
-    rating: '',
-    average_rating: '',
+    reviews,
+    rating,
+    average_rating: rating,
     number_available: '',
     product_GTIN: '',
   }
