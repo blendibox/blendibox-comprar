@@ -57,7 +57,7 @@ const CROSS_CHANNEL_PAIRS = [
 // ("facista" corrigido pra "fascista" — grafia correta em português.)
 const TITLE_BLACKLIST = [
   'penis', 'vagina', 'orgasmo', 'masturbador', 'excitante', 'comunista', 'fascista', 'sexo', 'vibrador',
-  'vibratoria', 'sugador', 'sexy',
+  'vibratoria', 'sugador', 'sexy', 'peniana', 'intimo', 'preservativo',
 ]
 
 function stripAccents(str) {
