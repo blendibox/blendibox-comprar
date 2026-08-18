@@ -22,7 +22,12 @@ const ROOT = path.resolve(__dirname, '..', '..')
 // cupons): a PA-API exige 3 vendas qualificadas nos últimos 180 dias pra
 // liberar acesso, então enquanto isso não acontece (ou pros livros que as
 // buscas fixas não cobrem), esse CSV cobre os produtos escolhidos à mão.
-// Colunas: asin,title,price,image,description (as duas últimas são opcionais).
+// Colunas: asin|title|price|image|description (as duas últimas são
+// opcionais). Delimitador é "|", não vírgula — sinopse de livro tem vírgula
+// o tempo todo, e cada vírgula sem aspas desalinhava as colunas seguintes
+// (bug real: preço/imagem/descrição foram parar no campo errado até essa
+// mudança). "|" praticamente nunca aparece em texto corrido, então dá pra
+// colar a sinopse direto sem escapar nada.
 // O link de afiliado é sempre gerado a partir do ASIN + AMAZON_PARTNER_TAG —
 // nunca precisa colar o link do SiteStripe inteiro, só o ASIN do produto.
 const MANUAL_CSV_PATH = path.join(ROOT, 'data', 'amazon-books.csv')
@@ -246,7 +251,13 @@ async function fetchManualRows(seenAsins, partnerTag) {
   if (!(await fileExists(MANUAL_CSV_PATH))) return []
 
   const raw = await readFile(MANUAL_CSV_PATH, 'utf-8')
-  const records = parse(raw, { columns: true, skip_empty_lines: true, relax_quotes: true, relax_column_count: true })
+  const records = parse(raw, {
+    delimiter: '|',
+    columns: true,
+    skip_empty_lines: true,
+    relax_quotes: true,
+    relax_column_count: true,
+  })
 
   const rows = []
   for (const row of records) {
