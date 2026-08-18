@@ -223,7 +223,7 @@ export function RegistryLandingPage() {
               </span>
             ))}
             <span className="registry-landing__brand registry-landing__brand--more">
-              +{merchantsCount != null ? merchantsCount : ''} lojas
+              +{merchantsCount != null ? Math.max(merchantsCount - brands.length, 0) : ''} lojas
             </span>
           </div>
         </section>
