@@ -7,9 +7,11 @@ import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
 import type { BlogContentBlock } from '../types/blog'
 
-// Suporte a link interno dentro do texto: [rótulo](/caminho). Deixa o artigo
-// referenciar páginas reais do site (categoria, loja) sem precisar de um tipo
-// de bloco à parte pra cada frase com link.
+// Suporte a link dentro do texto: [rótulo](/caminho) vira link interno da
+// SPA; [rótulo](https://...) vira link externo de verdade — sem isso, um
+// href absoluto passado pro <Link> do react-router não navega pra fora do
+// site. Deixa o artigo referenciar tanto páginas internas (categoria, loja)
+// quanto sites de terceiros sem precisar de um tipo de bloco à parte.
 const INLINE_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
 
 function renderInline(text: string): ReactNode {
@@ -21,7 +23,17 @@ function renderInline(text: string): ReactNode {
   while ((match = INLINE_LINK.exec(text))) {
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
     const [, label, href] = match
-    parts.push(<Link key={key++} to={href}>{label}</Link>)
+    parts.push(
+      /^https?:\/\//.test(href) ? (
+        <a key={key++} href={href} target="_blank" rel="noopener noreferrer">
+          {label}
+        </a>
+      ) : (
+        <Link key={key++} to={href}>
+          {label}
+        </Link>
+      ),
+    )
     lastIndex = match.index + match[0].length
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex))
