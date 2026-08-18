@@ -68,6 +68,9 @@
     "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false },
     "17854": { "slug": "eotica", "displayName": "Eotica BR", "vertical": "moda", "active": true },
 
-    "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true }
+    "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true },
+
+    "17729": { "slug": "kabum", "displayName": "Kabum BR", "vertical": "eletronicos", "active": true },
+    "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": true }
   }
 }
