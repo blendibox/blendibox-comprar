@@ -302,6 +302,19 @@ function buildVideoMetadata({ drops, shortDate, dateLabel, totalProducts, mercha
   const merchantTags = [...new Set(drops.map((d) => `#${d.merchantSlug}`))]
   const tags = ['#ofertas', '#promocao', '#desconto', '#precobaixo', ...merchantTags]
 
+  // Um link direto por produto do vídeo — além de facilitar quem assistiu
+  // achar o item exato (hoje só linkava pra home/cupons, genérico), o nome
+  // real do produto ficando perto do link real da página reforça a
+  // associação de tema pro Google indexar o vídeo (rel=nofollow do YouTube,
+  // então não é "link building" clássico, mas ajuda achabilidade e futura
+  // indexação mesmo assim). Sempre dado real de drops[], nunca inventado.
+  const productLines = drops
+    .map(
+      (d, i) =>
+        `${i + 1}. ${d.productName} (${d.merchantDisplayName}) — ${formatPrice(d.searchPrice, d.currency)} — https://${SITE_DOMAIN}/${d.merchantSlug}/${d.slug}/`
+    )
+    .join('\n')
+
   const description = `🔥 Confira as maiores quedas de preço encontradas hoje pelo Compare Ofertas.
 
 Monitoramos mais de ${Math.floor(totalProducts / 1000)} mil produtos em ${merchantsCount} lojas parceiras pra encontrar ofertas reais — o preço que baixou de verdade, com base no nosso histórico de monitoramento (não uma etiqueta "promoção" qualquer).
@@ -310,6 +323,9 @@ Neste vídeo você vê:
 ✓ Os produtos com maior desconto do dia (${dateLabel})
 ✓ Preço anterior e preço atual
 ✓ Percentual de queda real
+
+Produtos deste vídeo:
+${productLines}
 
 🔎 Compare preços: https://${SITE_DOMAIN}
 🎁 Lista de presentes: https://${SITE_DOMAIN}/lista-de-presentes
