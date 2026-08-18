@@ -438,7 +438,16 @@ async function main() {
   await rm(PRODUCTS_DIR, { recursive: true, force: true })
   await mkdir(PRODUCTS_DIR, { recursive: true })
 
-  await writeInBatches(products, 500, async (product) => {
+  // Só grava JSON individual (e só entra no index/busca) pro produto elegível
+  // a página estática — produto isolado não tem página, não aparece em
+  // busca/listagem/destaque em lugar nenhum do site (ver generate-home-
+  // highlights.mjs, generate-digest.mjs, generate-banners.mjs, que também
+  // filtram por isso), então gravar o JSON dele só ocupa espaço no deploy
+  // sem nunca ser buscado por ninguém. Mesmo princípio já usado pra produto
+  // sem foto ou com título na blacklist — se não vai ser exibido, não entra.
+  const publishedProducts = products.filter((p) => p.eligibleForStaticPage)
+
+  await writeInBatches(publishedProducts, 500, async (product) => {
     // URL/arquivo fica plano em /{merchant}/{slug} (sem o vertical no path) pra
     // bater com o esquema de URL que já está indexado no Google no site antigo.
     // O vertical continua no JSON como metadado, só não faz parte da rota.
@@ -447,7 +456,7 @@ async function main() {
     await writeFile(path.join(dir, `${product.slug}.json`), JSON.stringify(product))
   })
 
-  const index = products.map((p) => ({
+  const index = publishedProducts.map((p) => ({
     slug: p.slug,
     vertical: p.vertical,
     merchantSlug: p.merchantSlug,
@@ -472,8 +481,11 @@ async function main() {
     JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        totalProducts: products.length,
-        eligibleForStaticPage: products.filter((p) => p.eligibleForStaticPage).length,
+        // "produtos monitorados" no rodapé/listagem — precisa ser o que
+        // realmente está publicado (tem página, aparece em busca), não o
+        // total bruto do feed, senão o número conta produto que ninguém
+        // consegue achar no site.
+        totalProducts: publishedProducts.length,
         feeds: feedsConfig.feeds.map((f) => f.id),
         merchants: [...merchantsUsed.values()].map((m) => m.slug),
       },
@@ -483,7 +495,7 @@ async function main() {
   )
 
   console.log(
-    `Pronto: ${products.length} produtos (${index.filter((p) => p.eligibleForStaticPage).length} elegíveis a página estática) gravados em public/data/`
+    `Pronto: ${products.length} produtos no feed, ${publishedProducts.length} publicados (com página estática) em public/data/`
   )
 }
 
