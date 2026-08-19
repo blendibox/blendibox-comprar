@@ -11,7 +11,12 @@ on:
     # Awin e Grupo Boticário passam a ser rebuscados junto, todo dia também
     # (efeito colateral aceito — sem custo conhecido até agora).
     - cron: '0 6 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      skip_fetch:
+        description: 'Pular o fetch do feed (reusa o último catálogo salvo em cache — rápido, só pra mudança de código/UI que não depende de dado novo)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -38,6 +43,19 @@ jobs:
       - name: Instalar dependências
         run: npm ci
 
+      # public/data/ é gitignorado (catálogo inteiro, centenas de MB) — sem
+      # esse cache, todo run começa do zero e precisa rebuscar tudo. A chave
+      # de salvar é sempre única (run_id), então todo run deixa um cache novo;
+      # restore-keys pega o mais recente disponível na restauração. Só tem
+      # efeito prático quando skip_fetch=true (abaixo) — nos outros casos o
+      # fetch de qualquer forma sobrescreve o que foi restaurado.
+      - name: Cache do catálogo (public/data)
+        uses: actions/cache@v4
+        with:
+          path: public/data
+          key: catalogo-${{ github.run_id }}
+          restore-keys: catalogo-
+
       - name: Baixar feed e gerar JSON + build
         env:
           AWIN_API_KEY: ${{ secrets.AWIN_API_KEY }}
@@ -50,7 +68,18 @@ jobs:
           # Domínio próprio (CNAME) serve a partir da raiz, não de /repo-name/.
           VITE_BASE_PATH: /
           SITE_URL: https://comprar.blendibox.com.br
-        run: npm run build
+        run: |
+          # skip_fetch só existe em disparo manual (workflow_dispatch) — em
+          # push/schedule essa entrada nem existe, então a comparação abaixo
+          # cai sempre no fetch completo (comportamento de hoje, inalterado).
+          # Verifica o arquivo de verdade (não só a flag) porque o cache pode
+          # não ter nada restaurável ainda (primeiro run, ou cache expirado).
+          if [ "${{ github.event.inputs.skip_fetch }}" = "true" ] && [ -f public/data/index.json ]; then
+            echo "skip_fetch ativado e catálogo em cache encontrado — pulando fetch, só rebuild."
+            npm run build:no-fetch
+          else
+            npm run build
+          fi
 
       # Só no cron diário (ou disparo manual) — NUNCA em push. Sem essa
       # restrição, qualquer commit em main (várias vezes ao dia durante
