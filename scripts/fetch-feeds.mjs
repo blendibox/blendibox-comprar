@@ -16,6 +16,7 @@ import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
 import { upsizeProductServeImage, pickRealImage, getRealImageCandidates, verifyImageUrl, mapWithConcurrency } from './lib/images.mjs'
+import { decodeHtmlEntities } from './lib/htmlEntities.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -155,6 +156,10 @@ const IMAGE_FIELDS = [
   'awThumbUrl',
 ]
 
+// Campos de texto livre — alguns anunciantes (ex: Kabum) mandam entidade
+// HTML crua aqui ("Incompar&aacute;veis" em vez de "Incomparáveis").
+const TEXT_FIELDS = ['productName', 'description', 'merchantCategory', 'categoryName']
+
 function mapRow(row) {
   const mapped = {}
   for (const [csvKey, value] of Object.entries(row)) {
@@ -164,6 +169,8 @@ function mapRow(row) {
       mapped[key] = Number.isNaN(num) ? null : num
     } else if (IMAGE_FIELDS.includes(key)) {
       mapped[key] = upsizeProductServeImage(value)
+    } else if (TEXT_FIELDS.includes(key)) {
+      mapped[key] = decodeHtmlEntities(value)
     } else {
       mapped[key] = value
     }
