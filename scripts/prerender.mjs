@@ -371,6 +371,18 @@ async function main() {
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
 
+  // product.similar no disco só tem {slug, merchantSlug} (ver fetch-feeds.mjs
+  // — o snapshot completo repetido em até 6 cópias por produto era ~70% do
+  // tamanho do JSON individual). index.json já está inteiro em memória aqui,
+  // então resolver os stubs pro conteúdo completo é só um lookup — sem I/O
+  // extra — e preserva "produtos similares" como HTML estático de verdade
+  // (bot que não roda JS, ou o primeiro paint de um visitante real, continua
+  // vendo o carrossel populado, em vez de esperar fetch depois de hidratar).
+  const indexByKey = new Map(index.map((p) => [`${p.merchantSlug}/${p.slug}`, p]))
+  function enrichSimilar(similar) {
+    return similar.map((s) => indexByKey.get(`${s.merchantSlug}/${s.slug}`)).filter((p) => p != null)
+  }
+
   // --- Home: só as seções curadas (Destaques/Baixou de preço/Comprado
   // recentemente), pré-calculadas em scripts/generate-home-highlights.mjs —
   // arquivo pequeno, bem diferente do index.json completo usado pelos hubs
@@ -413,6 +425,7 @@ async function main() {
   for (const file of productFiles) {
     const product = JSON.parse(await readFile(file, 'utf-8'))
     if (!product.eligibleForStaticPage) continue
+    product.similar = enrichSimilar(product.similar)
 
     const routePath = `/${product.merchantSlug}/${product.slug}`
     const canonical = `${SITE_URL}${routePath}/`

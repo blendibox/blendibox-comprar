@@ -392,15 +392,13 @@ async function main() {
             return diffA - diffB
           })
 
+    // Só a referência mínima — o snapshot completo (nome/imagem/preço)
+    // duplicado até 6x por produto era ~70% do tamanho do JSON individual,
+    // sobretudo a URL da imagem repetida. A tela busca o produto completo
+    // sob demanda (fetchProduct) em vez de embutir a cópia aqui.
     product.similar = sorted.slice(0, MAX_SIMILAR).map((p) => ({
       slug: p.slug,
-      vertical: p.vertical,
       merchantSlug: p.merchantSlug,
-      merchantDisplayName: p.merchantDisplayName,
-      productName: p.productName,
-      awImageUrl: p.awImageUrl || p.merchantImageUrl,
-      searchPrice: p.searchPrice,
-      currency: p.currency,
     }))
 
     const merchantMeta = merchantsUsed.get(product.merchantSlug)

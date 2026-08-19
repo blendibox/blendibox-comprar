@@ -9,6 +9,18 @@ export interface SimilarRef {
   currency: string
 }
 
+// Referência mínima pra similar[] — só o suficiente pra montar a URL e
+// buscar o produto completo sob demanda (ver fetchProduct em lib/api.ts).
+// Antes guardava um snapshot inteiro (nome, imagem, preço) repetido em até
+// 6 cópias por produto — isso sozinho chegava a ~70% do tamanho do JSON de
+// cada produto, majoritariamente a URL da imagem repetida. Como cada
+// produto já tem seu próprio JSON pequeno, é mais barato buscar sob demanda
+// do que duplicar em todo mundo que o referencia.
+export interface SimilarStub {
+  slug: string
+  merchantSlug: string
+}
+
 export interface PricePoint {
   date: string
   price: number
@@ -64,7 +76,7 @@ export interface Product {
   merchantDisplayName: string
   vertical: string
   categorySlug: string
-  similar: SimilarRef[]
+  similar: SimilarStub[]
   eligibleForStaticPage: boolean
   priceHistory?: PricePoint[]
   // Preenchido só quando o preço de hoje é uma queda real de ≥5% em relação

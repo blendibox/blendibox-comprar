@@ -4,7 +4,7 @@ import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from 'lucide-re
 import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { getGalleryImages } from '../lib/images'
-import type { CouponEntry, Product, ProductIndexEntry, SimilarRef } from '../types/product'
+import type { CouponEntry, Product, ProductIndexEntry } from '../types/product'
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
@@ -24,24 +24,6 @@ type LoadState = 'loading' | 'ready' | 'error'
 // vez de mais um cupom, pra não deixar um carrossel enorme de rolar.
 const MAX_COUPONS_SHOWN = 5
 
-// SimilarRef só tem o subconjunto de campos gravado em `similar[]` (ver
-// scripts/fetch-feeds.mjs) — completa com os campos que só existem no
-// índice completo (nota, desconto, queda de preço) como null/vazio, já que
-// não foram calculados pra essa referência resumida. Permite reusar o
-// ProductCard de verdade (com botão de comparar) em vez de duplicar o
-// card à mão.
-function similarToIndexEntry(s: SimilarRef): ProductIndexEntry {
-  return {
-    ...s,
-    categorySlug: '',
-    eligibleForStaticPage: false,
-    rating: null,
-    storePrice: null,
-    discountPercentage: null,
-    previousPrice: null,
-    priceDropPercent: null,
-  }
-}
 
 export function ProductPage() {
   const { merchant = '', slug = '' } = useParams()
@@ -55,6 +37,7 @@ export function ProductPage() {
   // componente, o efeito abaixo detecta a mudança de path e busca de novo.
   const consumedPathRef = useRef<string | null>(initialProduct ? path : null)
   const [coupons, setCoupons] = useState<CouponEntry[]>([])
+  const [similarProducts, setSimilarProducts] = useState<ProductIndexEntry[]>([])
   const [activeImage, setActiveImage] = useState<string | null>(null)
   // Quando o produto não é encontrado, verifica se a LOJA ainda existe entre
   // as parceiras: se existir, a intenção original do visitante era ver algo
@@ -90,6 +73,40 @@ export function ProductPage() {
   useEffect(() => {
     fetchCoupons().then(setCoupons).catch(() => setCoupons([]))
   }, [])
+
+  // product.similar no JSON gravado só tem {slug, merchantSlug} (ver
+  // scripts/fetch-feeds.mjs — o snapshot completo duplicado 6x por produto
+  // era ~70% do tamanho do JSON individual). No SSR, scripts/prerender.mjs já
+  // resolve isso pro produto completo antes de injetar no HTML/hidratação
+  // (initialData) — por isso `similarFromData` é calculado direto no corpo
+  // do componente (não num useEffect: efeito não roda no SSR, então o HTML
+  // do servidor saía sem a seção e a hidratação no cliente batia diferente
+  // do que o servidor mandou). Só entra num fetch (via useEffect mesmo, aí
+  // sim sem risco de descompasso porque é client-only) quando o dado que
+  // chegou aqui é mesmo só o stub — o caso de navegar client-side pra outro
+  // produto sem passar pelo SSR daquela página específica.
+  const similarFromData = product ? (product.similar as unknown as Partial<ProductIndexEntry>[]) : []
+  const similarAlreadyEnriched = similarFromData.length > 0 && similarFromData.every((s) => typeof s.productName === 'string')
+
+  useEffect(() => {
+    if (!product || product.similar.length === 0 || similarAlreadyEnriched) {
+      setSimilarProducts([])
+      return
+    }
+    let cancelled = false
+    Promise.allSettled(product.similar.map((s) => fetchProduct(s.merchantSlug, s.slug))).then((results) => {
+      if (cancelled) return
+      setSimilarProducts(
+        results.filter((r): r is PromiseFulfilledResult<Product> => r.status === 'fulfilled').map((r) => r.value)
+      )
+    })
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product])
+
+  const resolvedSimilar = similarAlreadyEnriched ? (similarFromData as ProductIndexEntry[]) : similarProducts
 
   const { isSelected, toggle, isFull } = useComparator()
   const { isFavorite, toggle: toggleFavorite } = useFavorites()
@@ -351,12 +368,12 @@ export function ProductPage() {
         </section>
       )}
 
-      {product.similar.length > 0 && (
+      {resolvedSimilar.length > 0 && (
         <section className="similar-section">
           <h2>Produtos similares</h2>
           <Carousel>
-            {product.similar.map((s) => (
-              <ProductCard key={`${s.merchantSlug}-${s.slug}`} product={similarToIndexEntry(s)} />
+            {resolvedSimilar.map((s) => (
+              <ProductCard key={`${s.merchantSlug}-${s.slug}`} product={s} />
             ))}
           </Carousel>
         </section>
