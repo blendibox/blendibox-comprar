@@ -73,6 +73,8 @@
     "17729": { "slug": "kabum", "displayName": "Kabum BR", "vertical": "eletronicos", "active": true },
     "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": false },
 
-    "126693": { "slug": "exypna", "displayName": "Exypna", "vertical": "saude", "active": true }
+    "126693": { "slug": "exypna", "displayName": "Exypna", "vertical": "saude", "active": true },
+
+    "29407": { "slug": "belezanaweb", "displayName": "Beleza na Web BR", "vertical": "beleza", "active": true }
   }
 }
