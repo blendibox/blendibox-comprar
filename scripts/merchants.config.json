@@ -32,7 +32,7 @@
     "17858": { "slug": "electrolux", "displayName": "Electrolux BR", "vertical": "casa", "active": true },
     "24534": { "slug": "motorola", "displayName": "Motorola BR", "vertical": "casa", "active": true },
     "33061": { "slug": "lg", "displayName": "LG BR", "vertical": "casa", "active": true },
-    "108626": { "slug": "arno", "displayName": "Arno BR", "vertical": "casa", "active": true },
+    "108626": { "slug": "arno", "displayName": "Arno BR", "vertical": "casa", "active": true, "verifyImages": true  },
     "81383": { "slug": "carraro", "displayName": "Carraro BR", "vertical": "casa", "active": true },
     "36382": { "slug": "tokstok", "displayName": "Tok & Stok BR", "vertical": "casa", "active": true },
     "17777": { "slug": "mobly", "displayName": "Mobly BR", "vertical": "casa", "active": true },
@@ -41,8 +41,8 @@
     "105615": { "slug": "leveros", "displayName": "Leveros BR", "vertical": "casa", "active": true },
     "78382": { "slug": "panasonic", "displayName": "Panasonic BR", "vertical": "casa", "active": true },
     "106763": { "slug": "sharkninja", "displayName": "Shark-Ninja BR", "vertical": "casa", "active": true },
-    "78292": { "slug": "webfones", "displayName": "Webfones BR", "vertical": "casa", "active": false },
-    "19675": { "slug": "continental", "displayName": "Continental BR", "vertical": "casa", "active": true },
+    "78292": { "slug": "webfones", "displayName": "Webfones BR", "vertical": "casa", "active": true },
+    "19675": { "slug": "continental", "displayName": "Continental BR", "vertical": "casa", "active": true, "verifyImages": true  },
 
     "17648": { "slug": "cea", "displayName": "C&A BR", "vertical": "moda", "active": false },
     "100553": { "slug": "calvinklein", "displayName": "Calvin Klein BR", "vertical": "moda", "active": true },
@@ -53,10 +53,10 @@
     "17631": { "slug": "loccitane", "displayName": "L'Occitane au Brésil BR", "vertical": "beleza", "active": true },
     "17612": { "slug": "elens", "displayName": "eLens BR", "vertical": "moda", "active": true, "verifyImages": true  },
     "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": true },
-    "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": false },
+    "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": true },
     "118895": { "slug": "lojadomecanico", "displayName": "Loja do Mecanico BR", "vertical": "moda", "active": false },
     "17893": { "slug": "futfanatics", "displayName": "Fut Fanatics BR", "vertical": "esporte", "active": false },
-    "118977": { "slug": "lauriesporte", "displayName": "Lauri Esporte", "vertical": "esporte", "active": false },
+    "118977": { "slug": "lauriesporte", "displayName": "Lauri Esporte", "vertical": "esporte", "active": true },
     "17698": { "slug": "olympikus", "displayName": "Olympikus BR", "vertical": "esporte", "active": true, "priority": true },
     "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": true, "verifyImages": true },
     "127555": { "slug": "zeedog", "displayName": "Zee Dog BR", "vertical": "pet", "active": true },
@@ -71,6 +71,8 @@
     "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true },
 
     "17729": { "slug": "kabum", "displayName": "Kabum BR", "vertical": "eletronicos", "active": true },
-    "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": false }
+    "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": false },
+
+    "126693": { "slug": "exypna", "displayName": "Exypna", "vertical": "saude", "active": true }
   }
 }
