@@ -75,6 +75,8 @@
 
     "126693": { "slug": "exypna", "displayName": "Exypna", "vertical": "saude", "active": true },
 
-    "29407": { "slug": "belezanaweb", "displayName": "Beleza na Web BR", "vertical": "beleza", "active": true }
+    "29407": { "slug": "belezanaweb", "displayName": "Beleza na Web BR", "vertical": "beleza", "active": true },
+
+    "17658": { "slug": "natura", "displayName": "Natura BR", "vertical": "beleza", "active": true }
   }
 }
