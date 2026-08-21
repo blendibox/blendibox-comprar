@@ -28,6 +28,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Faltava isso — sem node_modules, o "import sharp" no topo do script
+      # falha na hora (module not found), antes de chegar em qualquer lógica
+      # de single/digest. Explica os runs de ~8-10s sem publicar nada.
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
       - name: Publicar
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
