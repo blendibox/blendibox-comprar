@@ -25,7 +25,10 @@ function renderInline(text: string): ReactNode {
     const [, label, href] = match
     parts.push(
       /^https?:\/\//.test(href) ? (
-        <a key={key++} href={href} target="_blank" rel="noopener noreferrer">
+        // sponsored (não só noopener/noreferrer): todo link externo em
+        // artigo do blog aqui é link de afiliado — é o rel correto pra isso,
+        // recomendado pelo próprio Google.
+        <a key={key++} href={href} target="_blank" rel="sponsored noopener noreferrer">
           {label}
         </a>
       ) : (
@@ -88,6 +91,17 @@ function Block({ block }: { block: BlogContentBlock }) {
             </tbody>
           </table>
         </div>
+      )
+    case 'banner':
+      return (
+        <a
+          className="blog-post__banner"
+          href={block.href}
+          target="_blank"
+          rel="sponsored noopener noreferrer"
+        >
+          <img src={block.imgSrc} alt={block.alt} loading="lazy" />
+        </a>
       )
   }
 }

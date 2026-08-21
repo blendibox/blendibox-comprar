@@ -1,5 +1,9 @@
 import type { BlogPost } from '../../types/blog'
 
+const AFFILIATE_LINK = 'https://www.awin1.com/cread.php?awinmid=124204&awinaffid=2104315&ued=https%3A%2F%2Fsejasocio.samsclub.com.br%2Findex.php%2Fcreator-sams%2F'
+const BANNER_LINK = 'https://www.awin1.com/cread.php?s=4784897&v=124204&q=603261&r=2104315'
+const BANNER_IMG = 'https://www.awin1.com/cshow.php?s=4784897&v=124204&q=603261&r=2104315'
+
 export const beneficiosDeAssinarSamsClub: BlogPost = {
   slug: 'beneficios-de-assinar-sams-club',
   title: 'Vale a pena assinar o Sam\'s Club? Benefícios e como ganhar desconto na primeira compra',
@@ -14,12 +18,13 @@ export const beneficiosDeAssinarSamsClub: BlogPost = {
   blocks: [
     {
       type: 'p',
-      text: 'Se você ainda não é sócio, dá pra [se cadastrar por aqui](https://www.awin1.com/cread.php?awinmid=124204&awinaffid=2104315&ued=https%3A%2F%2Fsejasocio.samsclub.com.br%2Findex.php%2Fcreator-sams%2F) e já sair com desconto garantido na primeira compra — R$ 50 no site/app ou R$ 75 nas lojas físicas, dependendo de onde você compra primeiro. Os detalhes de cada oferta estão logo abaixo.',
+      text: `Se você ainda não é sócio, dá pra [se cadastrar por aqui](${AFFILIATE_LINK}) e já sair com desconto garantido na primeira compra — R$ 50 no site/app ou R$ 75 nas lojas físicas, dependendo de onde você compra primeiro. Os detalhes de cada oferta estão logo abaixo.`,
     },
+    { type: 'banner', href: BANNER_LINK, imgSrc: BANNER_IMG, alt: 'Sam\'s Club — seja sócio' },
     { type: 'h2', text: 'O que é o Sam\'s Club' },
     {
       type: 'p',
-      text: 'O Sam\'s Club é o maior clube de compras do Brasil, com mais de 4 milhões de sócios — um modelo de loja de atacado onde só quem tem assinatura ativa consegue comprar, em troca de preço menor, produtos importados e itens que não aparecem no varejo comum.',
+      text: `O [Sam's Club](${AFFILIATE_LINK}) é o maior clube de compras do Brasil, com mais de 4 milhões de sócios — um modelo de loja de atacado onde só quem tem assinatura ativa consegue comprar, em troca de preço menor, produtos importados e itens que não aparecem no varejo comum.`,
     },
     { type: 'h2', text: 'Quanto custa ser sócio' },
     {
@@ -31,11 +36,15 @@ export const beneficiosDeAssinarSamsClub: BlogPost = {
         'Sócios também têm desconto exclusivo na Drogaria Carrefour',
       ],
     },
+    {
+      type: 'p',
+      text: `Quer ver os planos com detalhe antes de decidir? [Confira as opções de assinatura](${AFFILIATE_LINK}) direto no cadastro.`,
+    },
     { type: 'h2', text: 'Desconto de R$ 50 na primeira compra online' },
     {
       type: 'ul',
       items: [
-        'Torne-se sócio pelo [link de cadastro](https://www.awin1.com/cread.php?awinmid=124204&awinaffid=2104315&ued=https%3A%2F%2Fsejasocio.samsclub.com.br%2Findex.php%2Fcreator-sams%2F) e use o cupom BEMVINDO50 no campo "cupom" ao finalizar a compra no site ou app',
+        `Torne-se sócio pelo [link de cadastro](${AFFILIATE_LINK}) e use o cupom BEMVINDO50 no campo "cupom" ao finalizar a compra no site ou app`,
         'Válido pra compra igual ou maior que R$ 200',
       ],
     },
@@ -43,7 +52,7 @@ export const beneficiosDeAssinarSamsClub: BlogPost = {
     {
       type: 'ul',
       items: [
-        'Torne-se sócio pelo mesmo link — o desconto é aplicado automaticamente no pagamento, vinculado ao CPF do sócio titular',
+        `[Torne-se sócio pelo mesmo link](${AFFILIATE_LINK}) — o desconto é aplicado automaticamente no pagamento, vinculado ao CPF do sócio titular`,
         'Válido pra compra igual ou maior que R$ 300',
         'Prazo de até 30 dias a partir da entrada como novo sócio, e a partir de 48 horas após o pagamento da assinatura',
         'Só em lojas físicas',
@@ -51,6 +60,7 @@ export const beneficiosDeAssinarSamsClub: BlogPost = {
         'Oferta por tempo limitado, pode ser encerrada a qualquer momento sem aviso prévio',
       ],
     },
+    { type: 'banner', href: BANNER_LINK, imgSrc: BANNER_IMG, alt: 'Sam\'s Club — seja sócio' },
     {
       type: 'p',
       text: 'Compare Ofertas é parceiro afiliado do Sam\'s Club: se você virar sócio pelo nosso link, recebemos uma comissão, sem custo nenhum a mais pra você.',

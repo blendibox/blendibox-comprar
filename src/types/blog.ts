@@ -6,6 +6,9 @@ export type BlogContentBlock =
   | { type: 'ol'; items: string[] }
   | { type: 'quote'; text: string }
   | { type: 'table'; headers: string[]; rows: string[][] }
+  // Banner/botão de afiliado com imagem (ex: creative da Awin) — rel
+  // "sponsored" por padrão, é link pago/afiliado por definição.
+  | { type: 'banner'; href: string; imgSrc: string; alt: string }
 
 export type BlogFaqItem = { q: string; a: string }
 

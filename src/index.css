@@ -4857,6 +4857,30 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   border-bottom: none;
 }
 
+/* Banner de afiliado (creative da rede, ex: Awin) — a aparência real (cor,
+   formato) vem de fora, aqui só centraliza e evita estourar em telas
+   estreitas, com leve destaque visual de que é clicável. */
+.blog-post__banner {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 24px auto;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.blog-post__banner:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.blog-post__banner img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
 .blog-post__faq {
   margin-top: 28px;
 }
