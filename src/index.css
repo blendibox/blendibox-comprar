@@ -3615,6 +3615,12 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   background: #f4f5f8;
   color: #777;
   font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.registry-landing__brand--more:hover {
+  background: #eaecf1;
 }
 
 /* Por que aqui — grid de argumentos */

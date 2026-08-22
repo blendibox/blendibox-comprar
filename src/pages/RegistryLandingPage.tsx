@@ -93,6 +93,10 @@ export function RegistryLandingPage() {
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
   const [merchantsCount, setMerchantsCount] = useState<number | null>(null)
   const [brands, setBrands] = useState<string[]>([])
+  // Lojas que não estão na lista curada (BRAND_LABELS) — só carregadas de
+  // verdade quando o usuário clica em "+N lojas" pra ver todas.
+  const [otherBrands, setOtherBrands] = useState<string[]>([])
+  const [showAllBrands, setShowAllBrands] = useState(false)
   const [preview, setPreview] = useState<ProductIndexEntry[]>([])
 
   useEffect(() => {
@@ -100,8 +104,15 @@ export function RegistryLandingPage() {
     fetchMerchants()
       .then((list) => {
         setMerchantsCount(list.length)
+        const curatedSlugs = new Set(Object.keys(BRAND_LABELS))
         const active = new Set(list.map((m) => m.slug))
         setBrands(Object.keys(BRAND_LABELS).filter((s) => active.has(s)).map((s) => BRAND_LABELS[s]))
+        setOtherBrands(
+          list
+            .filter((m) => !curatedSlugs.has(m.slug))
+            .map((m) => m.displayName.replace(/ BR$/, ''))
+            .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+        )
       })
       .catch(() => {})
     // Card "Sua lista" ilustrativo, porém com produtos REAIS do catálogo.
@@ -222,9 +233,22 @@ export function RegistryLandingPage() {
                 {b}
               </span>
             ))}
-            <span className="registry-landing__brand registry-landing__brand--more">
-              +{merchantsCount != null ? Math.max(merchantsCount - brands.length, 0) : ''} lojas
-            </span>
+            {showAllBrands &&
+              otherBrands.map((b) => (
+                <span key={b} className="registry-landing__brand">
+                  {b}
+                </span>
+              ))}
+            {otherBrands.length > 0 && (
+              <button
+                type="button"
+                className="registry-landing__brand registry-landing__brand--more"
+                onClick={() => setShowAllBrands((v) => !v)}
+                aria-expanded={showAllBrands}
+              >
+                {showAllBrands ? 'Ver menos' : `+${otherBrands.length} lojas`}
+              </button>
+            )}
           </div>
         </section>
       )}
