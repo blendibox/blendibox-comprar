@@ -14,7 +14,7 @@ import { ShareBar } from '../components/ShareBar'
 import { ProductNotFound } from '../components/ProductNotFound'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
-import { formatSimpleDateBr, parseBrDate } from '../lib/date'
+import { formatSimpleDateBr, isoDateMs, parseBrDate } from '../lib/date'
 import { SITE_URL } from '../config/site'
 
 type LoadState = 'loading' | 'ready' | 'error'
@@ -127,15 +127,28 @@ export function ProductPage() {
   // scripts/update-price-history.mjs, que roda a cada build) — reflete a
   // realidade (build diário) em vez de uma alegação genérica de frequência.
   const lastPriceCheck = product.priceHistory?.length ? product.priceHistory[product.priceHistory.length - 1].date : null
-  // Menor preço já registrado no histórico rastreado (product.priceHistory,
-  // já limitado a MAX_POINTS em update-price-history.mjs) — texto visível e
-  // renderizado no servidor (sem depender do useEffect/"agora" do gráfico),
-  // pra ter conteúdo indexável de verdade sobre o histórico, não só o
-  // gráfico SVG (que só aparece depois de hidratar no cliente).
-  const lowestPricePoint =
-    product.priceHistory && product.priceHistory.length > 1
-      ? product.priceHistory.reduce((min, p) => (p.price < min.price ? p : min))
-      : null
+  // Menor preço nos últimos 90 dias (janela padrão de referência pra "menor
+  // preço" no e-commerce brasileiro) — texto visível e renderizado no
+  // servidor (sem depender do useEffect/"agora" do gráfico), pra ter
+  // conteúdo indexável de verdade sobre o histórico, não só o gráfico SVG
+  // (que só aparece depois de hidratar no cliente).
+  //
+  // A âncora de "hoje" é product.lastUpdated (dado do próprio JSON), nunca
+  // Date.now()/new Date() — cliente e servidor sempre concordam nesse valor
+  // porque vem do mesmo prop, evitando o erro de hidratação #418 já visto
+  // antes neste projeto quando o cálculo dependia do relógio de quem renderiza.
+  const lowestPricePoint = (() => {
+    if (!product.priceHistory?.length || !product.lastUpdated) return null
+    const todayIso = product.lastUpdated.slice(0, 10)
+    const windowStart = isoDateMs(todayIso) - 90 * 24 * 60 * 60 * 1000
+    const candidates = product.priceHistory.filter((p) => isoDateMs(p.date) >= windowStart)
+    // O preço vigente conta como válido "hoje" mesmo sem registro novo no
+    // histórico (só gravamos quando o preço MUDA) — sem isso, um produto
+    // parado há meses no mesmo preço ficaria de fora da comparação.
+    if (product.searchPrice != null) candidates.push({ date: todayIso, price: product.searchPrice })
+    if (candidates.length === 0) return null
+    return candidates.reduce((min, p) => (p.price < min.price ? p : min))
+  })()
 
   const now = new Date()
   const merchantCoupons = coupons.filter((c) => {
@@ -310,8 +323,10 @@ export function ProductPage() {
           )}
           {lowestPricePoint && (
             <p className="product-detail__lowest-price">
-              Menor preço já registrado: <strong>{formatPrice(lowestPricePoint.price, product.currency)}</strong> em{' '}
-              {formatSimpleDateBr(lowestPricePoint.date)}
+              Menor preço nos últimos 90 dias: <strong>{formatPrice(lowestPricePoint.price, product.currency)}</strong>{' '}
+              {lowestPricePoint.date === product.lastUpdated?.slice(0, 10)
+                ? '(preço atual)'
+                : `em ${formatSimpleDateBr(lowestPricePoint.date)}`}
             </p>
           )}
           <PriceTargetForm

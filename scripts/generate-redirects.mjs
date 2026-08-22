@@ -148,6 +148,29 @@ async function main() {
       `${alreadyCorrect} já corretos (sem redirect necessário), ${skipped} ignorados (loja inativa/dummy), ` +
       `${conflicts} evitados por já existir página real no path. ${toWrite.length - conflicts} arquivos de redirect gravados.`
   )
+
+  // Redirects temporários dos produtos que caíram do top-N diário da Shopee
+  // (ver updateShopeeRedirects em fetch-feeds.mjs) — lista curta e com
+  // expiração própria, gerada separado da migração de URL antiga acima.
+  const shopeeRedirectsPath = path.join(ROOT, 'data', 'shopee-redirects.json')
+  if (await fileExists(shopeeRedirectsPath)) {
+    const shopeeRedirects = JSON.parse(await readFile(shopeeRedirectsPath, 'utf-8'))
+    let written = 0
+    let shopeeConflicts = 0
+    for (const { path: oldPath, target: targetPath } of shopeeRedirects) {
+      const outDir = path.join(DIST_DIR, ...oldPath.split('/').filter(Boolean))
+      const outFile = path.join(outDir, 'index.html')
+      if (await fileExists(outFile)) {
+        // Produto voltou a existir de verdade nesse path — não sobrescreve.
+        shopeeConflicts++
+        continue
+      }
+      await mkdir(outDir, { recursive: true })
+      await writeFile(outFile, redirectHtml(`${SITE_URL}${targetPath}/`))
+      written++
+    }
+    console.log(`Redirects da Shopee: ${written} gravados, ${shopeeConflicts} evitados por já existir página real no path.`)
+  }
 }
 
 main().catch((err) => {

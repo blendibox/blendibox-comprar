@@ -192,6 +192,68 @@ function resolveMerchant(merchantsConfig, merchantId, merchantName) {
   }
 }
 
+// O catálogo da Shopee é reselecionado do zero todo dia (top-N por
+// subcategoria, ver scripts/lib/shopee.mjs) — um produto que estava no top
+// ontem pode sair hoje mesmo sem nada de errado com ele, e sua URL vira 404
+// puro (confirmado no Search Console: maior fonte isolada de "não encontrado").
+// Mantém um redirect temporário (produto → hub do vertical) pelas primeiras
+// semanas depois da queda, tempo suficiente pro Google reprocessar a URL, sem
+// acumular pra sempre — expira sozinho e tem teto de tamanho, porque uma URL
+// antiga o bastante já não vale mais a pena rastrear.
+const SHOPEE_KNOWN_PATHS_FILE = path.join(ROOT, 'data', 'shopee-known-paths.json')
+const SHOPEE_REDIRECTS_FILE = path.join(ROOT, 'data', 'shopee-redirects.json')
+const SHOPEE_REDIRECT_RETENTION_DAYS = 30
+const SHOPEE_REDIRECT_MAX_ENTRIES = 10000
+
+async function updateShopeeRedirects(publishedProducts) {
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayShopee = {}
+  for (const p of publishedProducts) {
+    if (p.merchantSlug !== 'shopee') continue
+    todayShopee[`/${p.merchantSlug}/${p.slug}`] = `/${p.vertical}`
+  }
+
+  let previousKnown = {}
+  try {
+    previousKnown = JSON.parse(await readFile(SHOPEE_KNOWN_PATHS_FILE, 'utf-8'))
+  } catch {
+    // Primeira execução — sem histórico anterior pra comparar ainda.
+  }
+
+  let redirects = []
+  try {
+    redirects = JSON.parse(await readFile(SHOPEE_REDIRECTS_FILE, 'utf-8'))
+  } catch {
+    // Primeira execução.
+  }
+
+  let newlyDropped = 0
+  for (const [p, target] of Object.entries(previousKnown)) {
+    if (!(p in todayShopee)) {
+      redirects.push({ path: p, target, droppedAt: todayIso })
+      newlyDropped++
+    }
+  }
+
+  // Produto que voltou a aparecer não precisa mais de redirect — a página
+  // real existe de novo, não faz sentido competir com ela.
+  redirects = redirects.filter((r) => !(r.path in todayShopee))
+
+  const cutoffMs = Date.now() - SHOPEE_REDIRECT_RETENTION_DAYS * 24 * 60 * 60 * 1000
+  redirects = redirects
+    .filter((r) => new Date(`${r.droppedAt}T00:00:00Z`).getTime() >= cutoffMs)
+    .sort((a, b) => (a.droppedAt < b.droppedAt ? 1 : -1))
+    .slice(0, SHOPEE_REDIRECT_MAX_ENTRIES)
+
+  await writeFile(SHOPEE_KNOWN_PATHS_FILE, JSON.stringify(todayShopee))
+  await writeFile(SHOPEE_REDIRECTS_FILE, JSON.stringify(redirects))
+
+  console.log(
+    `[shopee] ${Object.keys(todayShopee).length} produtos publicados hoje, ${newlyDropped} saíram desde a última execução, ` +
+      `${redirects.length} redirects ativos (retenção de ${SHOPEE_REDIRECT_RETENTION_DAYS} dias).`
+  )
+}
+
 function buildCategorySlug(product) {
   const raw = product.merchantCategory || product.categoryName
   if (!raw) return 'geral'
@@ -451,6 +513,8 @@ async function main() {
   // sem nunca ser buscado por ninguém. Mesmo princípio já usado pra produto
   // sem foto ou com título na blacklist — se não vai ser exibido, não entra.
   const publishedProducts = products.filter((p) => p.eligibleForStaticPage)
+
+  await updateShopeeRedirects(publishedProducts)
 
   await writeInBatches(publishedProducts, 500, async (product) => {
     // URL/arquivo fica plano em /{merchant}/{slug} (sem o vertical no path) pra

@@ -37,6 +37,15 @@ export function formatSimpleDateBr(iso: string): string {
   return `${day}/${month}/${year}`
 }
 
+// Epoch UTC de uma data simples "YYYY-MM-DD" (histórico de preço, lastUpdated)
+// — usa Date.UTC() em vez de novo Date(iso), que ficaria sujeito ao fuso local
+// de quem executa (mesmo cuidado das funções acima), pra sempre dar a mesma
+// diferença de dias não importa se roda no build (UTC) ou no navegador.
+export function isoDateMs(iso: string): number {
+  const [year, month, day] = iso.split('-').map(Number)
+  return Date.UTC(year, month - 1, day)
+}
+
 // Mesmo motivo do timeZone fixo acima, só que pra data+hora — sem pinar,
 // a HORA renderizada diverge do servidor (UTC) pro cliente (Brasil, UTC-3)
 // em toda carga de página, não só perto da meia-noite, já que o offset de
