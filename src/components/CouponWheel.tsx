@@ -86,6 +86,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
   const [email, setEmail] = useState('')
   const [consent, setConsent] = useState(false)
   const [gateStatus, setGateStatus] = useState<'idle' | 'sending' | 'error'>('idle')
+  const [codeCopied, setCodeCopied] = useState(false)
   const timeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -93,6 +94,20 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
     }
   }, [])
+
+  // Mesmo comportamento do CouponCard: aba nova abre a loja, essa aba não
+  // navega, então dá pra copiar o código e mostrar o aviso aqui mesmo.
+  function handleUseCoupon() {
+    if (result?.code) {
+      navigator.clipboard.writeText(result.code).then(() => setCodeCopied(true)).catch(() => {})
+    }
+  }
+
+  useEffect(() => {
+    if (!codeCopied) return
+    const t = setTimeout(() => setCodeCopied(false), 2500)
+    return () => clearTimeout(t)
+  }, [codeCopied])
 
   const anglePerSegment = 360 / segments.length
 
@@ -234,8 +249,9 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
               href={result.deeplink}
               target="_blank"
               rel="noopener noreferrer sponsored"
+              onClick={handleUseCoupon}
             >
-              Usar cupom
+              {codeCopied ? 'Cupom copiado!' : 'Usar cupom'}
             </a>
           </div>
         )}
