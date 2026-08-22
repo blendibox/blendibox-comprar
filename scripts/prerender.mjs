@@ -8,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { build } from 'esbuild'
 import { getRealImageCandidates } from './lib/images.mjs'
+import { slugify } from './lib/slugify.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -15,6 +16,51 @@ const DIST_DIR = path.join(ROOT, 'dist')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
 const PAGE_SIZE = 60
+
+// merchantCategory normalmente já vem em português (a maioria dos merchants
+// manda o nome da categoria pronto pro feed da Awin). A LG é a exceção conhecida
+// hoje: parte do catálogo dela vem na taxonomia do Google Product Category, em
+// inglês (o programa dela na Awin paga em dólar, então usam o feed internacional
+// padrão). As 11 strings abaixo são as únicas ocorrências reais encontradas
+// rodando contra os 3.631 produtos da LG em public/data/products/lg — não é
+// tradução de dicionário genérico, é o valor exato que aparece no feed. Sem
+// entrada aqui = usa o último trecho como está (nunca inventa um termo).
+const CATEGORY_TRANSLATIONS = {
+  'Electronics > Audio > Audio Components > Speakers': 'Caixas de Som',
+  'Electronics > Electronics Accessories > Computer Accessories': 'Acessórios de Informática',
+  'Electronics > Video > Computer Monitors': 'Monitores',
+  'Electronics > Video > Projectors': 'Projetores',
+  'Electronics > Video > Televisions': 'TVs',
+  'Electronics > Video > Video Accessories > Computer Monitor Accessories': 'Acessórios para Monitores',
+  'Home & Garden > Household Appliances > Climate Control Appliances': 'Ar-Condicionado',
+  'Home & Garden > Household Appliances > Climate Control Appliances > Air Conditioners': 'Ar-Condicionado Residencial',
+  'Home & Garden > Household Appliances > Laundry Appliances > Washing Machines': 'Lavanderia',
+  'Home & Garden > Kitchen & Dining > Cookware & Bakeware > Cookware': 'Panelas',
+  'Home & Garden > Kitchen & Dining > Kitchen Appliances': 'Eletrodomésticos de Cozinha',
+}
+
+// Rótulo curto de categoria pra usar no <title> e no breadcrumb. Strings com
+// " > " são taxonomia Google Product Category (só a LG usa isso hoje); as
+// demais já são o nome de categoria em português como o merchant mandou.
+function categoryLabel(merchantCategory) {
+  if (!merchantCategory) return null
+  if (!merchantCategory.includes('>')) return merchantCategory
+  return CATEGORY_TRANSLATIONS[merchantCategory] || merchantCategory.split('>').pop().trim()
+}
+
+// buildCategorySlug() em fetch-feeds.mjs gera o categorySlug a partir do
+// último trecho do merchantCategory BRUTO (antes de qualquer tradução) — pra
+// LG isso significa slugs em inglês ("televisions", "speakers", etc.) nas
+// páginas de hub de categoria. Deriva o mesmo mapeamento de CATEGORY_TRANSLATIONS
+// (uma fonte só, sem repetir a lista) pra exibir o rótulo certo nessas páginas
+// sem mexer no slug/URL em si (evita quebrar link já indexado). Contraparte
+// client-side: src/lib/categoryLabels.ts (mantida em sincronia manualmente).
+const CATEGORY_SLUG_LABELS = Object.fromEntries(
+  Object.entries(CATEGORY_TRANSLATIONS).map(([breadcrumb, label]) => [slugify(breadcrumb.split('>').pop().trim()), label])
+)
+function categoryHubLabel(categorySlug) {
+  return CATEGORY_SLUG_LABELS[categorySlug] || categorySlug.replace(/-/g, ' ')
+}
 
 async function buildEntryServer() {
   const result = await build({
@@ -188,7 +234,7 @@ function productJsonLd(product, canonical) {
   }
   if (product.description) productLd.description = product.description
 
-  const category = product.merchantCategory || product.categoryName
+  const category = categoryLabel(product.merchantCategory) || product.categoryName
   if (category) productLd.category = category
 
   const gtin = validGtin(product.productGtin)
@@ -207,19 +253,32 @@ function productJsonLd(product, canonical) {
     }
   }
 
+  const breadcrumbItems = [
+    { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: product.merchantDisplayName,
+      item: `${SITE_URL}/${product.merchantSlug}/`,
+    },
+  ]
+  // Nível extra só quando dá pra apontar pra um hub de categoria real (mesma
+  // rota gerada mais abaixo em generateAll, /:vertical/categoria/:slug) — sem
+  // isso o ListItem ficaria sem URL válida, o que o Google rejeita.
+  if (category && product.vertical && product.categorySlug) {
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: breadcrumbItems.length + 1,
+      name: category,
+      item: `${SITE_URL}/${product.vertical}/categoria/${product.categorySlug}/`,
+    })
+  }
+  breadcrumbItems.push({ '@type': 'ListItem', position: breadcrumbItems.length + 1, name: product.productName, item: canonical })
+
   const breadcrumbLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: product.merchantDisplayName,
-        item: `${SITE_URL}/${product.merchantSlug}/`,
-      },
-      { '@type': 'ListItem', position: 3, name: product.productName, item: canonical },
-    ],
+    itemListElement: breadcrumbItems,
   }
 
   return [productLd, breadcrumbLd]
@@ -430,6 +489,11 @@ async function main() {
     const routePath = `/${product.merchantSlug}/${product.slug}`
     const canonical = `${SITE_URL}${routePath}/`
     const description = `Compare o preço de ${product.productName} na ${product.merchantDisplayName}. Veja detalhes e produtos similares no Compare Ofertas.`
+    const category = categoryLabel(product.merchantCategory)
+    // Categoria entra no título só quando existe E não é redundante (produto
+    // já mencionando o próprio termo da categoria no nome não ganha nada
+    // repetindo) — cauda longa de verdade, não enchimento.
+    const titleCategory = category && !product.productName.toLowerCase().includes(category.toLowerCase()) ? category : null
 
     const url = await renderPage({
       template,
@@ -437,7 +501,9 @@ async function main() {
       routePath,
       initialData: product,
       head: {
-        title: `${product.productName} – ${product.merchantDisplayName} | Compare Ofertas`,
+        title: titleCategory
+          ? `${product.productName} – ${titleCategory} – ${product.merchantDisplayName} | Compare Ofertas`
+          : `${product.productName} – ${product.merchantDisplayName} | Compare Ofertas`,
         description,
         canonical,
         image: product.awImageUrl || product.merchantImageUrl,
@@ -542,8 +608,8 @@ async function main() {
       routePath,
       initialData: { items: items.slice(0, PAGE_SIZE), totalCount: items.length },
       head: {
-        title: `${categorySlug.replace(/-/g, ' ')} em ${vertical} | Compare Ofertas`,
-        description: `Compare ${items.length.toLocaleString('pt-BR')} ofertas de ${categorySlug.replace(/-/g, ' ')} em ${vertical}.`,
+        title: `${categoryHubLabel(categorySlug)} em ${vertical} | Compare Ofertas`,
+        description: `Compare ${items.length.toLocaleString('pt-BR')} ofertas de ${categoryHubLabel(categorySlug)} em ${vertical}.`,
         canonical,
       },
     })

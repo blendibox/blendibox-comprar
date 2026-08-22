@@ -5,6 +5,7 @@ import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons, fetchMerchants } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { parseBrDate } from '../lib/date'
+import { categoryHubLabel } from '../lib/categoryLabels'
 import type { CouponEntry, HubInitialData, MerchantMeta } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
@@ -207,7 +208,7 @@ export function HubPage() {
             <div className="hub-links__list">
               {displayCategories.map(([catSlug, count]) => (
                 <Link key={catSlug} to={`/${vertical}/categoria/${catSlug}`} className="hub-chip">
-                  {catSlug.replace(/-/g, ' ')} <span>({count})</span>
+                  {categoryHubLabel(catSlug)} <span>({count})</span>
                 </Link>
               ))}
             </div>

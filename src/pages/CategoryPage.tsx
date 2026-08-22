@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { TrendingDown } from 'lucide-react'
 import { useIndex } from '../hooks/useIndex'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
+import { categoryHubLabel } from '../lib/categoryLabels'
 import type { ListInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
@@ -12,6 +13,7 @@ const PAGE_SIZE = 60
 
 export function CategoryPage() {
   const { vertical = '', categorySlug = '' } = useParams()
+  const categoryLabel = categoryHubLabel(categorySlug)
   const path = `/${vertical}/categoria/${categorySlug}/`
   const [initial] = useState<ListInitialData | null>(() => peekInitialData<ListInitialData>(path))
   const { products, state } = useIndex()
@@ -57,7 +59,7 @@ export function CategoryPage() {
         <a href={`/${vertical}`}>{vertical}</a>
       </nav>
       <header className="page__header">
-        <h1 style={{ textTransform: 'capitalize' }}>{categorySlug.replace(/-/g, ' ')}</h1>
+        <h1 style={{ textTransform: 'capitalize' }}>{categoryLabel}</h1>
         <p className="page__meta">{totalCount.toLocaleString('pt-BR')} produtos</p>
       </header>
 
@@ -68,10 +70,10 @@ export function CategoryPage() {
         <div className="filters">
           <input
             type="search"
-            placeholder={`Buscar em ${categorySlug.replace(/-/g, ' ')}...`}
+            placeholder={`Buscar em ${categoryLabel}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            aria-label={`Buscar em ${categorySlug.replace(/-/g, ' ')}`}
+            aria-label={`Buscar em ${categoryLabel}`}
           />
           <select value={sort} onChange={(e) => setSort(e.target.value as SortOption)} aria-label="Ordenar por">
             {(Object.keys(SORT_LABELS) as SortOption[]).map((key) => (
