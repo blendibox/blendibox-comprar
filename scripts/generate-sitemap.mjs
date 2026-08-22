@@ -49,6 +49,13 @@ async function main() {
   const indexXml = `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${indexBody}\n</sitemapindex>\n`
   await writeFile(path.join(DIST_DIR, 'sitemap.xml'), indexXml)
 
+  // Arquivo de verificação do IndexNow (protocolo pra avisar Bing/Yandex/
+  // etc. quando uma URL muda — ver scripts/submit-indexnow.mjs). Só o
+  // conteúdo do arquivo precisa bater com a chave usada lá; sem segredo
+  // nenhum aqui, o arquivo é público por definição do protocolo.
+  const INDEXNOW_KEY = '99b0d62f28ddd1aeb5a4b368bbb6e12d'
+  await writeFile(path.join(DIST_DIR, `${INDEXNOW_KEY}.txt`), INDEXNOW_KEY)
+
   // Allow explícito pra cada bot de IA conhecido, além do wildcard geral —
   // o wildcard já libera todo mundo, mas listar nominalmente deixa a intenção
   // inequívoca (e blinda contra alguém adicionar sem querer uma regra mais

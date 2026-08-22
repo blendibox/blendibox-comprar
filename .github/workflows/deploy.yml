@@ -160,3 +160,32 @@ jobs:
       - name: Deploy no GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Job separado, só depois que o site já está no ar de verdade — o
+  # protocolo IndexNow (Bing/Yandex/Seznam/Naver; o Google não participa)
+  # confere a chave em SITE_URL/{key}.txt na hora que recebe o aviso, então
+  # precisa que o Pages já tenha publicado o dist/ novo antes de avisar.
+  # Só no cron/disparo manual, nunca em push (mesmo motivo do vídeo — não
+  # faz sentido avisar buscador externo a cada commit de desenvolvimento).
+  notify-indexnow:
+    needs: deploy
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Avisar IndexNow (Bing/Yandex) das URLs que mudaram hoje
+        continue-on-error: true
+        env:
+          SITE_URL: https://comprar.blendibox.com.br
+        run: node scripts/submit-indexnow.mjs
