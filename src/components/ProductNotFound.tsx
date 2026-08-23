@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Flame, Search, ShoppingBag, TrendingDown, TrendingUp, X } from 'lucide-react'
+import { Flame, Search, ShoppingBag, TrendingDown, TrendingUp, X } from './Icon'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import type { FeedMeta, HomeHighlights, MerchantMeta } from '../types/product'
 import { Carousel } from './Carousel'

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { Check, Heart, Mail, ShieldCheck } from 'lucide-react'
+import { Check, Heart, Mail, ShieldCheck } from './Icon'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 

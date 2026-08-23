@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { CalendarDays, Gift } from 'lucide-react'
+import { CalendarDays, Gift } from '../components/Icon'
 import { getBlogPost, getRelatedPosts } from '../data/blog'
 import { ShareBar } from '../components/ShareBar'
 import { formatSimpleDateBr } from '../lib/date'

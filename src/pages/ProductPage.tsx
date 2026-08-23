@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
-import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from 'lucide-react'
+import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from '../components/Icon'
 import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { getGalleryImages } from '../lib/images'

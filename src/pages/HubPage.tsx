@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ChevronDown, TrendingDown } from 'lucide-react'
+import { ChevronDown, TrendingDown } from '../components/Icon'
 import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons, fetchMerchants } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'

@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { Gift, Lock } from 'lucide-react'
+import { Gift, Lock } from '../components/Icon'
 import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
 import { RegistrySteps } from '../components/RegistrySteps'
 

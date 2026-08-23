@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { TrendingDown } from 'lucide-react'
+import { TrendingDown } from '../components/Icon'
 import { useIndex } from '../hooks/useIndex'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { categoryHubLabel } from '../lib/categoryLabels'

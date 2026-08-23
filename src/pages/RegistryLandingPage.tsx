@@ -16,7 +16,7 @@ import {
   ShoppingBag,
   Sparkles,
   Store,
-} from 'lucide-react'
+} from '../components/Icon'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import { formatPrice } from '../components/ProductCard'
 import { getMyLists } from '../lib/registry'

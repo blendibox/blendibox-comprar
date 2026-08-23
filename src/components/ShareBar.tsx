@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Copy, Share2 } from 'lucide-react'
+import { Check, Copy, Share2 } from './Icon'
 
 // Barra de compartilhamento do blog: visível, com link funcional de verdade
 // pra cada rede (não só ícone decorativo) + compartilhamento nativo no

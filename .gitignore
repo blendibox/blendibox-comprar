@@ -12,6 +12,10 @@ scripts/.entry-server.generated.mjs
 # não versionado (muda toda semana e é grande demais pra valer a pena no git).
 public/data/
 
+# Gerado por scripts/generate-icon-sprite.mjs (ver npm script "predev"/"build")
+# — determinístico a partir de scripts/lib/iconNames.mjs, não precisa ir pro git.
+public/icons-sprite.svg
+
 # Config/estado local do Claude Code, não é parte do projeto.
 .claude/
 

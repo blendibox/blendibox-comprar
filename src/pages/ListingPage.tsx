@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Clock, Flame, Search, ShoppingBag, TrendingDown, TrendingUp } from 'lucide-react'
+import { Clock, Flame, Search, ShoppingBag, TrendingDown, TrendingUp } from '../components/Icon'
 import { fetchHomeHighlights, fetchIndex, fetchMerchants, fetchMeta } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIndexEntry } from '../types/product'

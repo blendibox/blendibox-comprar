@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { Check, Copy, Heart, PartyPopper, Search, Trash2 } from 'lucide-react'
+import { Check, Copy, Heart, PartyPopper, Search, Trash2 } from '../components/Icon'
 import { fetchIndex, fetchProduct } from '../lib/api'
 import { matchesSearch } from '../lib/search'
 import { formatPrice } from '../components/ProductCard'

@@ -14,7 +14,7 @@ import {
   Store,
   Tag,
   Ticket,
-} from 'lucide-react'
+} from './Icon'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'

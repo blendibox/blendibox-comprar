@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check, Heart, Plus, Star, TrendingDown } from 'lucide-react'
+import { Check, Heart, Plus, Star, TrendingDown } from './Icon'
 import type { ProductIndexEntry } from '../types/product'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'

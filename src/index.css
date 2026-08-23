@@ -32,6 +32,19 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Presets padrão do lucide-react, movidos de atributo inline (repetido em
+   toda página, ver src/components/Icon.tsx) pra CSS — some/muda de cor/
+   espessura em cada um dos ~41 usos por página de produto, e essa parte é
+   igual em quase todos. Caso raro que precisa de valor diferente (coração
+   preenchido, estrela) usa style inline, que tem prioridade sobre isto. */
+.lucide {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 a {
   color: inherit;
 }

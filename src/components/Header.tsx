@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket } from 'lucide-react'
+import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket } from './Icon'
 
 const NAV_LINKS = [
   { to: '/', label: 'Início', Icon: Home },

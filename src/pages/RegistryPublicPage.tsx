@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
-import { Check, Gift, Lock } from 'lucide-react'
+import { Check, Gift, Lock } from '../components/Icon'
 import { formatPrice } from '../components/ProductCard'
 import {
   getGuestToken,

@@ -1,20 +1,8 @@
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link } from 'react-router-dom'
-import {
-  Bell,
-  Check,
-  ChevronLeft,
-  ChevronRight,
-  Copy,
-  Gift,
-  Heart,
-  Mail,
-  Search,
-  Share2,
-  Tag,
-  TrendingDown,
-  type LucideIcon,
-} from 'lucide-react'
+import { Bell, Check, ChevronLeft, ChevronRight, Copy, Gift, Heart, Mail, Search, Share2, Tag, TrendingDown } from '../components/Icon'
+
+type IconComponent = ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>
 
 // Passo a passo interativo do site. Telas "mock" em CSS/JSX (sem prints que
 // envelhecem). Um seletor de tópico dirige o mesmo carrossel — evita empilhar
@@ -207,7 +195,7 @@ function ScreenDrop({ step }: { step: number }) {
 type Topic = {
   id: string
   label: string
-  Icon: LucideIcon
+  Icon: IconComponent
   cta: { to: string; label: string }
   steps: { title: string; text: string }[]
   Screen: ComponentType<{ step: number }>
