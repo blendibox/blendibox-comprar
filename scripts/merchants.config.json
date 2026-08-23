@@ -66,7 +66,7 @@
     "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": true, "verifyImages": true  },
 
     "17697": { "slug": "dafiti", "displayName": "Dafiti BR", "vertical": "moda", "active": false },
-    "17854": { "slug": "eotica", "displayName": "Eotica BR", "vertical": "moda", "active": true },
+    "17854": { "slug": "eotica", "displayName": "Eotica BR", "vertical": "moda", "active": true, "verifyImages": true },
 
     "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true },
 
