@@ -1,5 +1,5 @@
 import { useEffect, useState, type ComponentType } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { Bell, Check, ChevronLeft, ChevronRight, Copy, Gift, Heart, Mail, Search, Share2, Tag, TrendingDown } from '../components/Icon'
 
 type IconComponent = ComponentType<{ size?: number; className?: string; 'aria-hidden'?: boolean }>

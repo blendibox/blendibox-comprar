@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { useComparator } from '../context/ComparatorContext'
 import { formatPrice } from '../components/ProductCard'
 import { CompareChart, type CompareSeries } from '../components/CompareChart'
@@ -68,7 +68,7 @@ export function ComparePage() {
                 <span className="product-card__merchant">{item.merchantDisplayName}</span>
                 <h3>{item.productName}</h3>
                 <div className="compare-card__price">{formatPrice(item.searchPrice, item.currency)}</div>
-                <Link className="cta-button" to={`/${item.merchantSlug}/${item.slug}`}>
+                <Link className="cta-button" to={`/${item.merchantSlug}/${item.slug}/`}>
                   Ver detalhes
                 </Link>
               </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Link'
 import { Flame, Search, ShoppingBag, TrendingDown, TrendingUp, X } from './Icon'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import type { FeedMeta, HomeHighlights, MerchantMeta } from '../types/product'
@@ -113,7 +113,7 @@ export function ProductNotFound() {
           <h2>Nossas lojas parceiras</h2>
           <div className="partners-grid">
             {merchants.map((m) => (
-              <Link key={m.slug} to={`/${m.slug}`} className="partners-grid__item">
+              <Link key={m.slug} to={`/${m.slug}/`} className="partners-grid__item">
                 <MerchantLogo merchantId={m.merchantId} displayName={m.displayName} className="partners-grid__logo" />
                 <span>{m.displayName}</span>
               </Link>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { Check, Copy, Heart, PartyPopper, Search, Trash2 } from '../components/Icon'
 import { fetchIndex, fetchProduct } from '../lib/api'
 import { matchesSearch } from '../lib/search'

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { useFavorites } from '../context/FavoritesContext'
 import { formatPrice } from '../components/ProductCard'
 import { PriceDropWatchForm } from '../components/PriceDropWatchForm'
@@ -37,7 +37,7 @@ export function FavoritesPage() {
                 <span className="product-card__merchant">{item.merchantDisplayName}</span>
                 <h3>{item.productName}</h3>
                 <div className="compare-card__price">{formatPrice(item.searchPrice, item.currency)}</div>
-                <Link className="cta-button" to={`/${item.merchantSlug}/${item.slug}`}>
+                <Link className="cta-button" to={`/${item.merchantSlug}/${item.slug}/`}>
                   Ver detalhes
                 </Link>
               </div>

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { CalendarDays, Gift } from '../components/Icon'
 import { blogPosts } from '../data/blog'
 import { formatSimpleDateBr } from '../lib/date'

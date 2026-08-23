@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import { Navigate, useParams } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from '../components/Icon'
 import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
@@ -113,7 +114,7 @@ export function ProductPage() {
 
   if (state === 'loading') return <p className="status">Carregando produto...</p>
   if (state === 'error' || !product) {
-    if (merchantCheck === 'exists') return <Navigate to={`/${merchant}`} replace />
+    if (merchantCheck === 'exists') return <Navigate to={`/${merchant}/`} replace />
     if (merchantCheck !== 'not-exists') return <p className="status">Carregando...</p>
     return <ProductNotFound />
   }
@@ -359,7 +360,7 @@ export function ProductPage() {
           <h2>Esse mesmo produto em outro canal</h2>
           <Link
             className="cross-channel-card"
-            to={`/${product.crossChannel.merchantSlug}/${product.crossChannel.slug}`}
+            to={`/${product.crossChannel.merchantSlug}/${product.crossChannel.slug}/`}
           >
             <img
               className="cross-channel-card__image"

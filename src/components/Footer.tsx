@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Link'
 import { Clock, Heart, Info, Link2, Play, RefreshCw, Send, ShieldCheck, Tag, TrendingDown, TrendingUp } from './Icon'
 import { fetchHomeHighlights, fetchMerchants, fetchMeta } from '../lib/api'
 import { timeAgo } from '../lib/timeAgo'

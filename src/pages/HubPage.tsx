@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
+import { Link } from '../components/Link'
 import { ChevronDown, TrendingDown } from '../components/Icon'
 import { useIndex } from '../hooks/useIndex'
 import { fetchCoupons, fetchMerchants } from '../lib/api'

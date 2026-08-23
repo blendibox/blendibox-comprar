@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Link'
 import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket } from './Icon'
 
 const NAV_LINKS = [

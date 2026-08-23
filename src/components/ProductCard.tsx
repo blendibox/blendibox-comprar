@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link } from './Link'
 import { Check, Heart, Plus, Star, TrendingDown } from './Icon'
 import type { ProductIndexEntry } from '../types/product'
 import { useComparator } from '../context/ComparatorContext'
@@ -104,7 +104,10 @@ export function ProductCard({
   // produto).
   priority?: boolean
 }) {
-  const href = `/${product.merchantSlug}/${product.slug}`
+  // Barra final consistente com o canonical/sitemap (prerender.mjs) — sem
+  // isso, o GitHub Pages redireciona (301) toda vez que esse link é aberto
+  // fora do SPA (link copiado do card, compartilhado, aberto direto).
+  const href = `/${product.merchantSlug}/${product.slug}/`
   const { isSelected, toggle, isFull } = useComparator()
   const selected = isSelected(product.merchantSlug, product.slug)
   const { isFavorite, toggle: toggleFavorite } = useFavorites()

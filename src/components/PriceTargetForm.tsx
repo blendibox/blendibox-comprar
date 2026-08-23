@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link } from './Link'
 import { Bell, Check, ChevronDown, ShieldCheck, TrendingDown } from './Icon'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
