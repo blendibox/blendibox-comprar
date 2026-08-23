@@ -133,21 +133,25 @@ export function ProductPage() {
   // conteúdo indexável de verdade sobre o histórico, não só o gráfico SVG
   // (que só aparece depois de hidratar no cliente).
   //
-  // A âncora de "hoje" é product.lastUpdated (dado do próprio JSON), nunca
-  // Date.now()/new Date() — cliente e servidor sempre concordam nesse valor
-  // porque vem do mesmo prop, evitando o erro de hidratação #418 já visto
-  // antes neste projeto quando o cálculo dependia do relógio de quem renderiza.
+  // A âncora de "hoje" nunca é Date.now()/new Date() — cliente e servidor
+  // sempre concordam nesse valor porque vem do próprio prop, evitando o erro
+  // de hidratação #418 já visto antes neste projeto quando o cálculo
+  // dependia do relógio de quem renderiza. product.lastUpdated seria o dado
+  // ideal, mas vem vazio em parte do feed (ex: LG) — por isso usa o mais
+  // recente entre ele e a última data do próprio priceHistory (que sempre
+  // existe aqui, mesma lógica de lastPriceCheck acima) como fallback.
   const lowestPricePoint = (() => {
-    if (!product.priceHistory?.length || !product.lastUpdated) return null
-    const todayIso = product.lastUpdated.slice(0, 10)
+    if (!product.priceHistory?.length) return null
+    const historyLastIso = product.priceHistory[product.priceHistory.length - 1].date
+    const lastUpdatedIso = product.lastUpdated?.slice(0, 10)
+    const todayIso = lastUpdatedIso && lastUpdatedIso > historyLastIso ? lastUpdatedIso : historyLastIso
     const windowStart = isoDateMs(todayIso) - 90 * 24 * 60 * 60 * 1000
     const candidates = product.priceHistory.filter((p) => isoDateMs(p.date) >= windowStart)
     // O preço vigente conta como válido "hoje" mesmo sem registro novo no
     // histórico (só gravamos quando o preço MUDA) — sem isso, um produto
     // parado há meses no mesmo preço ficaria de fora da comparação.
     if (product.searchPrice != null) candidates.push({ date: todayIso, price: product.searchPrice })
-    if (candidates.length === 0) return null
-    return candidates.reduce((min, p) => (p.price < min.price ? p : min))
+    return { ...candidates.reduce((min, p) => (p.price < min.price ? p : min)), todayIso }
   })()
 
   const now = new Date()
@@ -324,7 +328,7 @@ export function ProductPage() {
           {lowestPricePoint && (
             <p className="product-detail__lowest-price">
               Menor preço nos últimos 90 dias: <strong>{formatPrice(lowestPricePoint.price, product.currency)}</strong>{' '}
-              {lowestPricePoint.date === product.lastUpdated?.slice(0, 10)
+              {lowestPricePoint.date === lowestPricePoint.todayIso
                 ? '(preço atual)'
                 : `em ${formatSimpleDateBr(lowestPricePoint.date)}`}
             </p>
