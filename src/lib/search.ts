@@ -9,10 +9,17 @@
 // serem salvos no arquivo-fonte em vez do escape.
 const COMBINING_DIACRITICS = new RegExp(`[${String.fromCharCode(0x0300)}-${String.fromCharCode(0x036f)}]`, 'g')
 
+// Reta ('), curva de fechamento (U+2019) e de abertura (U+2018) — cobre o que
+// o usuário digita (reta, do teclado) e o que costuma vir nos dados de feed
+// (curva, "typographic"). Sem isso, "L'Occitane" no nome da loja não batia
+// com alguém digitando "Loccitane" sem apóstrofo nenhum.
+const APOSTROPHES = new RegExp(`[${String.fromCharCode(0x0027)}${String.fromCharCode(0x2018)}${String.fromCharCode(0x2019)}]`, 'g')
+
 export function normalizeSearchText(value: string): string {
   return value
     .normalize('NFD')
     .replace(COMBINING_DIACRITICS, '')
+    .replace(APOSTROPHES, '')
     .toLowerCase()
 }
 
