@@ -2,6 +2,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link } from './Link'
 import {
   BadgeCheck,
+  Check,
+  Copy,
   Gift,
   Lock,
   PartyPopper,
@@ -243,7 +245,15 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
           <div className="coupon-wheel__result">
             <span className="coupon-wheel__result-advertiser">{result.advertiser}</span>
             <p>{result.title}</p>
-            <span className="coupon-card__code">{result.code}</span>
+            <button
+              type="button"
+              className="coupon-card__code"
+              onClick={handleUseCoupon}
+              aria-label={codeCopied ? 'Cupom copiado' : `Copiar código do cupom ${result.code}`}
+            >
+              {result.code}
+              {codeCopied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+            </button>
             <a
               className="cta-button"
               href={result.deeplink}

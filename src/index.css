@@ -2307,6 +2307,19 @@ a {
   padding: 6px 12px;
   border-radius: 6px;
   letter-spacing: 0.05em;
+  /* Agora é <button> (clicar/tocar no próprio código copia) — reset dos
+     estilos padrão de botão do navegador, mantendo a aparência de antes. */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.coupon-card__code:hover {
+  background: #fce7f3;
 }
 
 .coupon-card__expiry {

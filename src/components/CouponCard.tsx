@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import type { CouponEntry } from '../types/product'
 import { formatBrDate } from '../lib/date'
 import { MerchantLogo } from './MerchantLogo'
+import { Check, Copy } from './Icon'
 
 export function CouponCard({ coupon }: { coupon: CouponEntry }) {
   const validUntil = formatBrDate(coupon.ends)
@@ -31,7 +32,17 @@ export function CouponCard({ coupon }: { coupon: CouponEntry }) {
         <span className="coupon-card__advertiser">{coupon.advertiser}</span>
       </div>
       <p className="coupon-card__title">{coupon.title}</p>
-      {coupon.code && <span className="coupon-card__code">{coupon.code}</span>}
+      {coupon.code && (
+        <button
+          type="button"
+          className="coupon-card__code"
+          onClick={handleUseCoupon}
+          aria-label={copied ? 'Cupom copiado' : `Copiar código do cupom ${coupon.code}`}
+        >
+          {coupon.code}
+          {copied ? <Check size={14} aria-hidden="true" /> : <Copy size={14} aria-hidden="true" />}
+        </button>
+      )}
       {validUntil && <span className="coupon-card__expiry">{`Válido até ${validUntil}`}</span>}
       <a
         className="cta-button"
