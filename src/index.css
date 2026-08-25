@@ -23,9 +23,26 @@
   --hero-field-h: 60px;
 }
 
+/* Fallback com métricas ajustadas pra Inter Variable — sem isso, o texto do
+   body inteiro "pula" (CLS alto, medido 0.97 nesse site) no instante em que
+   a fonte real termina de carregar e substitui a Arial local (que por
+   padrão ocupa um espaço físico diferente: largura de caractere, altura de
+   linha). Os valores abaixo são os mesmos que o next/font da Vercel gera
+   pra Inter — não são chute, é a mesma técnica usada em produção em escala
+   (ver https://developer.chrome.com/blog/font-fallbacks/).
+*/
+@font-face {
+  font-family: 'Inter Fallback';
+  src: local('Arial');
+  ascent-override: 90.49%;
+  descent-override: 22.56%;
+  line-gap-override: 0%;
+  size-adjust: 107.06%;
+}
+
 body {
   margin: 0;
-  font-family: 'Inter Variable', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-family: 'Inter Variable', 'Inter Fallback', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   background: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
