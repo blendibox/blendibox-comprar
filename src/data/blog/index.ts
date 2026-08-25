@@ -20,6 +20,7 @@ import { quantoCustaMontarUmEnxovalDeBebe } from './quanto-custa-montar-um-enxov
 import { codigoParceiroBling } from './codigo-parceiro-bling'
 import { livrosMaisVendidosNaAmazon } from './livros-mais-vendidos-na-amazon'
 import { beneficiosDeAssinarSamsClub } from './beneficios-de-assinar-sams-club'
+import { allugatorAssinaturaDeEletronicos } from './allugator-assinatura-de-eletronicos'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -45,6 +46,7 @@ export const blogPosts: BlogPost[] = [
   codigoParceiroBling,
   livrosMaisVendidosNaAmazon,
   beneficiosDeAssinarSamsClub,
+  allugatorAssinaturaDeEletronicos,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
