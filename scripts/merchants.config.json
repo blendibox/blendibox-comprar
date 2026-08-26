@@ -23,6 +23,7 @@
     "30511": { "slug": "lego", "displayName": "Lego BR", "vertical": "brinquedos", "active": true },
     "17740": { "slug": "kippling", "displayName": "Kipling BR", "vertical": "moda", "active": true },
     "51271": { "slug": "mizuno", "displayName": "Mizuno BR", "vertical": "esporte", "active": true, "priority": true },
+    "23659": { "slug": "asics", "displayName": "ASICS BR", "vertical": "esporte", "active": true, "priority": true },
 
     "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": true },
     "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": true },
