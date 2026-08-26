@@ -40,6 +40,33 @@
   size-adjust: 107.06%;
 }
 
+/* Wrapper do EmailField (src/components/EmailField.tsx) — o <span> em si só
+   existe pra dar um ponto de referência (position:relative) pra sugestão
+   flutuar por baixo (position:absolute), sem empurrar nem depender do
+   layout de quem envolve (funciona igual dentro de campo com ícone, label
+   empilhado ou formulário simples — os 7 lugares do site que pedem e-mail). */
+.email-field {
+  position: relative;
+  display: inline-flex;
+}
+
+.email-field__suggestion {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 5;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border: none;
+  border-radius: 6px;
+  background: var(--color-teal-a11y);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 body {
   margin: 0;
   font-family: 'Inter Variable', 'Inter Fallback', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;

@@ -17,6 +17,7 @@ import {
   Tag,
   Ticket,
 } from './Icon'
+import { EmailField } from './EmailField'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
@@ -221,14 +222,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
             <p className="coupon-wheel__gate-lead">
               <Lock size={14} aria-hidden="true" /> {`Você caiu em ${result.advertiser}! Digite seu e-mail pra revelar o cupom:`}
             </p>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Seu e-mail"
-              required
-              aria-label="Seu e-mail"
-            />
+            <EmailField value={email} onChange={setEmail} placeholder="Seu e-mail" required aria-label="Seu e-mail" />
             <label className="coupon-wheel__consent">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
               {' Aceito a '}

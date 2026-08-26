@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from './Link'
+import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 type Status = 'idle' | 'sending' | 'done' | 'error'
@@ -54,14 +55,7 @@ export function NewsletterSignup() {
     <div className="newsletter">
       <h3>Cupons e alertas por e-mail</h3>
       <form className="newsletter__form" onSubmit={handleSubmit}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Seu e-mail"
-          required
-          aria-label="Seu e-mail"
-        />
+        <EmailField value={email} onChange={setEmail} placeholder="Seu e-mail" required aria-label="Seu e-mail" />
         <label className="newsletter__consent">
           <input type="checkbox" required />
           {' Concordo em receber e-mails com cupons e ofertas, e li e aceito a '}

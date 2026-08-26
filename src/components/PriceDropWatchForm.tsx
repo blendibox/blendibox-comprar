@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from './Link'
 import { Check, Heart, Mail, ShieldCheck } from './Icon'
+import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 
@@ -132,10 +133,9 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
       <form className="pricedrop-bar__form" onSubmit={handleSubmit}>
         <div className="pricedrop-bar__field">
           <Mail size={16} aria-hidden="true" />
-          <input
-            type="email"
+          <EmailField
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
             placeholder="Seu melhor e-mail"
             required
             aria-label="Seu e-mail"

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { Gift, Lock } from '../components/Icon'
+import { EmailField } from '../components/EmailField'
 import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
 import { RegistrySteps } from '../components/RegistrySteps'
 
@@ -103,13 +104,7 @@ export function CreateRegistryPage() {
 
         <label className="registry-form__field">
           <span>E-mail do responsável</span>
-          <input
-            type="email"
-            value={ownerEmail}
-            onChange={(e) => setOwnerEmail(e.target.value)}
-            placeholder="seu@email.com"
-            required
-          />
+          <EmailField value={ownerEmail} onChange={setOwnerEmail} placeholder="seu@email.com" required />
           <small className="registry-form__hint">
             <Lock size={12} aria-hidden="true" /> É por aqui que você vai acessar e editar sua lista.
           </small>

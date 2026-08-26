@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from './Link'
 import { Check, Gift, Mail, ShieldCheck } from './Icon'
+import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 const DISMISSED_KEY = 'compare-ofertas:topbar-dismissed'
@@ -124,10 +125,9 @@ export function TopBar() {
       <form className="topbar__form" onSubmit={handleSubmit}>
         <div className="topbar__field">
           <Mail size={16} aria-hidden="true" />
-          <input
-            type="email"
+          <EmailField
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
             placeholder="Seu melhor e-mail"
             required
             aria-label="Seu e-mail"

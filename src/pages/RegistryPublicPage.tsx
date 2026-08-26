@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { Check, Gift, Lock } from '../components/Icon'
+import { EmailField } from '../components/EmailField'
 import { formatPrice } from '../components/ProductCard'
 import {
   getGuestToken,
@@ -150,7 +151,7 @@ function GuestGate({ id, title, onDone }: { id: string; title: string; onDone: (
       <form className="registry-form" onSubmit={submit}>
         <label className="registry-form__field">
           <span>Seu e-mail</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="seu@email.com" />
+          <EmailField value={email} onChange={setEmail} required placeholder="seu@email.com" />
         </label>
         <label className="registry-form__check">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />

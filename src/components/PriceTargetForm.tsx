@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from './Link'
 import { Bell, Check, ChevronDown, ShieldCheck, TrendingDown } from './Icon'
+import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 import { formatPrice } from './ProductCard'
@@ -113,10 +114,9 @@ export function PriceTargetForm({ product }: { product: FavoriteItem }) {
             ))}
           </div>
 
-          <input
-            type="email"
+          <EmailField
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={setEmail}
             placeholder="Seu melhor e-mail"
             required
             aria-label="Seu e-mail"
