@@ -29,6 +29,10 @@ const HEIGHT = 1920
 const SITE_DOMAIN = 'comprar.blendibox.com.br'
 
 const OPENING_SECONDS = 4
+// Tempo de pausa por pergunta, em segundos — cada segundo vira 1 frame do
+// número descendo (12, 11, ... 1), tempo real pra ler a pergunta e pensar
+// antes da resposta aparecer (não é só um "3-2-1" decorativo).
+const COUNTDOWN_SECONDS = 12
 const COUNTDOWN_FRAME_SECONDS = 1
 const REVEAL_SECONDS = 5
 const CLOSING_SECONDS = 5
@@ -141,6 +145,12 @@ function openingSlideSvg(quiz) {
 
 function questionCountdownSvg({ index, total, question, count }) {
   const questionLines = wrapText(question, 24, 6)
+  // Número de 2 dígitos (12, 11, 10) precisa de fonte menor pra não estourar
+  // o círculo — o baseline reajusta junto, senão o número de 1 dígito depois
+  // (quando o count cai pra <10) fica visualmente "flutuando" fora do centro.
+  const twoDigits = count >= 10
+  const numberFontSize = twoDigits ? 190 : 260
+  const numberY = twoDigits ? 1284 : 1315
   return `${svgHeader()}${backgroundDecor()}
     <text x="${WIDTH / 2}" y="170" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="800" fill="${COLORS.teal}">PERGUNTA ${index} DE ${total}</text>
     <text x="${WIDTH / 2}" y="255" text-anchor="middle" font-family="Arial, sans-serif" font-size="50" font-weight="800" fill="${COLORS.white}">
@@ -149,8 +159,8 @@ function questionCountdownSvg({ index, total, question, count }) {
     <rect x="${WIDTH / 2 - 230}" y="660" width="460" height="80" rx="40" fill="${COLORS.navyLight}" stroke="${COLORS.pink}" stroke-width="3" />
     <text x="${WIDTH / 2}" y="712" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" font-weight="800" fill="${COLORS.pink}">PODE OU NÃO PODE?</text>
     <circle cx="${WIDTH / 2}" cy="1200" r="220" fill="${COLORS.navyLight}" stroke="${COLORS.teal}" stroke-width="14" />
-    <text x="${WIDTH / 2}" y="1315" text-anchor="middle" font-family="Arial, sans-serif" font-size="260" font-weight="900" fill="${COLORS.white}">${count}</text>
-    <text x="${WIDTH / 2}" y="1480" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="${COLORS.gray}">pensa rápido...</text>
+    <text x="${WIDTH / 2}" y="${numberY}" text-anchor="middle" font-family="Arial, sans-serif" font-size="${numberFontSize}" font-weight="900" fill="${COLORS.white}">${count}</text>
+    <text x="${WIDTH / 2}" y="1480" text-anchor="middle" font-family="Arial, sans-serif" font-size="30" fill="${COLORS.gray}">tempo pra pensar...</text>
     ${wordmark(WIDTH / 2, HEIGHT - 100, 'middle')}
   </svg>`
 }
@@ -259,8 +269,8 @@ async function main() {
     const index = i + 1
     console.log(`Gerando pergunta ${index}/${total}: "${q.question.slice(0, 50)}..."`)
 
-    for (const count of [3, 2, 1]) {
-      const countPath = path.join(OUT_DIR, `slide-${String(index).padStart(2, '0')}a-count${count}.png`)
+    for (let count = COUNTDOWN_SECONDS; count >= 1; count--) {
+      const countPath = path.join(OUT_DIR, `slide-${String(index).padStart(2, '0')}a-count${String(count).padStart(2, '0')}.png`)
       await sharp(Buffer.from(questionCountdownSvg({ index, total, question: q.question, count }))).png().toFile(countPath)
       slides.push({ file: countPath, seconds: COUNTDOWN_FRAME_SECONDS })
     }
