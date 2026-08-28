@@ -30,3 +30,10 @@ public/icons-sprite.svg
 /daily-video.mp4
 /daily-video.metadata.json
 upload_youtube.bat
+
+# Vídeo de quiz gerado por scripts/generate-quiz-video.mjs — mesmo motivo do
+# vídeo diário acima (artefato local, gerado sob demanda pra postar manual).
+.quiz-video-tmp/
+scripts/.quiz-data.video-tmp.mjs
+/quiz-video.mp4
+/quiz-video.metadata.json
