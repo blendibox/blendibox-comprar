@@ -443,12 +443,37 @@ async function main() {
     console.log(`[campos opcionais] preenchimento no feed: ${summary}`)
   }
 
+  // Alguns merchants de calçado/roupa (ex: Mizuno, ASICS) registram cada
+  // tamanho do mesmo modelo como um "produto" à parte no feed — sem nenhum
+  // campo de "produto pai" pra agrupar. Como o preço é idêntico entre
+  // tamanhos, esses irmãos dominavam o topo do ranqueamento por proximidade
+  // de preço abaixo, lotando "produtos similares" com o MESMO produto em
+  // outro tamanho em vez de alternativa de verdade (achado real: um tênis
+  // Mizuno com 11 tamanhos cadastrados, todos a R$1.299,99). Sem campo
+  // confiável pra agrupar, baseProductKey() tira o número de tamanho
+  // (ex: 34-46) e o tamanho em letra (P/M/G/GG/XG) isolados do nome —
+  // heurística, não perfeita, mas o pior caso é só mostrar um pouco menos
+  // de itens no carrossel, nunca junta produto errado de verdade.
+  const SIZE_LETTER_TOKENS = new Set(['pp', 'p', 'm', 'g', 'gg', 'xg', 'xgg', 'xxg'])
+  function baseProductKey(name) {
+    return stripAccents(name)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((token) => !/^\d{2,3}$/.test(token) && !SIZE_LETTER_TOKENS.has(token))
+      .join(' ')
+      .trim()
+  }
+  const baseKeyByProduct = new Map(products.map((p) => [p, baseProductKey(p.productName)]))
+
   // Produtos similares: mesma categoria dentro do mesmo vertical, ordenados
   // por proximidade de preço (fallback pros primeiros da categoria se não
   // houver preço em algum dos dois lados).
   for (const product of products) {
     const categoryKey = `${product.vertical}/${product.categorySlug}`
-    const siblings = byCategoryKey.get(categoryKey).filter((p) => p.awProductId !== product.awProductId)
+    const ownBaseKey = baseKeyByProduct.get(product)
+    const siblings = byCategoryKey
+      .get(categoryKey)
+      .filter((p) => p.awProductId !== product.awProductId && (!ownBaseKey || baseKeyByProduct.get(p) !== ownBaseKey))
     const price = product.searchPrice ?? product.displayPrice
     const sorted =
       price == null
