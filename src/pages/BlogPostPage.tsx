@@ -4,6 +4,7 @@ import { Link } from '../components/Link'
 import { CalendarDays, Gift } from '../components/Icon'
 import { getBlogPost, getRelatedPosts } from '../data/blog'
 import { ShareBar } from '../components/ShareBar'
+import { QuizPodeNaoPode } from '../components/QuizPodeNaoPode'
 import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
 import type { BlogContentBlock } from '../types/blog'
@@ -104,6 +105,8 @@ function Block({ block }: { block: BlogContentBlock }) {
           <img src={block.imgSrc} alt={block.alt} loading="lazy" />
         </a>
       )
+    case 'quiz':
+      return <QuizPodeNaoPode title={block.title} questions={block.questions} />
   }
 }
 

@@ -4957,6 +4957,137 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   height: auto;
 }
 
+/* Quiz "pode ou não pode" embutido em artigo (ver QuizPodeNaoPode.tsx) */
+.quiz-pnp {
+  margin: 28px 0;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: var(--color-band);
+}
+
+.quiz-pnp__title {
+  margin: 0 0 4px;
+  font-size: 17px;
+}
+
+.quiz-pnp__progress {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #6b6b6b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quiz-pnp__question {
+  margin: 0 0 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.quiz-pnp__choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.quiz-pnp__choice {
+  flex: 1;
+  min-width: 120px;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.quiz-pnp__choice:disabled {
+  cursor: default;
+}
+
+.quiz-pnp__choice--pode {
+  color: var(--color-green);
+}
+
+.quiz-pnp__choice--nao-pode {
+  color: var(--color-pink);
+}
+
+.quiz-pnp__choice--reveal-correct {
+  border-color: var(--color-green);
+  background: #ecfdf3;
+}
+
+.quiz-pnp__choice--reveal-wrong {
+  border-color: var(--color-pink);
+  background: #fdf2f8;
+  opacity: 0.7;
+}
+
+.quiz-pnp__feedback {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.quiz-pnp__feedback p {
+  margin: 2px 0 0;
+  color: #444;
+}
+
+.quiz-pnp__feedback--correct {
+  background: #ecfdf3;
+  color: var(--color-green);
+}
+
+.quiz-pnp__feedback--wrong {
+  background: #fdf2f8;
+  color: var(--color-pink);
+}
+
+.quiz-pnp__next {
+  margin-top: 16px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-navy);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.quiz-pnp__result {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.quiz-pnp__score {
+  font-size: 16px;
+  margin: 0 0 16px;
+}
+
+.quiz-pnp__score strong {
+  color: var(--color-teal-a11y);
+}
+
+.quiz-pnp__restart {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: var(--color-navy);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .blog-post__faq {
   margin-top: 28px;
 }
