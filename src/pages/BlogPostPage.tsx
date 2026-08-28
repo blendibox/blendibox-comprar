@@ -3,8 +3,10 @@ import { useParams } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { CalendarDays, Gift } from '../components/Icon'
 import { getBlogPost, getRelatedPosts } from '../data/blog'
+import { getQuiz } from '../data/quizzes'
 import { ShareBar } from '../components/ShareBar'
 import { QuizPodeNaoPode } from '../components/QuizPodeNaoPode'
+import { QuizEleitoral } from '../components/QuizEleitoral'
 import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
 import type { BlogContentBlock } from '../types/blog'
@@ -45,7 +47,7 @@ function renderInline(text: string): ReactNode {
   return parts.length > 1 ? parts : text
 }
 
-function Block({ block }: { block: BlogContentBlock }) {
+function Block({ block, url }: { block: BlogContentBlock; url: string }) {
   switch (block.type) {
     case 'h2':
       return <h2>{block.text}</h2>
@@ -107,6 +109,20 @@ function Block({ block }: { block: BlogContentBlock }) {
       )
     case 'quiz':
       return <QuizPodeNaoPode title={block.title} questions={block.questions} />
+    case 'quiz-premium': {
+      const quiz = getQuiz(block.quizSlug)
+      if (!quiz) return null
+      return (
+        <QuizEleitoral
+          eyebrow={quiz.eyebrow}
+          title={quiz.title}
+          subtitle={quiz.subtitle}
+          qualityBadge={quiz.qualityBadge}
+          questions={quiz.questions}
+          url={url}
+        />
+      )
+    }
   }
 }
 
@@ -143,7 +159,7 @@ export function BlogPostPage() {
 
       <div className="blog-post__body">
         {post.blocks.map((block, i) => (
-          <Block key={i} block={block} />
+          <Block key={i} block={block} url={url} />
         ))}
       </div>
 

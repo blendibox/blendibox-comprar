@@ -379,6 +379,23 @@ function blogPostJsonLd(post, canonical) {
   return jsonLd
 }
 
+// Quiz: mesmo padrão de blogPostJsonLd acima, mas sem tipo Quiz do
+// schema.org — não é um tipo com suporte confirmado nos rich results do
+// Google, então evitamos inventar/usar um schema não verificado. Só o
+// BreadcrumbList (via "Quiz" em vez de "Blog").
+function quizJsonLd(quiz, canonical) {
+  const breadcrumbLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Quiz', item: `${SITE_URL}/quizzes/` },
+      { '@type': 'ListItem', position: 3, name: quiz.title, item: canonical },
+    ],
+  }
+  return [breadcrumbLd]
+}
+
 function inlineJson(value) {
   // Evita que o JSON quebre a tag <script> caso algum texto contenha "</script>".
   return JSON.stringify(value).replace(/</g, '\\u003c')
@@ -425,7 +442,7 @@ async function walkProductFiles(dir) {
 
 async function main() {
   const template = await readFile(path.join(DIST_DIR, 'index.html'), 'utf-8')
-  const { renderRoute, blogPosts } = await buildEntryServer()
+  const { renderRoute, blogPosts, quizzes } = await buildEntryServer()
 
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
@@ -754,6 +771,55 @@ async function main() {
       },
     })
     generatedUrls.push({ url, changefreq: 'monthly', priority: 0.6, lastmod: post.updatedAt || post.publishedAt })
+  }
+
+  // --- Quiz: listagem + uma página por quiz (fonte: src/data/quizzes, mesma
+  // do cliente, reexportada via entry-server — nunca duplica conteúdo). ---
+  const quizListJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Quiz | Compare Ofertas',
+    url: `${SITE_URL}/quizzes/`,
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: quizzes.map((quiz, i) => ({
+        '@type': 'ListItem',
+        position: i + 1,
+        url: `${SITE_URL}/quizzes/${quiz.slug}/`,
+        name: quiz.title,
+      })),
+    },
+  }
+  const quizListUrl = await renderPage({
+    template,
+    renderRoute,
+    routePath: '/quizzes',
+    initialData: undefined,
+    head: {
+      title: 'Quiz | Compare Ofertas',
+      description: 'Teste seus conhecimentos em quizzes rápidos, sempre baseados em fonte oficial.',
+      canonical: `${SITE_URL}/quizzes/`,
+      jsonLd: [quizListJsonLd],
+    },
+  })
+  generatedUrls.push({ url: quizListUrl, changefreq: 'weekly', priority: 0.5, lastmod: buildDate })
+
+  for (const quiz of quizzes) {
+    const routePath = `/quizzes/${quiz.slug}`
+    const canonical = `${SITE_URL}${routePath}/`
+    const url = await renderPage({
+      template,
+      renderRoute,
+      routePath,
+      initialData: undefined,
+      head: {
+        title: quiz.metaTitle,
+        description: quiz.metaDescription,
+        canonical,
+        jsonLd: quizJsonLd(quiz, canonical),
+      },
+    })
+    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.6, lastmod: quiz.publishedAt })
   }
 
   await writeFile(path.join(DIST_DIR, '.routes-manifest.json'), JSON.stringify(generatedUrls))

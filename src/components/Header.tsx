@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from './Link'
-import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket } from './Icon'
+import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket, Vote } from './Icon'
 
 const NAV_LINKS = [
   { to: '/', label: 'Início', Icon: Home },
@@ -9,6 +9,7 @@ const NAV_LINKS = [
   { to: '/favoritos', label: 'Favoritos', Icon: Heart },
   { to: '/comparar', label: 'Comparar', Icon: ArrowLeftRight },
   { to: '/blog', label: 'Blog', Icon: BookOpen },
+  { to: '/quizzes', label: 'Quiz', Icon: Vote },
   { to: '/como-funciona', label: 'Como funciona', Icon: HelpCircle },
 ]
 

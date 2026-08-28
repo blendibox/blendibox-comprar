@@ -18,6 +18,13 @@ export type BlogContentBlock =
       title: string
       questions: { question: string; correctAnswer: boolean; explanation: string }[]
     }
+  // Versão "premium" do quiz acima — cabeçalho com estatística, barra de
+  // progresso visual, citação da base legal por pergunta, modo "ver todas
+  // as respostas" e compartilhar resultado. Componente à parte
+  // (QuizEleitoral.tsx), não substitui o 'quiz' simples — os dois convivem.
+  // Referencia por slug o mesmo quiz da seção /quizzes (src/data/quizzes) —
+  // nunca duplica os dados das perguntas dentro do artigo.
+  | { type: 'quiz-premium'; quizSlug: string }
 
 export type BlogFaqItem = { q: string; a: string }
 

@@ -19,6 +19,8 @@ import { RegistryManagePage } from './pages/RegistryManagePage'
 import { WalkthroughPage } from './pages/WalkthroughPage'
 import { BlogPage } from './pages/BlogPage'
 import { BlogPostPage } from './pages/BlogPostPage'
+import { QuizzesPage } from './pages/QuizzesPage'
+import { QuizDetailPage } from './pages/QuizDetailPage'
 
 export function AppRoutes() {
   return (
@@ -37,6 +39,8 @@ export function AppRoutes() {
         <Route path="como-funciona" element={<WalkthroughPage />} />
         <Route path="blog" element={<BlogPage />} />
         <Route path="blog/:slug" element={<BlogPostPage />} />
+        <Route path="quizzes" element={<QuizzesPage />} />
+        <Route path="quizzes/:slug" element={<QuizDetailPage />} />
         <Route path="listas/nova" element={<CreateRegistryPage />} />
         <Route path="lista/:id" element={<RegistryPublicPage />} />
         <Route path="lista/:id/editar" element={<RegistryManagePage />} />

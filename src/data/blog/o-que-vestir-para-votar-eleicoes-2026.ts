@@ -19,7 +19,7 @@ export const oQueVestirParaVotarEleicoes2026: BlogPost = {
     { type: 'h2', text: 'O que é permitido' },
     {
       type: 'p',
-      text: 'Segundo o guia oficial "Propaganda Eleitoral — Pode/Não Pode" do Ministério Público do Rio Grande do Sul (com base na Lei nº 9.504/1997 e na Resolução TSE nº 23.610/2019), no dia da eleição a eleitora e o eleitor podem usar bandeira, broche, dístico, adesivo ou camiseta para manifestar preferência de forma individual e silenciosa — inclusive ao entrar no local de votação.',
+      text: 'Segundo o [guia oficial "Propaganda Eleitoral — Pode/Não Pode"](https://www.mprs.mp.br/media/areas/eleitoral/arquivos/guia_propagandaeleitoral_2026_mprs.pdf) do Ministério Público do Rio Grande do Sul (com base na Lei nº 9.504/1997 e na Resolução TSE nº 23.610/2019), no dia da eleição a eleitora e o eleitor podem usar bandeira, broche, dístico, adesivo ou camiseta para manifestar preferência de forma individual e silenciosa — inclusive ao entrar no local de votação.',
     },
     {
       type: 'p',
@@ -44,39 +44,7 @@ export const oQueVestirParaVotarEleicoes2026: BlogPost = {
       type: 'p',
       text: 'Fiscal partidário tem regra própria: pode usar crachá com nome e sigla do partido, mas sem vestuário padronizado.',
     },
-    {
-      type: 'quiz',
-      title: 'Teste o que você entendeu: pode ou não pode?',
-      questions: [
-        {
-          question: 'Você pode vestir a camiseta do seu candidato pra ir votar, sozinho, sem fazer barulho?',
-          correctAnswer: true,
-          explanation:
-            'Pode. A manifestação individual e silenciosa é permitida por lei, inclusive dentro da seção eleitoral.',
-        },
-        {
-          question: 'Um grupo de 10 pessoas pode ir junto ao local de votação, todos vestindo a mesma camiseta de campanha?',
-          correctAnswer: false,
-          explanation: 'Não pode. Isso caracteriza aglomeração com vestuário padronizado, expressamente proibida.',
-        },
-        {
-          question: 'Você pode distribuir camisetas do seu candidato pra outros eleitores na fila?',
-          correctAnswer: false,
-          explanation:
-            'Não pode. Mesmo sendo permitido usar individualmente, distribuir material (camiseta, adesivo, santinho) no dia da eleição é proibido.',
-        },
-        {
-          question: 'O fiscal de partido pode usar um crachá com o nome e a sigla do partido dentro da seção eleitoral?',
-          correctAnswer: true,
-          explanation: 'Pode, desde que seja só o crachá — sem vestuário padronizado.',
-        },
-        {
-          question: 'Você pode ficar conversando com outros eleitores na fila tentando convencê-los a votar no seu candidato?',
-          correctAnswer: false,
-          explanation: 'Não pode. Abordar ou tentar persuadir outros eleitores no dia da votação é "boca de urna", proibida por lei.',
-        },
-      ],
-    },
+    { type: 'quiz-premium', quizSlug: 'o-que-pode-e-nao-pode-nas-eleicoes' },
     { type: 'h2', text: 'Dicas práticas pro dia da votação' },
     {
       type: 'ul',
@@ -87,6 +55,10 @@ export const oQueVestirParaVotarEleicoes2026: BlogPost = {
         'Leve uma bolsa pequena e prática: você vai precisar ter as mãos livres pra manusear documento e assinar a lista de votação.',
         'Confira a previsão do tempo — outubro no Brasil já é primavera, com dias quentes em boa parte do país e chuva de verão em outras regiões, dependendo de onde você mora.',
       ],
+    },
+    {
+      type: 'p',
+      text: 'Fonte: [Eleições Gerais 2026 — Propaganda Eleitoral — Pode/Não Pode (PDF)](https://www.mprs.mp.br/media/areas/eleitoral/arquivos/guia_propagandaeleitoral_2026_mprs.pdf), Ministério Público do Rio Grande do Sul, com base na Lei nº 9.504/1997 e na Resolução TSE nº 23.610/2019.',
     },
   ],
   faq: [

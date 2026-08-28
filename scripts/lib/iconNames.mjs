@@ -22,6 +22,7 @@ export const ICON_NAMES = [
   'Copy',
   'Crown',
   'Flame',
+  'GraduationCap',
   'Gift',
   'Heart',
   'HelpCircle',
@@ -38,6 +39,7 @@ export const ICON_NAMES = [
   'Play',
   'Plus',
   'RefreshCw',
+  'Scale',
   'Search',
   'Send',
   'Share2',
@@ -52,5 +54,6 @@ export const ICON_NAMES = [
   'Trash2',
   'TrendingDown',
   'TrendingUp',
+  'Vote',
   'X',
 ]
