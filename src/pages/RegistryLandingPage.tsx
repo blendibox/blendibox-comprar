@@ -287,6 +287,10 @@ export function RegistryLandingPage() {
         <h2>Como funciona</h2>
         <p style={{ textAlign: 'center', margin: '-8px 0 18px' }}>
           <Link to="/como-funciona" className="registry-landing__seelink">Ver o passo a passo interativo →</Link>
+          {' · '}
+          <Link to="/quizzes/como-funciona-a-lista-de-presentes" className="registry-landing__seelink">
+            Teste o que você sabe sobre a lista →
+          </Link>
         </p>
         <div className="registry-landing__steps">
           {STEPS.map(({ Icon, title, text }, i) => (

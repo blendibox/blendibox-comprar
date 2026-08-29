@@ -15,6 +15,15 @@ export function FavoritesPage() {
             ? 'Clique no coração de um produto na listagem pra salvar aqui e acompanhar depois.'
             : `${items.length} produto${items.length === 1 ? '' : 's'} salvo${items.length === 1 ? '' : 's'}`}
         </p>
+        <p style={{ textAlign: 'center', margin: '4px 0 0' }}>
+          <Link to="/quizzes/como-funcionam-os-favoritos" className="registry-landing__seelink">
+            Teste o que você sabe sobre os Favoritos →
+          </Link>
+          {' · '}
+          <Link to="/quizzes/como-funciona-o-aviso-de-queda-de-preco" className="registry-landing__seelink">
+            Como funciona o aviso de queda de preço →
+          </Link>
+        </p>
       </header>
 
       {items.length === 0 ? (

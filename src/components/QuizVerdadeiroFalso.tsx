@@ -1,19 +1,17 @@
 import { useState } from 'react'
-import { BookOpen, Check, Clock, GraduationCap, PartyPopper, Scale, ShieldCheck, Vote, X } from './Icon'
+import { Bell, BookOpen, Check, Clock, Gift, GraduationCap, Heart, PartyPopper, Scale, ShieldCheck, Vote, X } from './Icon'
 import { ShareBar } from './ShareBar'
+import type { QuizIcon, QuizQuestion } from '../types/quiz'
 
-interface QuizQuestion {
-  question: string
-  correctAnswer: boolean
-  explanation: string
-  legalBasis: string
-}
+const HEADER_ICONS: Record<QuizIcon, typeof Vote> = { Vote, Gift, Bell, Heart }
 
-interface QuizEleitoralProps {
+interface QuizVerdadeiroFalsoProps {
   eyebrow: string
   title: string
   subtitle: string
   qualityBadge: string
+  icon: QuizIcon
+  footnote?: string
   questions: QuizQuestion[]
   // URL canônica da página onde o quiz está (a do próprio quiz em
   // /quizzes/:slug, ou a do artigo do blog quando embutido via bloco
@@ -23,20 +21,21 @@ interface QuizEleitoralProps {
   url: string
 }
 
-// Versão "premium" do quiz "pode ou não pode" (ver também QuizPodeNaoPode.tsx,
-// mantido como está — este é um componente à parte, não substitui aquele).
-// Cabeçalho com estatística ao vivo, barra de progresso visual, citação da
-// base legal por pergunta (mesma fonte oficial do texto do artigo — nunca
-// inventada aqui), modo "ver todas as respostas" e compartilhar resultado.
+// Quiz "verdadeiro ou falso" premium — cabeçalho com estatística ao vivo,
+// barra de progresso visual, explicação por pergunta (+ citação de base
+// legal, quando existe — só pra quizzes sobre lei, ex: o eleitoral), modo
+// "ver todas as respostas" e compartilhar o quiz (não o resultado — convida
+// quem recebe a FAZER o quiz, ver ShareBar mais abaixo).
 //
 // Estado guarda a resposta de CADA pergunta (não só a atual) — é o que
 // permite montar a tela de revisão no final sem precisar refazer o quiz.
-export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, questions, url }: QuizEleitoralProps) {
+export function QuizVerdadeiroFalso({ eyebrow, title, subtitle, qualityBadge, icon, footnote, questions, url }: QuizVerdadeiroFalsoProps) {
   const [current, setCurrent] = useState(0)
   const [selections, setSelections] = useState<(boolean | null)[]>(() => new Array(questions.length).fill(null))
   const [finished, setFinished] = useState(false)
   const [reviewMode, setReviewMode] = useState(false)
 
+  const HeaderIcon = HEADER_ICONS[icon]
   const total = questions.length
   const score = selections.filter((sel, i) => sel !== null && sel === questions[i].correctAnswer).length
   const answeredCount = selections.filter((s) => s !== null).length
@@ -74,16 +73,16 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
 
   const resultMessage =
     score === total
-      ? 'Você manda muito bem! Sabe exatamente o que pode e o que não pode.'
+      ? 'Você manda muito bem! Sabe exatamente como funciona.'
       : score >= Math.ceil(total * 0.6)
-        ? 'Você está bem informado, mas ainda vale revisar algumas regras antes de votar.'
-        : 'Vale a pena revisar as regras com calma antes do dia da votação.'
+        ? 'Você está bem informado, mas ainda vale revisar alguns detalhes.'
+        : 'Vale a pena revisar as respostas com calma.'
 
   return (
     <div className="quiz-el">
       <header className="quiz-el__header">
         <div className="quiz-el__header-icon">
-          <Vote size={28} aria-hidden="true" />
+          <HeaderIcon size={28} aria-hidden="true" />
         </div>
         <div>
           <span className="quiz-el__eyebrow">{eyebrow}</span>
@@ -135,7 +134,7 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
               onClick={() => choose(true)}
               disabled={isAnswered}
             >
-              <Check size={18} aria-hidden="true" /> Pode
+              <Check size={18} aria-hidden="true" /> Verdadeiro
             </button>
             <button
               type="button"
@@ -143,7 +142,7 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
               onClick={() => choose(false)}
               disabled={isAnswered}
             >
-              <X size={18} aria-hidden="true" /> Não pode
+              <X size={18} aria-hidden="true" /> Falso
             </button>
           </div>
 
@@ -151,17 +150,19 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
             <div className={`quiz-el__feedback${isCorrect ? ' is-correct' : ' is-wrong'}`}>
               <div className="quiz-el__feedback-head">
                 {isCorrect ? <Check size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
-                <strong>{isCorrect ? 'Acertou!' : q.correctAnswer ? 'Pode.' : 'Não pode.'}</strong>
+                <strong>{isCorrect ? 'Acertou!' : q.correctAnswer ? 'Verdadeiro.' : 'Falso.'}</strong>
                 <span className="quiz-el__feedback-tag">{isCorrect ? 'RESPOSTA CORRETA' : 'RESPOSTA INCORRETA'}</span>
               </div>
               <p className="quiz-el__feedback-text">{q.explanation}</p>
-              <div className="quiz-el__legal">
-                <Scale size={16} aria-hidden="true" />
-                <div>
-                  <strong>Base legal</strong>
-                  <span>{q.legalBasis}</span>
+              {q.legalBasis && (
+                <div className="quiz-el__legal">
+                  <Scale size={16} aria-hidden="true" />
+                  <div>
+                    <strong>Base legal</strong>
+                    <span>{q.legalBasis}</span>
+                  </div>
                 </div>
-              </div>
+              )}
               <button type="button" className="quiz-el__next" onClick={next}>
                 {isLast ? 'Ver resultado →' : 'Próxima pergunta →'}
               </button>
@@ -225,10 +226,12 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
                   <strong>{`${i + 1}. ${item.question}`}</strong>
                 </div>
                 <p className="quiz-el__feedback-text">{item.explanation}</p>
-                <div className="quiz-el__legal">
-                  <Scale size={16} aria-hidden="true" />
-                  <span>{item.legalBasis}</span>
-                </div>
+                {item.legalBasis && (
+                  <div className="quiz-el__legal">
+                    <Scale size={16} aria-hidden="true" />
+                    <span>{item.legalBasis}</span>
+                  </div>
+                )}
               </div>
             )
           })}
@@ -238,10 +241,9 @@ export function QuizEleitoral({ eyebrow, title, subtitle, qualityBadge, question
         </div>
       )}
 
-      {answeredCount === 0 && (
+      {answeredCount === 0 && footnote && (
         <p className="quiz-el__footnote">
-          <ShieldCheck size={14} aria-hidden="true" /> Todas as respostas são baseadas na Lei das Eleições (Lei nº 9.504/97) e nas
-          resoluções do TSE.
+          <ShieldCheck size={14} aria-hidden="true" /> {footnote}
         </p>
       )}
     </div>

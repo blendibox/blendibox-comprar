@@ -6,7 +6,7 @@ import { getBlogPost, getRelatedPosts } from '../data/blog'
 import { getQuiz } from '../data/quizzes'
 import { ShareBar } from '../components/ShareBar'
 import { QuizPodeNaoPode } from '../components/QuizPodeNaoPode'
-import { QuizEleitoral } from '../components/QuizEleitoral'
+import { QuizVerdadeiroFalso } from '../components/QuizVerdadeiroFalso'
 import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
 import type { BlogContentBlock } from '../types/blog'
@@ -113,11 +113,13 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
       const quiz = getQuiz(block.quizSlug)
       if (!quiz) return null
       return (
-        <QuizEleitoral
+        <QuizVerdadeiroFalso
           eyebrow={quiz.eyebrow}
           title={quiz.title}
           subtitle={quiz.subtitle}
           qualityBadge={quiz.qualityBadge}
+          icon={quiz.icon}
+          footnote={quiz.footnote}
           questions={quiz.questions}
           url={url}
         />

@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { getQuiz } from '../data/quizzes'
-import { QuizEleitoral } from '../components/QuizEleitoral'
+import { QuizVerdadeiroFalso } from '../components/QuizVerdadeiroFalso'
 import { ShareBar } from '../components/ShareBar'
 import { SITE_URL } from '../config/site'
 
@@ -29,11 +29,13 @@ export function QuizDetailPage() {
 
       <ShareBar url={url} title={quiz.title} />
 
-      <QuizEleitoral
+      <QuizVerdadeiroFalso
         eyebrow={quiz.eyebrow}
         title={quiz.title}
         subtitle={quiz.subtitle}
         qualityBadge={quiz.qualityBadge}
+        icon={quiz.icon}
+        footnote={quiz.footnote}
         questions={quiz.questions}
         url={url}
       />
