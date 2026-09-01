@@ -44,6 +44,7 @@
     "106763": { "slug": "sharkninja", "displayName": "Shark-Ninja BR", "vertical": "casa", "active": true },
     "78292": { "slug": "webfones", "displayName": "Webfones BR", "vertical": "casa", "active": true },
     "19675": { "slug": "continental", "displayName": "Continental BR", "vertical": "casa", "active": true, "verifyImages": true  },
+    "31405": { "slug": "yamamura", "displayName": "Yamamura BR", "vertical": "casa", "active": true },
 
     "17648": { "slug": "cea", "displayName": "C&A BR", "vertical": "moda", "active": false },
     "100553": { "slug": "calvinklein", "displayName": "Calvin Klein BR", "vertical": "moda", "active": true },
