@@ -41,7 +41,7 @@ export const aMeninaDosGravetosLivroSobreLutoEInventario: BlogPost = {
     },
     {
       type: 'p',
-      text: 'É esse o fio que dá título ao livro: uma menina que aprende a se esconder, e que passa a vida inteira trazendo para fora — em tecido, em código, em paredes de uma casa construída com as próprias mãos — tudo aquilo que só existia dentro dela. Até entender que a última coisa que faltava trazer à luz era ela mesma.',
+      text: 'É esse o fio que dá título ao livro: uma menina que tinha o instinto de se esconder, e que passa a vida inteira trazendo para fora — em tecido, em código, em paredes de uma casa construída com as próprias mãos — tudo aquilo que só existia dentro dela. Até entender que a última coisa que faltava trazer à luz era ela mesma.',
     },
     { type: 'h2', text: 'Uma narrativa que prende do início ao fim' },
     {
