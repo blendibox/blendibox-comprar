@@ -52,7 +52,7 @@ export const aMeninaDosGravetosLivroSobreLutoEInventario: BlogPost = {
     },
     {
       type: 'quote',
-      text: 'No meio de tudo que eles deixaram — no inventário, essa palavra fria pra coisa mais quente e mais difícil que existe.',
+      text: 'Sentei no chão e comecei a separar. Uma pilha pra cada um... De um lado, o que já tinha sido resolvido; do outro, o que ainda estava aberto.',
     },
     {
       type: 'p',
@@ -69,16 +69,16 @@ export const aMeninaDosGravetosLivroSobreLutoEInventario: BlogPost = {
         'Pra quem gosta de relatos reais, sem fórmula pronta, sobre reconstruir a própria vida',
       ],
     },
+    {
+      type: 'quote',
+      text: 'Se ela alcançar uma pessoa que também se esconde, que também acha que precisa dar conta de tudo sozinha, então guardá-la só pra mim seria só mais um jeito de me esconder.',
+    },
     { type: 'h2', text: 'Preço, formato e onde ler' },
     {
       type: 'p',
       text: 'O eBook [A Menina dos Gravetos](' +
         AMAZON_LINK +
         ') está disponível na Loja Kindle da Amazon por R$ 9,90 — ou de graça para quem tem assinatura Kindle Unlimited. São 133 páginas, em português, e dá pra ler no Kindle ou no app gratuito da Amazon, em celular, tablet ou computador — não precisa ter o aparelho físico.',
-    },
-    {
-      type: 'quote',
-      text: 'A casa era dela para transformar, e minha só para obedecer.',
     },
     {
       type: 'p',
