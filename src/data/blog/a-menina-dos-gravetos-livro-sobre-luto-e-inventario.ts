@@ -43,6 +43,25 @@ export const aMeninaDosGravetosLivroSobreLutoEInventario: BlogPost = {
       type: 'p',
       text: 'É esse o fio que dá título ao livro: uma menina que aprende a se esconder, e que passa a vida inteira trazendo para fora — em tecido, em código, em paredes de uma casa construída com as próprias mãos — tudo aquilo que só existia dentro dela. Até entender que a última coisa que faltava trazer à luz era ela mesma.',
     },
+    { type: 'h2', text: 'Uma narrativa que prende do início ao fim' },
+    {
+      type: 'p',
+      text: 'Diante do perigo ou do desconhecido, o que o seu corpo faz? O primeiro instinto de Lila foi se esconder debaixo da cama. O segundo foi tentar erguer o próprio mundo com galhos secos recolhidos na calçada. Quando os adultos jogaram fora os seus tijolos de madeira, chamando-os de sujeira, ela não parou de construir — apenas trocou de material.',
+    },
+    {
+      type: 'p',
+      text: 'Numa narrativa crua, poética e profundamente honesta, [A Menina dos Gravetos](' +
+        AMAZON_LINK +
+        ') guia o leitor pelos vãos e escadas de uma vida moldada pela urgência de se virar sozinha. Entre as regras rígidas de uma igreja na juventude, a solidão de uma casa cheia, as marcas invisíveis da parentalização e os golpes do luto, Lila costura as feridas do passado com a mesma firmeza com que projeta as suas paredes.',
+    },
+    {
+      type: 'quote',
+      text: 'Este livro não é só o relato de uma sobrevivente. É um espelho para quem já precisou engolir o choro, inventar o próprio caminho e aprender, no sufoco, a amar sem desaparecer.',
+    },
+    {
+      type: 'p',
+      text: 'É esse tom — sem filtro, sem enfeite, mas com uma escrita cuidada — que faz o livro prender do início ao fim, principalmente pra quem gosta de relato pessoal de verdade, não a versão editada que a gente costuma contar dos próprios traumas.',
+    },
     { type: 'h2', text: 'Não é só uma história — também é um guia prático de inventário' },
     {
       type: 'p',
