@@ -23,6 +23,7 @@ import { beneficiosDeAssinarSamsClub } from './beneficios-de-assinar-sams-club'
 import { allugatorAssinaturaDeEletronicos } from './allugator-assinatura-de-eletronicos'
 import { brazilcoreModaCopaDoMundo2026 } from './brazilcore-moda-copa-do-mundo-2026'
 import { oQueVestirParaVotarEleicoes2026 } from './o-que-vestir-para-votar-eleicoes-2026'
+import { aMeninaDosGravetosLivroSobreLutoEInventario } from './a-menina-dos-gravetos-livro-sobre-luto-e-inventario'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
@@ -51,6 +52,7 @@ export const blogPosts: BlogPost[] = [
   allugatorAssinaturaDeEletronicos,
   brazilcoreModaCopaDoMundo2026,
   oQueVestirParaVotarEleicoes2026,
+  aMeninaDosGravetosLivroSobreLutoEInventario,
 ].sort((a, b) => (a.publishedAt < b.publishedAt ? 1 : -1))
 
 export function getBlogPost(slug: string): BlogPost | undefined {
