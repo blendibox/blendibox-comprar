@@ -102,9 +102,18 @@ export function ProductExitIntentCoupon({
           </p>
         )}
 
-        <button type="button" className="product-exit-coupon__dismiss" onClick={() => setOpen(false)}>
+        {/* Vai pra loja mesmo sem o cupom — quem clicou aqui já ia sair de
+            qualquer jeito, então pelo menos aproveita o clique. Fechar o
+            popup sem sair é o botão × ali em cima, não este link. */}
+        <a
+          className="product-exit-coupon__dismiss"
+          href={dealHref}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          onClick={() => setOpen(false)}
+        >
           Continuar sem o cupom
-        </button>
+        </a>
       </div>
     </div>
   )
