@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Ticket } from './Icon'
+import { Clock, Gift, Heart, Tag } from './Icon'
 import { CouponCodeButton } from './CouponCodeButton'
 import { useExitIntent } from '../hooks/useExitIntent'
+import { formatBrDate } from '../lib/date'
 import type { CouponEntry } from '../types/product'
 
 // Exit-intent específico da página de produto: em vez de sortear (como a
@@ -34,6 +35,16 @@ export function ProductExitIntentCoupon({
     { enabled: !shown },
   )
 
+  // Prazo real do próprio cupom (quando existe) — nunca uma urgência
+  // inventada tipo "por tempo limitado" sem data nenhuma por trás.
+  const validUntil = formatBrDate(coupon.ends)
+
+  function copyCode() {
+    if (coupon.code) {
+      navigator.clipboard.writeText(coupon.code).catch(() => {})
+    }
+  }
+
   if (!open) return null
 
   return (
@@ -42,15 +53,58 @@ export function ProductExitIntentCoupon({
         <button className="coupon-wheel-modal__close" onClick={() => setOpen(false)} aria-label="Fechar">
           {'×'}
         </button>
-        <div className="product-exit-coupon__icon">
-          <Ticket size={28} aria-hidden="true" />
+
+        <div className="product-exit-coupon__icon-wrap" aria-hidden="true">
+          <span className="product-exit-coupon__spark product-exit-coupon__spark--tl" />
+          <span className="product-exit-coupon__spark product-exit-coupon__spark--tr" />
+          <span className="product-exit-coupon__spark product-exit-coupon__spark--bl" />
+          <span className="product-exit-coupon__spark product-exit-coupon__spark--br" />
+          <div className="product-exit-coupon__icon">
+            <Gift size={28} aria-hidden="true" />
+          </div>
         </div>
-        <h2 className="coupon-wheel-modal__title">Espera! Não saia sem seu cupom</h2>
-        <p className="coupon-wheel-modal__hint">{`${coupon.title} — só na ${merchantDisplayName}`}</p>
-        {coupon.code && <CouponCodeButton code={coupon.code} />}
-        <a className="cta-button" href={dealHref} target="_blank" rel="noopener noreferrer sponsored" onClick={() => setOpen(false)}>
-          {`Ir para a ${merchantDisplayName}`}
+
+        <h2 className="product-exit-coupon__title">
+          <span>Espera!</span> <strong>{coupon.title}</strong> <Heart size={20} fill="currentColor" aria-hidden="true" />
+        </h2>
+        <p className="coupon-wheel-modal__hint">{`Só na ${merchantDisplayName}`}</p>
+
+        {coupon.code && (
+          <div className="product-exit-coupon__ticket">
+            <div className="product-exit-coupon__ticket-code">
+              <span className="product-exit-coupon__ticket-value">{coupon.code}</span>
+              <span className="product-exit-coupon__ticket-label">Seu cupom de desconto</span>
+            </div>
+            <CouponCodeButton code={coupon.code} variant="icon" />
+          </div>
+        )}
+
+        <a
+          className="cta-button product-exit-coupon__cta"
+          href={dealHref}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          onClick={() => {
+            copyCode()
+            setOpen(false)
+          }}
+        >
+          {coupon.code && <Tag size={17} aria-hidden="true" />}
+          <span className="product-exit-coupon__cta-text">
+            {coupon.code ? `Copiar cupom e ir para a ${merchantDisplayName}` : `Ir para a ${merchantDisplayName}`}
+          </span>
+          <span className="product-exit-coupon__cta-arrow">→</span>
         </a>
+
+        {validUntil && (
+          <p className="product-exit-coupon__expiry">
+            <Clock size={14} aria-hidden="true" /> {`Cupom válido até ${validUntil}`}
+          </p>
+        )}
+
+        <button type="button" className="product-exit-coupon__dismiss" onClick={() => setOpen(false)}>
+          Continuar sem o cupom
+        </button>
       </div>
     </div>
   )

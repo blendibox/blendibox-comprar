@@ -1250,20 +1250,181 @@ a {
 /* Popup de exit-intent da página de produto (ver ProductExitIntentCoupon) —
    reaproveita o overlay/modal da roleta (.coupon-wheel-overlay/-modal) pra
    consistência visual, só ajusta o que é específico daqui. */
+.product-exit-coupon__icon-wrap {
+  position: relative;
+  width: 64px;
+  margin: 0 auto 14px;
+}
+
 .product-exit-coupon__icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 12px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  background: var(--color-band);
+  background: #fdf2f8;
   color: var(--color-pink);
 }
 
-.product-exit-coupon .coupon-card__code {
-  margin: 4px auto 16px;
+/* Riscos decorativos ao redor do ícone (mesma ideia do confete no hero da
+   lista de presentes) — só um floreio, não carregam dado nenhum. */
+.product-exit-coupon__spark {
+  position: absolute;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-teal);
+}
+
+.product-exit-coupon__spark--tl {
+  top: -6px;
+  left: -14px;
+  transform: rotate(-40deg);
+}
+
+.product-exit-coupon__spark--tr {
+  top: -6px;
+  right: -14px;
+  transform: rotate(40deg);
+  background: var(--color-pink);
+}
+
+.product-exit-coupon__spark--bl {
+  bottom: 2px;
+  left: -18px;
+  transform: rotate(20deg);
+  background: var(--color-pink);
+}
+
+.product-exit-coupon__spark--br {
+  bottom: 2px;
+  right: -18px;
+  transform: rotate(-20deg);
+  background: var(--color-teal);
+}
+
+/* Riscos são só floreio — em modal estreito ficariam colados na borda. */
+@media (max-width: 380px) {
+  .product-exit-coupon__spark {
+    display: none;
+  }
+}
+
+.product-exit-coupon__title {
+  margin: 0 0 4px;
+  font-size: 22px;
+  line-height: 1.3;
+}
+
+.product-exit-coupon__title span {
+  color: var(--color-text);
+}
+
+.product-exit-coupon__title strong {
+  color: var(--color-pink);
+}
+
+.product-exit-coupon__title svg {
+  vertical-align: -2px;
+  color: var(--color-pink);
+}
+
+/* "Ticket" do cupom — código grande à esquerda, botão de copiar à direita,
+   separados por uma borda tracejada vertical (como um talão de verdade). */
+.product-exit-coupon__ticket {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 18px 0;
+  padding: 14px 16px;
+  border: 1.5px dashed var(--color-pink);
+  background: #fdf2f8;
+  border-radius: 12px;
+}
+
+.product-exit-coupon__ticket-code {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.product-exit-coupon__ticket-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #be185d;
+}
+
+.product-exit-coupon__ticket-label {
+  font-size: 12px;
+  color: #8a5068;
+}
+
+.coupon-card__code--icon {
+  flex-direction: column;
+  gap: 2px;
+  border: none;
+  background: none;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.product-exit-coupon__cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 14px;
+  padding: 14px 16px;
+}
+
+.product-exit-coupon__cta svg {
+  flex-shrink: 0;
+}
+
+.product-exit-coupon__cta-text {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.product-exit-coupon__cta-arrow {
+  flex-shrink: 0;
+}
+
+.product-exit-coupon__expiry {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: #8a5068;
+}
+
+.product-exit-coupon__dismiss {
+  display: block;
+  width: 100%;
+  margin: 14px 0 0;
+  padding-top: 14px;
+  border: none;
+  border-top: 1px solid #eee;
+  background: none;
+  color: #8a8a8a;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.product-exit-coupon__dismiss:hover {
+  color: #555;
+  text-decoration: underline;
 }
 
 /* Pill simples por padrão (usado inline no preço da página de produto); no
