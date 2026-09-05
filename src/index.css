@@ -1220,6 +1220,52 @@ a {
   background: #0c5a52;
 }
 
+/* Cupom em destaque logo antes do CTA principal — o objetivo é a pessoa não
+   precisar sair procurando cupom em outro lugar antes de clicar em "Ver
+   oferta" (motivo comum de abandono: procura, se distrai, não volta). */
+.product-detail__coupon-highlight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  border: 1.5px dashed var(--color-pink);
+  background: #fdf2f8;
+  border-radius: 10px;
+  color: #be185d;
+}
+
+.product-detail__coupon-highlight-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  font-size: 14px;
+}
+
+.product-detail__coupon-highlight-body strong {
+  color: var(--color-text);
+}
+
+/* Popup de exit-intent da página de produto (ver ProductExitIntentCoupon) —
+   reaproveita o overlay/modal da roleta (.coupon-wheel-overlay/-modal) pra
+   consistência visual, só ajusta o que é específico daqui. */
+.product-exit-coupon__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  border-radius: 50%;
+  background: var(--color-band);
+  color: var(--color-pink);
+}
+
+.product-exit-coupon .coupon-card__code {
+  margin: 4px auto 16px;
+}
+
 /* Pill simples por padrão (usado inline no preço da página de produto); no
    card da listagem vira selo sobre a imagem via o seletor abaixo. */
 .discount-badge {

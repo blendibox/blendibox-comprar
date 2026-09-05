@@ -21,15 +21,12 @@ import { EmailField } from './EmailField'
 import { fetchCoupons } from '../lib/api'
 import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { useExitIntent } from '../hooks/useExitIntent'
 
 const MAX_SEGMENTS = 8
 // Mostra a roleta por exit-intent no máximo uma vez por navegador — nunca de
 // novo depois disso, pra não ser repetitivo em quem volta ao site.
 const EXIT_INTENT_SHOWN_KEY = 'compare-ofertas:coupon-wheel-exit-shown'
-// Só arma a detecção depois desse tempo na página — sem isso, um movimento
-// reflexo do mouse logo ao chegar (ex: indo fechar uma aba de fundo) dispara
-// a roleta pra quem acabou de entrar, o que não é "saindo do site" de verdade.
-const EXIT_INTENT_ARM_DELAY_MS = 4000
 const SEGMENT_COLORS = ['#14b8a6', '#1e3a5f', '#ec4899', '#0f766e', '#22c55e', '#2563eb', '#14b8a6', '#db2777']
 // Ícones só decorativos por fatia (não têm relação com a loja) — dão o visual
 // colorido do mockup sem inventar dado nenhum sobre o cupom.
@@ -69,7 +66,11 @@ function hasShownExitIntent() {
 // penaliza ranqueamento mobile. Exit-intent é baseado em mouse saindo por
 // cima da viewport, então não existe em touch — não dispara em mobile por
 // natureza, o que evita esse risco de qualquer forma nesses acessos.
-export function CouponWheelButton() {
+//
+// suppressExitIntent: página de produto tem seu próprio exit-intent, mais
+// específico (o cupom real daquela loja, não um sorteio) — nesses casos o
+// Layout passa true aqui pra não empilhar os dois popups na mesma saída.
+export function CouponWheelButton({ suppressExitIntent = false }: { suppressExitIntent?: boolean }) {
   const [open, setOpen] = useState(false)
   const [coupons, setCoupons] = useState<CouponEntry[] | null>(null)
 
@@ -90,33 +91,17 @@ export function CouponWheelButton() {
   // e-mail realmente funciona (depende do Worker de newsletter configurado).
   const canShow = segments.length >= 3 && NEWSLETTER_CONFIGURED
 
-  useEffect(() => {
-    if (!canShow || open || isSubscribed() || hasShownExitIntent()) return
-
-    let armed = false
-    const armTimer = window.setTimeout(() => {
-      armed = true
-    }, EXIT_INTENT_ARM_DELAY_MS)
-
-    function handleMouseOut(e: MouseEvent) {
-      // relatedTarget nulo + clientY <= 0 é o sinal clássico de mouse saindo
-      // por cima da janela (rumo à barra de abas/endereço) — não qualquer
-      // movimento entre elementos da própria página.
-      if (!armed || e.relatedTarget || e.clientY > 0) return
+  useExitIntent(
+    () => {
       setOpen(true)
       try {
         localStorage.setItem(EXIT_INTENT_SHOWN_KEY, '1')
       } catch {
         // segue sem persistir — pior caso, mostra de novo numa próxima visita
       }
-    }
-
-    document.addEventListener('mouseout', handleMouseOut)
-    return () => {
-      window.clearTimeout(armTimer)
-      document.removeEventListener('mouseout', handleMouseOut)
-    }
-  }, [canShow, open])
+    },
+    { enabled: canShow && !open && !suppressExitIntent && !isSubscribed() && !hasShownExitIntent() },
+  )
 
   if (!canShow) return null
 

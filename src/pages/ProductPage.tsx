@@ -8,6 +8,8 @@ import { getGalleryImages } from '../lib/images'
 import type { CouponEntry, Product, ProductIndexEntry } from '../types/product'
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
+import { CouponCodeButton } from '../components/CouponCodeButton'
+import { ProductExitIntentCoupon } from '../components/ProductExitIntentCoupon'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { PriceTargetForm } from '../components/PriceTargetForm'
 import { Carousel } from '../components/Carousel'
@@ -165,6 +167,10 @@ export function ProductPage() {
   const visibleCoupons = hasMoreCoupons
     ? merchantCoupons.slice(0, MAX_COUPONS_SHOWN - 1)
     : merchantCoupons.slice(0, MAX_COUPONS_SHOWN)
+  // O cupom em destaque (perto do CTA e no popup de exit-intent) prioriza um
+  // com código de verdade pra copiar — sem isso, cai no primeiro cupom válido
+  // mesmo sem código (ainda vale mostrar a promoção, só não tem o que copiar).
+  const highlightCoupon = merchantCoupons.find((c) => c.isVoucher && c.code) ?? merchantCoupons[0] ?? null
 
   return (
     <div className="page product-page">
@@ -294,6 +300,15 @@ export function ProductPage() {
             <Check size={14} strokeWidth={2.5} aria-hidden="true" />
             {lastPriceCheck ? ` Preço verificado em ${formatSimpleDateBr(lastPriceCheck)}` : ' Preço verificado diariamente'}
           </div>
+          {highlightCoupon && (
+            <div className="product-detail__coupon-highlight">
+              <Ticket size={18} aria-hidden="true" />
+              <div className="product-detail__coupon-highlight-body">
+                <strong>{highlightCoupon.title}</strong>
+                {highlightCoupon.code && <CouponCodeButton code={highlightCoupon.code} />}
+              </div>
+            </div>
+          )}
           <div className="product-detail__actions">
             <a
               className="cta-button"
@@ -414,6 +429,14 @@ export function ProductPage() {
             )}
           </Carousel>
         </section>
+      )}
+
+      {highlightCoupon && (
+        <ProductExitIntentCoupon
+          coupon={highlightCoupon}
+          merchantDisplayName={product.merchantDisplayName}
+          dealHref={product.awDeepLink}
+        />
       )}
     </div>
   )

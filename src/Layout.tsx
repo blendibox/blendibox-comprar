@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation, useMatch } from 'react-router-dom'
 import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { ComparatorTray } from './components/ComparatorTray'
@@ -17,6 +17,10 @@ export function Layout() {
   // de preço" o próprio componente esconde o FAB via classe no body enquanto
   // estiver visível (some a barra, o FAB volta) — ver PriceDropWatchForm.
   const onRegistry = pathname.startsWith('/lista') || pathname === '/como-funciona'
+  // Página de produto tem seu próprio exit-intent (o cupom real daquela
+  // loja, em ProductExitIntentCoupon) — suprime o da roleta sitewide aqui
+  // pra não empilhar os dois popups na mesma saída (ver CouponWheel.tsx).
+  const onProductPage = Boolean(useMatch(':merchant/:slug'))
 
   return (
     <ComparatorProvider>
@@ -29,7 +33,7 @@ export function Layout() {
         </main>
         <Footer />
         <ComparatorTray />
-        {!onRegistry && <CouponWheelButton />}
+        {!onRegistry && <CouponWheelButton suppressExitIntent={onProductPage} />}
       </FavoritesProvider>
     </ComparatorProvider>
   )
