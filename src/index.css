@@ -2792,6 +2792,7 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   align-items: center;
   justify-content: center;
   padding: 16px;
+  animation: coupon-wheel-overlay-in 0.25s ease-out;
 }
 
 .coupon-wheel-modal {
@@ -2808,6 +2809,27 @@ body.has-fixed-bottombar .coupon-wheel-fab {
      do disco (mesmo sem sair visualmente da roleta) como overflow horizontal
      do modal, e pisca uma barra de rolagem lateral durante o spin. */
   overflow-x: hidden;
+  animation: coupon-wheel-modal-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes coupon-wheel-overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes coupon-wheel-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coupon-wheel-overlay,
+  .coupon-wheel-modal {
+    animation: none;
+  }
 }
 
 .coupon-wheel-modal h2 {

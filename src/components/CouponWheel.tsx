@@ -23,6 +23,13 @@ import type { CouponEntry } from '../types/product'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
 
 const MAX_SEGMENTS = 8
+// Mostra a roleta por exit-intent no máximo uma vez por navegador — nunca de
+// novo depois disso, pra não ser repetitivo em quem volta ao site.
+const EXIT_INTENT_SHOWN_KEY = 'compare-ofertas:coupon-wheel-exit-shown'
+// Só arma a detecção depois desse tempo na página — sem isso, um movimento
+// reflexo do mouse logo ao chegar (ex: indo fechar uma aba de fundo) dispara
+// a roleta pra quem acabou de entrar, o que não é "saindo do site" de verdade.
+const EXIT_INTENT_ARM_DELAY_MS = 4000
 const SEGMENT_COLORS = ['#14b8a6', '#1e3a5f', '#ec4899', '#0f766e', '#22c55e', '#2563eb', '#14b8a6', '#db2777']
 // Ícones só decorativos por fatia (não têm relação com a loja) — dão o visual
 // colorido do mockup sem inventar dado nenhum sobre o cupom.
@@ -47,9 +54,21 @@ function isSubscribed() {
   }
 }
 
+function hasShownExitIntent() {
+  try {
+    return Boolean(localStorage.getItem(EXIT_INTENT_SHOWN_KEY))
+  } catch {
+    return false
+  }
+}
+
 // Botão flutuante — colocado em qualquer página, abre o popup da roleta sob
-// demanda (nunca abre sozinho: popup automático ao carregar a página conta
-// como "interstitial intrusivo" pro Google, além de ser mais chato).
+// demanda. Também abre sozinho por exit-intent (mouse saindo por cima da
+// janela, sinal de que a pessoa está indo fechar a aba) — nunca ao carregar a
+// página, que aí sim conta como "interstitial intrusivo" pro Google e
+// penaliza ranqueamento mobile. Exit-intent é baseado em mouse saindo por
+// cima da viewport, então não existe em touch — não dispara em mobile por
+// natureza, o que evita esse risco de qualquer forma nesses acessos.
 export function CouponWheelButton() {
   const [open, setOpen] = useState(false)
   const [coupons, setCoupons] = useState<CouponEntry[] | null>(null)
@@ -66,10 +85,40 @@ export function CouponWheelButton() {
     return shuffle(withCode).slice(0, MAX_SEGMENTS)
   }, [coupons])
 
-  // Só mostra o botão se der pra montar uma roleta de verdade (pelo menos
-  // alguns cupons reais e distintos pra sortear) e se o gate por e-mail
-  // realmente funciona (depende do Worker de newsletter configurado).
-  if (segments.length < 3 || !NEWSLETTER_CONFIGURED) return null
+  // Só mostra o botão (e a roleta) se der pra montar uma roleta de verdade
+  // (pelo menos alguns cupons reais e distintos pra sortear) e se o gate por
+  // e-mail realmente funciona (depende do Worker de newsletter configurado).
+  const canShow = segments.length >= 3 && NEWSLETTER_CONFIGURED
+
+  useEffect(() => {
+    if (!canShow || open || isSubscribed() || hasShownExitIntent()) return
+
+    let armed = false
+    const armTimer = window.setTimeout(() => {
+      armed = true
+    }, EXIT_INTENT_ARM_DELAY_MS)
+
+    function handleMouseOut(e: MouseEvent) {
+      // relatedTarget nulo + clientY <= 0 é o sinal clássico de mouse saindo
+      // por cima da janela (rumo à barra de abas/endereço) — não qualquer
+      // movimento entre elementos da própria página.
+      if (!armed || e.relatedTarget || e.clientY > 0) return
+      setOpen(true)
+      try {
+        localStorage.setItem(EXIT_INTENT_SHOWN_KEY, '1')
+      } catch {
+        // segue sem persistir — pior caso, mostra de novo numa próxima visita
+      }
+    }
+
+    document.addEventListener('mouseout', handleMouseOut)
+    return () => {
+      window.clearTimeout(armTimer)
+      document.removeEventListener('mouseout', handleMouseOut)
+    }
+  }, [canShow, open])
+
+  if (!canShow) return null
 
   return (
     <>
@@ -96,6 +145,15 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
     return () => {
       if (timeoutRef.current) window.clearTimeout(timeoutRef.current)
     }
+  }, [])
+
+  // Som ao abrir o modal (clique no FAB ou exit-intent). Navegador pode
+  // bloquear áudio sem interação prévia do usuário (política de autoplay) —
+  // nesse caso .play() rejeita a Promise; ignoramos, sem quebrar a roleta.
+  useEffect(() => {
+    const audio = new Audio('/sounds/roleta.mp3')
+    audio.volume = 0.6
+    audio.play().catch(() => {})
   }, [])
 
   // Mesmo comportamento do CouponCard: aba nova abre a loja, essa aba não
