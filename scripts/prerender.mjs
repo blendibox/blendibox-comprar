@@ -505,7 +505,7 @@ async function main() {
 
     const routePath = `/${product.merchantSlug}/${product.slug}`
     const canonical = `${SITE_URL}${routePath}/`
-    const description = `Compare o preço de ${product.productName} na ${product.merchantDisplayName}. Veja detalhes e produtos similares no Compare Ofertas.`
+    const description = `Compare o menor preço de ${product.productName} na ${product.merchantDisplayName}. Veja detalhes e produtos similares no Compare Ofertas.`
     const category = categoryLabel(product.merchantCategory)
     // Categoria entra no título só quando existe E não é redundante (produto
     // já mencionando o próprio termo da categoria no nome não ganha nada
@@ -519,8 +519,8 @@ async function main() {
       initialData: product,
       head: {
         title: titleCategory
-          ? `${product.productName} – ${titleCategory} – ${product.merchantDisplayName} | Compare Ofertas`
-          : `${product.productName} – ${product.merchantDisplayName} | Compare Ofertas`,
+          ? `Comprar ${product.productName} – ${titleCategory} – ${product.merchantDisplayName} | Compare Ofertas`
+          : `Comprar ${product.productName} – ${product.merchantDisplayName} | Compare Ofertas`,
         description,
         canonical,
         image: product.awImageUrl || product.merchantImageUrl,

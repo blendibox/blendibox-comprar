@@ -5,11 +5,13 @@
 // em SITE_URL/{key}.txt esteja acessível na hora em que o buscador confere.
 //
 // "Mudou hoje" aqui é definido de forma honesta e verificável: a home
-// (sempre relevante), a listagem do blog, e os produtos que tiveram queda
+// (sempre relevante), a listagem do blog, os produtos que tiveram queda
 // de preço real hoje (data/price-drops-today.json — a mesma fonte usada
-// pelo vídeo diário e pelos posts do Telegram). Não republica o catálogo
-// inteiro todo dia só porque tecnicamente "pode" ter mudado — isso seria
-// spam pro endpoint e não reflete o que de fato mudou.
+// pelo vídeo diário e pelos posts do Telegram), e as páginas /cupons/{loja}
+// cujo conjunto de cupons realmente mudou hoje (data/coupon-changes-today.json
+// — ver fetch-coupons.mjs). Não republica o catálogo inteiro nem as ~40
+// páginas de cupom todo dia só porque tecnicamente "pode" ter mudado — isso
+// seria spam pro endpoint e não reflete o que de fato mudou.
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -32,13 +34,23 @@ async function main() {
     .then(JSON.parse)
     .catch(() => [])
 
+  const couponChangesPath = path.join(ROOT, 'data', 'coupon-changes-today.json')
+  const changedCouponSlugs = await readFile(couponChangesPath, 'utf-8')
+    .then(JSON.parse)
+    .catch(() => [])
+
   const urls = new Set([`${SITE_URL}/`, `${SITE_URL}/blog/`])
   for (const item of drops) {
     urls.add(`${SITE_URL}/${item.merchantSlug}/${item.slug}/`)
   }
+  for (const slug of changedCouponSlugs) {
+    urls.add(`${SITE_URL}/cupons/${slug}/`)
+  }
 
   const urlList = [...urls]
-  console.log(`[indexnow] ${urlList.length} URLs mudaram hoje (1 home + 1 blog + ${drops.length} produto(s) em queda de preço).`)
+  console.log(
+    `[indexnow] ${urlList.length} URLs mudaram hoje (1 home + 1 blog + ${drops.length} produto(s) em queda de preço + ${changedCouponSlugs.length} página(s) de cupom).`
+  )
 
   for (let i = 0; i < urlList.length; i += MAX_URLS_PER_BATCH) {
     const batch = urlList.slice(i, i + MAX_URLS_PER_BATCH)

@@ -17,6 +17,11 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
+// Pequeno e versionado em data/ (não gitignored como public/data/) — precisa
+// sobreviver entre runs do GitHub Actions pra saber o que já existia ontem.
+// Mesmo padrão de data/price-history.json (ver update-price-history.mjs).
+const SNAPSHOT_PATH = path.join(ROOT, 'data', 'coupon-snapshot.json')
+const CHANGES_TODAY_PATH = path.join(ROOT, 'data', 'coupon-changes-today.json')
 
 const PUBLISHER_ID = process.env.AWIN_PUBLISHER_ID || '2104315'
 const TOKEN = process.env.AWIN_PROMOTIONS_TOKEN
@@ -65,6 +70,8 @@ async function main() {
     console.log('AWIN_PROMOTIONS_TOKEN não definida — build segue sem cupons.')
     await mkdir(OUTPUT_DIR, { recursive: true })
     await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), '[]')
+    await mkdir(path.dirname(CHANGES_TODAY_PATH), { recursive: true })
+    await writeFile(CHANGES_TODAY_PATH, '[]')
     return
   }
 
@@ -111,7 +118,31 @@ async function main() {
   await mkdir(OUTPUT_DIR, { recursive: true })
   await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), JSON.stringify(coupons))
 
+  // Detecta lojas cujo conjunto de cupons mudou desde o último fetch (novo
+  // cupom, ou algum expirou/sumiu) — usado por submit-indexnow.mjs pra
+  // avisar Bing/Yandex só das páginas /cupons/{loja} que de fato mudaram
+  // hoje, em vez de reenviar as ~40 todo dia (mesmo princípio do
+  // price-drops-today.json em update-price-history.mjs).
+  const idsByMerchant = new Map()
+  for (const c of coupons) {
+    if (!c.merchantSlug) continue
+    if (!idsByMerchant.has(c.merchantSlug)) idsByMerchant.set(c.merchantSlug, [])
+    idsByMerchant.get(c.merchantSlug).push(c.id)
+  }
+  const newSnapshot = Object.fromEntries(
+    [...idsByMerchant.entries()].map(([slug, ids]) => [slug, [...ids].sort()])
+  )
+  const oldSnapshot = await readFile(SNAPSHOT_PATH, 'utf-8').then(JSON.parse).catch(() => ({}))
+  const changedSlugs = Object.keys(newSnapshot).filter(
+    (slug) => JSON.stringify(newSnapshot[slug]) !== JSON.stringify(oldSnapshot[slug] ?? [])
+  )
+
+  await mkdir(path.dirname(SNAPSHOT_PATH), { recursive: true })
+  await writeFile(SNAPSHOT_PATH, JSON.stringify(newSnapshot))
+  await writeFile(CHANGES_TODAY_PATH, JSON.stringify(changedSlugs))
+
   console.log(`Cupons: ${coupons.length} promoções dos nossos lojistas gravadas.`)
+  console.log(`[cupons] ${changedSlugs.length} loja(s) com cupom novo/alterado hoje: ${changedSlugs.join(', ') || '(nenhuma)'}`)
 }
 
 main().catch((err) => {
