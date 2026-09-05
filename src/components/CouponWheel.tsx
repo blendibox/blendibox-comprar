@@ -185,6 +185,9 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
     timeoutRef.current = window.setTimeout(() => {
       setSpinning(false)
       setResult(segments[chosenIndex])
+      // Disparado a partir do clique em "Girar!" (gesto do usuário já
+      // aconteceu), então não esbarra na política de autoplay.
+      new Audio('/sounds/win.mp3').play().catch(() => {})
     }, SPIN_DURATION_MS)
   }
 
