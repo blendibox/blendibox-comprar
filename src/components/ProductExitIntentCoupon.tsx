@@ -12,9 +12,10 @@ import type { CouponEntry } from '../types/product'
 // de intenção alta. Sem gate de e-mail também por isso: o objetivo aqui é
 // tirar fricção bem na hora da saída, não criar mais uma.
 //
-// Sem persistência entre visitas de propósito — cada página de produto é uma
-// decisão de compra à parte, então faz sentido poder aparecer de novo numa
-// visita futura a outro produto (ou a esse mesmo, mais tarde).
+// Sem persistência nenhuma de propósito (nem entre visitas, nem dentro da
+// mesma visita) — reabre a cada nova tentativa de saída, mesmo depois de
+// fechado antes. Fechar e continuar navegando não devia gastar a única
+// chance da pessoa ver o cupom.
 export function ProductExitIntentCoupon({
   coupon,
   merchantDisplayName,
@@ -25,15 +26,14 @@ export function ProductExitIntentCoupon({
   dealHref: string
 }) {
   const [open, setOpen] = useState(false)
-  const [shown, setShown] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
+  // Reabre a cada nova tentativa de saída (não só uma vez por visita à
+  // página) — fechar e continuar navegando não deveria gastar a única
+  // chance; só não pode disparar de novo enquanto já está aberto.
   useExitIntent(
-    () => {
-      setShown(true)
-      setOpen(true)
-    },
-    { enabled: !shown },
+    () => setOpen(true),
+    { enabled: !open },
   )
 
   // Prazo real do próprio cupom (quando existe) — nunca uma urgência
@@ -46,25 +46,41 @@ export function ProductExitIntentCoupon({
     }
   }
 
-  // Botão "COPIAR" do ticket: copia (CouponCodeButton já faz isso e chama
-  // onCopy) e, depois de um instante pra pessoa ler "Copiado!", segue
-  // sozinho pra loja — o atraso é curto de propósito (perto do que os
-  // navegadores ainda toleram como resultado do próprio clique, sem contar
-  // como popup inesperado e ser bloqueado).
+  // Fecha e limpa o estado de "redirecionando" junto — sem isso, fechar no
+  // meio da contagem do ticket (ou depois que ela termina) deixava esse
+  // estado grudado, e reabrir mais tarde (agora que dá pra reabrir mais de
+  // uma vez) mostrava o ticket já verde antes de a pessoa copiar de novo.
+  function closePopup() {
+    setOpen(false)
+    setRedirecting(false)
+  }
+
+  // Botão "COPIAR" do ticket (ou clicar no próprio código, mesmo efeito):
+  // copia e, depois de um instante pra pessoa ler "Copiado!", segue sozinho
+  // pra loja — o atraso é curto de propósito (perto do que os navegadores
+  // ainda toleram como resultado do próprio clique, sem contar como popup
+  // inesperado e ser bloqueado).
   function handleTicketCopy() {
     setRedirecting(true)
     window.setTimeout(() => {
       window.open(dealHref, '_blank', 'noopener,noreferrer')
-      setOpen(false)
+      closePopup()
     }, 1200)
+  }
+
+  // O código grande também copia ao clicar (não só o botão "COPIAR" ao
+  // lado) — o hover com "Clique para copiar" deixa isso óbvio.
+  function handleValueClick() {
+    if (!coupon.code || redirecting) return
+    navigator.clipboard.writeText(coupon.code).then(handleTicketCopy).catch(() => {})
   }
 
   if (!open) return null
 
   return (
-    <div className="coupon-wheel-overlay" onClick={() => setOpen(false)}>
+    <div className="coupon-wheel-overlay" onClick={closePopup}>
       <div className="coupon-wheel-modal product-exit-coupon" onClick={(e) => e.stopPropagation()}>
-        <button className="coupon-wheel-modal__close" onClick={() => setOpen(false)} aria-label="Fechar">
+        <button className="coupon-wheel-modal__close" onClick={closePopup} aria-label="Fechar">
           {'×'}
         </button>
 
@@ -86,7 +102,15 @@ export function ProductExitIntentCoupon({
         {coupon.code && (
           <div className={`product-exit-coupon__ticket${redirecting ? ' product-exit-coupon__ticket--success' : ''}`}>
             <div className="product-exit-coupon__ticket-code">
-              <span className="product-exit-coupon__ticket-value">{coupon.code}</span>
+              <button
+                type="button"
+                className="product-exit-coupon__ticket-value"
+                onClick={handleValueClick}
+                title="Clique para copiar"
+                disabled={redirecting}
+              >
+                {coupon.code}
+              </button>
               <span
                 className={`product-exit-coupon__ticket-label${redirecting ? ' product-exit-coupon__ticket-label--success' : ''}`}
               >
@@ -104,7 +128,7 @@ export function ProductExitIntentCoupon({
           rel="noopener noreferrer sponsored"
           onClick={() => {
             copyCode()
-            setOpen(false)
+            closePopup()
           }}
         >
           {coupon.code && <Tag size={17} aria-hidden="true" />}
@@ -116,22 +140,28 @@ export function ProductExitIntentCoupon({
 
         {validUntil && (
           <p className="product-exit-coupon__expiry">
-            <Clock size={14} aria-hidden="true" /> {`Cupom válido até ${validUntil}`}
+            <Clock size={14} aria-hidden="true" />{' '}
+            {coupon.code ? `Cupom válido até ${validUntil}` : `Oferta válida até ${validUntil}`}
           </p>
         )}
 
-        {/* Vai pra loja mesmo sem o cupom — quem clicou aqui já ia sair de
+        {/* Só faz sentido "continuar sem o cupom" quando existe um código
+            sendo dispensado — sem código, o CTA principal já é só "ir pra
+            loja", e esse link viraria um duplicado dele sem propósito. Vai
+            pra loja mesmo sem o cupom — quem clicou aqui já ia sair de
             qualquer jeito, então pelo menos aproveita o clique. Fechar o
             popup sem sair é o botão × ali em cima, não este link. */}
-        <a
-          className="product-exit-coupon__dismiss"
-          href={dealHref}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          onClick={() => setOpen(false)}
-        >
-          Continuar sem o cupom
-        </a>
+        {coupon.code && (
+          <a
+            className="product-exit-coupon__dismiss"
+            href={dealHref}
+            target="_blank"
+            rel="noopener noreferrer sponsored"
+            onClick={closePopup}
+          >
+            Continuar sem o cupom
+          </a>
+        )}
       </div>
     </div>
   )

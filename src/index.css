@@ -1395,6 +1395,22 @@ a {
   font-weight: 800;
   letter-spacing: 0.03em;
   color: #be185d;
+  border: none;
+  background: none;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.product-exit-coupon__ticket-value:hover:not(:disabled) {
+  text-decoration: underline;
+  text-decoration-style: dashed;
+  text-underline-offset: 3px;
+}
+
+.product-exit-coupon__ticket-value:disabled {
+  cursor: default;
 }
 
 .product-exit-coupon__ticket-label {
