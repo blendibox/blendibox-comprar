@@ -208,6 +208,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
         }
         setUnlocked(true)
         setGateStatus('idle')
+        new Audio('/sounds/win.mp3').play().catch(() => {})
       } else {
         setGateStatus('error')
       }
@@ -219,7 +220,14 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
   return (
     <div className="coupon-wheel-overlay" onClick={onClose}>
       <div className="coupon-wheel-modal" onClick={(e) => e.stopPropagation()}>
-        <button className="coupon-wheel-modal__close" onClick={onClose} aria-label="Fechar">
+        <button
+          className="coupon-wheel-modal__close"
+          onClick={() => {
+            new Audio('/sounds/out.mp3').play().catch(() => {})
+            onClose()
+          }}
+          aria-label="Fechar"
+        >
           {'×'}
         </button>
         <h2 className="coupon-wheel-modal__title">
