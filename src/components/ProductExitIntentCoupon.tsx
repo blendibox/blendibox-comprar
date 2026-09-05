@@ -26,6 +26,7 @@ export function ProductExitIntentCoupon({
 }) {
   const [open, setOpen] = useState(false)
   const [shown, setShown] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
   useExitIntent(
     () => {
@@ -43,6 +44,19 @@ export function ProductExitIntentCoupon({
     if (coupon.code) {
       navigator.clipboard.writeText(coupon.code).catch(() => {})
     }
+  }
+
+  // Botão "COPIAR" do ticket: copia (CouponCodeButton já faz isso e chama
+  // onCopy) e, depois de um instante pra pessoa ler "Copiado!", segue
+  // sozinho pra loja — o atraso é curto de propósito (perto do que os
+  // navegadores ainda toleram como resultado do próprio clique, sem contar
+  // como popup inesperado e ser bloqueado).
+  function handleTicketCopy() {
+    setRedirecting(true)
+    window.setTimeout(() => {
+      window.open(dealHref, '_blank', 'noopener,noreferrer')
+      setOpen(false)
+    }, 1200)
   }
 
   if (!open) return null
@@ -70,12 +84,16 @@ export function ProductExitIntentCoupon({
         <p className="coupon-wheel-modal__hint">{`Só na ${merchantDisplayName}`}</p>
 
         {coupon.code && (
-          <div className="product-exit-coupon__ticket">
+          <div className={`product-exit-coupon__ticket${redirecting ? ' product-exit-coupon__ticket--success' : ''}`}>
             <div className="product-exit-coupon__ticket-code">
               <span className="product-exit-coupon__ticket-value">{coupon.code}</span>
-              <span className="product-exit-coupon__ticket-label">Seu cupom de desconto</span>
+              <span
+                className={`product-exit-coupon__ticket-label${redirecting ? ' product-exit-coupon__ticket-label--success' : ''}`}
+              >
+                {redirecting ? 'Copiado! Redirecionando...' : 'Seu cupom de desconto'}
+              </span>
             </div>
-            <CouponCodeButton code={coupon.code} variant="icon" />
+            <CouponCodeButton code={coupon.code} variant="icon" onCopy={handleTicketCopy} />
           </div>
         )}
 
