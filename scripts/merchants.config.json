@@ -1,5 +1,5 @@
 {
-  "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais. 'titleBlacklistEnabled' = descarta o produto se o título bater com alguma palavra de TITLE_BLACKLIST em scripts/fetch-feeds.mjs (lista única, compartilhada — reservado pra feeds de marketplace/nicho com risco maior de título impróprio).",
+  "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais. 'titleBlacklistEnabled' = descarta o produto se o título bater com alguma palavra de TITLE_BLACKLIST em scripts/fetch-feeds.mjs (lista única, compartilhada — reservado pra feeds de marketplace/nicho com risco maior de título impróprio). 'forceCurrency' = ignora o campo currency do feed e usa este valor fixo — reservado pra merchant cujo feed manda a moeda errada (ex: LG BR manda tudo como USD mesmo os preços sendo em reais).",
   "merchants": {
     "17780": { "slug": "mac", "displayName": "MAC Cosmeticos BR", "vertical": "beleza", "active": true },
     "17619": { "slug": "foreverliss", "displayName": "Forever Liss BR", "vertical": "beleza", "active": true, "verifyImages": true },
@@ -32,7 +32,7 @@
     "17639": { "slug": "consul", "displayName": "Consul BR", "vertical": "casa", "active": true },
     "17858": { "slug": "electrolux", "displayName": "Electrolux BR", "vertical": "casa", "active": true },
     "24534": { "slug": "motorola", "displayName": "Motorola BR", "vertical": "casa", "active": true },
-    "33061": { "slug": "lg", "displayName": "LG BR", "vertical": "casa", "active": true },
+    "33061": { "slug": "lg", "displayName": "LG BR", "vertical": "casa", "active": true, "forceCurrency": "BRL" },
     "108626": { "slug": "arno", "displayName": "Arno BR", "vertical": "casa", "active": true, "verifyImages": true  },
     "81383": { "slug": "carraro", "displayName": "Carraro BR", "vertical": "casa", "active": true },
     "36382": { "slug": "tokstok", "displayName": "Tok & Stok BR", "vertical": "casa", "active": true },

@@ -320,6 +320,10 @@ async function main() {
 
   function finalizeProduct(mapped, merchant, realImage) {
     mapped.awImageUrl = realImage
+    // Alguns feeds mandam a moeda errada (ex: LG BR reporta tudo como USD
+    // mesmo os preços sendo reais) — forceCurrency no merchants.config.json
+    // corrige isso na fonte, antes do valor se espalhar pro site inteiro.
+    if (merchant.forceCurrency) mapped.currency = merchant.forceCurrency
     const categorySlug = buildCategorySlug(mapped)
     const slugBase = slugify(mapped.productName) || 'produto'
     // Usa o merchant_product_id (SKU da loja) como sufixo quando existe — é o
