@@ -1400,7 +1400,12 @@ a {
   letter-spacing: 0.04em;
 }
 
-.product-exit-coupon__cta {
+/* .cta-button.product-exit-coupon__cta (em vez de só .product-exit-coupon__cta)
+   pra ganhar de .cta-button no empate de especificidade — esse seletor vem
+   antes de .cta-button no arquivo, e "display: inline-block" de lá vencia
+   por ordem de declaração, quebrando a linha entre ícone e texto em telas
+   mais estreitas (não aparecia num teste rápido só porque sobrava espaço). */
+.cta-button.product-exit-coupon__cta {
   position: relative;
   overflow: hidden;
   display: flex;

@@ -91,7 +91,7 @@ export function ProductExitIntentCoupon({
         >
           {coupon.code && <Tag size={17} aria-hidden="true" />}
           <span className="product-exit-coupon__cta-text">
-            {coupon.code ? `Copiar cupom e ir para a ${merchantDisplayName}` : `Ir para a ${merchantDisplayName}`}
+            {coupon.code ? `Copiar e ir para ${merchantDisplayName}` : `Ir para a ${merchantDisplayName}`}
           </span>
           <span className="product-exit-coupon__cta-arrow">→</span>
         </a>
