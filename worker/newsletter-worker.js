@@ -144,10 +144,24 @@ async function handleWatch(request, env, headers) {
     const targetPrice = typeof item.targetPrice === 'number' && item.targetPrice > 0 ? item.targetPrice : null
     const idx = watchers.findIndex((w) => w.email === email)
     if (idx >= 0) {
-      // Já acompanha: atualiza a meta, preserva baseline/addedAt originais.
-      watchers[idx] = { ...watchers[idx], targetPrice }
+      if (watchers[idx].active === false) {
+        // Já tinha sido avisado antes — reabre o acompanhamento com o preço
+        // de agora como novo baseline (senão "cairia" na hora, comparado a
+        // um preço de semanas atrás).
+        watchers[idx] = {
+          ...watchers[idx],
+          targetPrice,
+          active: true,
+          priceAtWatch,
+          addedAt: new Date().toISOString(),
+          notifiedAt: null,
+        }
+      } else {
+        // Ainda ativo: só atualiza a meta, preserva baseline/addedAt originais.
+        watchers[idx] = { ...watchers[idx], targetPrice }
+      }
     } else {
-      watchers.push({ email, addedAt: new Date().toISOString(), priceAtWatch, targetPrice })
+      watchers.push({ email, addedAt: new Date().toISOString(), priceAtWatch, targetPrice, active: true })
     }
     await env.PRICE_WATCH.put(key, JSON.stringify(watchers))
     indexSet.add(productKey)
@@ -468,8 +482,18 @@ async function checkPriceDropsAndNotify(env) {
     }
     const current = product.searchPrice
 
-    const remaining = []
+    // Histórico nunca é apagado — quem já foi avisado antes (active: false)
+    // fica no array, só não é reavaliado de novo. Isso preserva pra sempre
+    // quem já usou o recurso, em vez de perder o registro assim que o aviso
+    // sai (o que antes deixava a única fonte desse dado ser o histórico de
+    // envio da própria Resend).
+    const updatedWatchers = []
+    let hasActive = false
     for (const w of watchers) {
+      if (w.active === false) {
+        updatedWatchers.push(w)
+        continue
+      }
       const baseline = typeof w.priceAtWatch === 'number' ? w.priceAtWatch : null
       const target = typeof w.targetPrice === 'number' ? w.targetPrice : null
       const reachedTarget = target != null && current <= target
@@ -494,18 +518,17 @@ async function checkPriceDropsAndNotify(env) {
         }
         if (!byEmail.has(w.email)) byEmail.set(w.email, [])
         byEmail.get(w.email).push(info)
+        updatedWatchers.push({ ...w, active: false, notifiedAt: new Date().toISOString() })
       } else {
-        remaining.push(w)
+        updatedWatchers.push(w)
+        hasActive = true
       }
     }
-    // Aviso é único: quem foi avisado sai; quem ainda espera permanece (e o
-    // produto continua no índice enquanto tiver watcher).
-    if (remaining.length) {
-      await env.PRICE_WATCH.put(key, JSON.stringify(remaining))
-      nextIndex.push(productKey)
-    } else {
-      await env.PRICE_WATCH.delete(key)
-    }
+    // Grava o histórico completo sempre. Só sai do índice diário (deixa de
+    // ser checado) quando não sobra ninguém ativo — reentra sozinho se
+    // alguém assinar de novo pro mesmo produto (ver handleWatch).
+    await env.PRICE_WATCH.put(key, JSON.stringify(updatedWatchers))
+    if (hasActive) nextIndex.push(productKey)
   }
 
   await env.PRICE_WATCH.put('watch:index', JSON.stringify(nextIndex))
