@@ -1267,47 +1267,72 @@ a {
   color: var(--color-pink);
 }
 
-/* Riscos decorativos ao redor do ícone (mesma ideia do confete no hero da
-   lista de presentes) — só um floreio, não carregam dado nenhum. */
+/* Riscos decorativos ao redor do ícone — mesma animação de flutuar do
+   confete no TopBar (.topbar__confetti/topbarConfetti), só reaproveitada
+   aqui: sobe/desce girando um pouco, em vez de piscar. */
 .product-exit-coupon__spark {
   position: absolute;
   width: 14px;
   height: 3px;
   border-radius: 2px;
   background: var(--color-teal);
+  --rot: 0deg;
+  transform: rotate(var(--rot));
+  animation: product-exit-coupon-spark-float 2.4s ease-in-out infinite;
 }
 
 .product-exit-coupon__spark--tl {
   top: -6px;
   left: -14px;
-  transform: rotate(-40deg);
+  --rot: -40deg;
+  animation-delay: 0s;
 }
 
 .product-exit-coupon__spark--tr {
   top: -6px;
   right: -14px;
-  transform: rotate(40deg);
+  --rot: 40deg;
   background: var(--color-pink);
+  animation-delay: 0.6s;
 }
 
 .product-exit-coupon__spark--bl {
   bottom: 2px;
   left: -18px;
-  transform: rotate(20deg);
+  --rot: 20deg;
   background: var(--color-pink);
+  animation-delay: 1.2s;
 }
 
 .product-exit-coupon__spark--br {
   bottom: 2px;
   right: -18px;
-  transform: rotate(-20deg);
+  --rot: -20deg;
   background: var(--color-teal);
+  animation-delay: 1.8s;
+}
+
+@keyframes product-exit-coupon-spark-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--rot));
+  }
+  50% {
+    transform: translateY(-6px) rotate(calc(var(--rot) + 12deg));
+  }
 }
 
 /* Riscos são só floreio — em modal estreito ficariam colados na borda. */
 @media (max-width: 380px) {
   .product-exit-coupon__spark {
     display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-exit-coupon__spark {
+    animation: none;
+    opacity: 1;
   }
 }
 
@@ -1376,6 +1401,8 @@ a {
 }
 
 .product-exit-coupon__cta {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1383,6 +1410,35 @@ a {
   width: 100%;
   font-size: 14px;
   padding: 14px 16px;
+}
+
+/* Brilho passando — uma faixa clara em diagonal atravessando o botão em
+   ciclo, chamando atenção pro CTA principal sem precisar de texto extra. */
+.product-exit-coupon__cta::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(115deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  animation: product-exit-coupon-shine 2.6s ease-in-out infinite;
+}
+
+@keyframes product-exit-coupon-shine {
+  0% {
+    left: -60%;
+  }
+  40%,
+  100% {
+    left: 130%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-exit-coupon__cta::after {
+    display: none;
+  }
 }
 
 .product-exit-coupon__cta svg {
@@ -1397,6 +1453,7 @@ a {
 
 .product-exit-coupon__cta-arrow {
   flex-shrink: 0;
+  margin-left: 6px;
 }
 
 .product-exit-coupon__expiry {
