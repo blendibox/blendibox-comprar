@@ -108,6 +108,7 @@ jobs:
         run: npm run daily-video
 
       - name: Publicar vídeo no YouTube
+        id: upload_youtube
         if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
@@ -120,7 +121,22 @@ jobs:
             echo "Secrets do YouTube ainda não configurados (Settings > Secrets and variables > Actions) — pulando upload."
             exit 0
           fi
-          npm run upload-video
+          npm run upload-video 2>&1 | tee youtube-upload.log
+          exit ${PIPESTATUS[0]}
+
+      # continue-on-error acima esconde a falha do resumo do Actions (de
+      # propósito — não pode travar o deploy do site por causa do YouTube),
+      # mas isso também significa que ela fica invisível até alguém notar
+      # manualmente. Foi assim que o refresh token ficou expirado por 2
+      # semanas sem ninguém saber (31/08–14/09/2026). Esse passo só existe
+      # pra fechar esse ponto cego — avisa no mesmo dia, não 2 semanas depois.
+      - name: Avisar por e-mail se o upload do YouTube falhou
+        if: steps.upload_youtube.outcome == 'failure'
+        continue-on-error: true
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+        run: node scripts/notify-youtube-failure.mjs
 
       # Mesmo vídeo, mesmo momento do YouTube — não espera os horários de
       # 12h15/19h30 do canal (esses são só pras ofertas avulsas/resumo).

@@ -37,3 +37,9 @@ upload_youtube.bat
 scripts/.quiz-data.video-tmp.mjs
 /quiz-video.mp4
 /quiz-video.metadata.json
+
+# Vídeos baixados por scripts/recover-missed-youtube-uploads.mjs — mesmo
+# motivo, artefato local de uma recuperação pontual, não versionado.
+.recovered-videos/
+scripts/manual.txt
+scripts/manual.txt
