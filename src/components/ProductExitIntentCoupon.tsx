@@ -40,6 +40,13 @@ export function ProductExitIntentCoupon({
   // inventada tipo "por tempo limitado" sem data nenhuma por trás.
   const validUntil = formatBrDate(coupon.ends)
 
+  // O cupom/oferta tem o próprio link de afiliado (vindo direto da Awin,
+  // específico daquela promoção) — usa ele em vez do link genérico do
+  // produto sempre que existir, porque é o link que garante o desconto
+  // sendo aplicado/rastreado corretamente pra aquela oferta exata. Só cai
+  // pro link do produto se o cupom não tiver deeplink próprio.
+  const targetHref = coupon.deeplink || dealHref
+
   function copyCode() {
     if (coupon.code) {
       navigator.clipboard.writeText(coupon.code).catch(() => {})
@@ -63,7 +70,7 @@ export function ProductExitIntentCoupon({
   function handleTicketCopy() {
     setRedirecting(true)
     window.setTimeout(() => {
-      window.open(dealHref, '_blank', 'noopener,noreferrer')
+      window.open(targetHref, '_blank', 'noopener,noreferrer')
       closePopup()
     }, 1200)
   }
@@ -123,7 +130,7 @@ export function ProductExitIntentCoupon({
 
         <a
           className="cta-button product-exit-coupon__cta"
-          href={dealHref}
+          href={targetHref}
           target="_blank"
           rel="noopener noreferrer sponsored"
           onClick={() => {
@@ -150,7 +157,10 @@ export function ProductExitIntentCoupon({
             loja", e esse link viraria um duplicado dele sem propósito. Vai
             pra loja mesmo sem o cupom — quem clicou aqui já ia sair de
             qualquer jeito, então pelo menos aproveita o clique. Fechar o
-            popup sem sair é o botão × ali em cima, não este link. */}
+            popup sem sair é o botão × ali em cima, não este link.
+            Usa dealHref (não targetHref) de propósito: quem clica aqui está
+            dispensando o cupom, então não faz sentido sair pelo link de
+            rastreio específico dessa promoção. */}
         {coupon.code && (
           <a
             className="product-exit-coupon__dismiss"
