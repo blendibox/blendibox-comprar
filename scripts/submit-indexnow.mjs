@@ -4,14 +4,19 @@
 // verdade (job "deploy" concluído) — o próprio protocolo exige que a chave
 // em SITE_URL/{key}.txt esteja acessível na hora em que o buscador confere.
 //
-// "Mudou hoje" aqui é definido de forma honesta e verificável: a home
-// (sempre relevante), a listagem do blog, os produtos que tiveram queda
-// de preço real hoje (data/price-drops-today.json — a mesma fonte usada
-// pelo vídeo diário e pelos posts do Telegram), e as páginas /cupons/{loja}
-// cujo conjunto de cupons realmente mudou hoje (data/coupon-changes-today.json
-// — ver fetch-coupons.mjs). Não republica o catálogo inteiro nem as ~40
-// páginas de cupom todo dia só porque tecnicamente "pode" ter mudado — isso
-// seria spam pro endpoint e não reflete o que de fato mudou.
+// "Mudou hoje" aqui é definido de forma honesta e verificável: os produtos
+// que tiveram queda de preço real hoje (data/price-drops-today.json — a
+// mesma fonte usada pelo vídeo diário e pelos posts do Telegram), e as
+// páginas /cupons/{loja} cujo conjunto de cupons realmente mudou hoje
+// (data/coupon-changes-today.json — ver fetch-coupons.mjs). Não republica
+// o catálogo inteiro nem as ~40 páginas de cupom todo dia só porque
+// tecnicamente "pode" ter mudado — isso seria spam pro endpoint e não
+// reflete o que de fato mudou.
+//
+// Home e blog só entram nos dias em que há algo novo (Bing sinalizou nossas
+// submissões como "modo batch" — reenviar as mesmas URLs todo santo dia,
+// mudando algo real ou não, é exatamente o padrão que o IndexNow pede pra
+// evitar; a recomendação deles é notificar só o que de fato mudou).
 import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -39,17 +44,28 @@ async function main() {
     .then(JSON.parse)
     .catch(() => [])
 
-  const urls = new Set([`${SITE_URL}/`, `${SITE_URL}/blog/`])
+  const urls = new Set()
   for (const item of drops) {
     urls.add(`${SITE_URL}/${item.merchantSlug}/${item.slug}/`)
   }
   for (const slug of changedCouponSlugs) {
     urls.add(`${SITE_URL}/cupons/${slug}/`)
   }
+  // Home e blog só valem a pena reavisar em dia com novidade de verdade
+  // (senão são as mesmas duas URLs de sempre, todo dia — o padrão que o
+  // Bing classificou como "batch").
+  if (urls.size > 0) {
+    urls.add(`${SITE_URL}/`)
+    urls.add(`${SITE_URL}/blog/`)
+  }
 
   const urlList = [...urls]
+  if (!urlList.length) {
+    console.log('[indexnow] nada mudou hoje (sem queda de preço nem cupom novo) — nenhuma URL enviada.')
+    return
+  }
   console.log(
-    `[indexnow] ${urlList.length} URLs mudaram hoje (1 home + 1 blog + ${drops.length} produto(s) em queda de preço + ${changedCouponSlugs.length} página(s) de cupom).`
+    `[indexnow] ${urlList.length} URLs mudaram hoje (${drops.length} produto(s) em queda de preço + ${changedCouponSlugs.length} página(s) de cupom + home/blog).`
   )
 
   for (let i = 0; i < urlList.length; i += MAX_URLS_PER_BATCH) {

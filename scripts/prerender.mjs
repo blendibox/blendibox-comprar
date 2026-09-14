@@ -667,7 +667,12 @@ async function main() {
       description: 'Passo a passo do Compare Ofertas: lista de presentes, newsletter de cupons e aviso de queda de preço nos favoritos.',
       jsonLd: [howToJsonLd],
     },
-    { routePath: '/sobre', title: 'Sobre nós | Compare Ofertas', description: 'Conheça o Compare Ofertas.' },
+    {
+      routePath: '/sobre',
+      title: 'Sobre nós | Compare Ofertas',
+      description:
+        'Reunimos e curamos ofertas de marcas conhecidas em várias lojas parceiras, atualizadas semanalmente. Compare preços e assine a newsletter de cupons e quedas de preço.',
+    },
     {
       routePath: '/perguntas-frequentes',
       title: 'Perguntas frequentes | Compare Ofertas',
