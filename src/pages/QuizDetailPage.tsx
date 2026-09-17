@@ -13,7 +13,7 @@ export function QuizDetailPage() {
     return (
       <div className="page blog-page">
         <p className="status status--error">Quiz não encontrado.</p>
-        <Link to="/quizzes">← Voltar pros quizzes</Link>
+        <Link to="/quizzes/">← Voltar pros quizzes</Link>
       </div>
     )
   }
@@ -23,7 +23,7 @@ export function QuizDetailPage() {
   return (
     <article className="page blog-post">
       <nav className="blog-post__breadcrumb" aria-label="Breadcrumb">
-        <Link to="/">Início</Link> <span aria-hidden="true">›</span> <Link to="/quizzes">Quiz</Link>{' '}
+        <Link to="/">Início</Link> <span aria-hidden="true">›</span> <Link to="/quizzes/">Quiz</Link>{' '}
         <span aria-hidden="true">›</span> <span aria-current="page">{quiz.title}</span>
       </nav>
 

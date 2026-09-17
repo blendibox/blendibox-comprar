@@ -144,7 +144,7 @@ export function TopBar() {
           <label className="topbar__consent">
             <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
             {' Aceito a '}
-            <Link to="/privacidade">Política de Privacidade</Link>
+            <Link to="/privacidade/">Política de Privacidade</Link>
           </label>
           {status === 'error' && <span className="topbar__error">Erro, tente de novo.</span>}
         </div>

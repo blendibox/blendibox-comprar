@@ -30,7 +30,7 @@ export function AboutPage() {
           bom preço e relevância, em vez de simplesmente listar tudo sem critério.
         </p>
         <p>
-          Quem assina nossa <Link to="/privacidade">newsletter</Link> recebe, por e-mail, cupons e as
+          Quem assina nossa <Link to="/privacidade/">newsletter</Link> recebe, por e-mail, cupons e as
           maiores quedas de preço da semana — além de avisos de queda em produtos que você escolhe
           acompanhar. Você pode cancelar a inscrição quando quiser, direto no link presente em
           qualquer e-mail que enviarmos.

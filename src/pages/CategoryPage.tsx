@@ -56,7 +56,7 @@ export function CategoryPage() {
       <nav className="breadcrumbs">
         <a href="/">Início</a>
         {' › '}
-        <a href={`/${vertical}`}>{vertical}</a>
+        <a href={`/${vertical}/`}>{vertical}</a>
       </nav>
       <header className="page__header">
         <h1 style={{ textTransform: 'capitalize' }}>{categoryLabel}</h1>

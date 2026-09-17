@@ -286,7 +286,7 @@ export function RegistryLandingPage() {
       <section className="registry-landing__section">
         <h2>Como funciona</h2>
         <p style={{ textAlign: 'center', margin: '-8px 0 18px' }}>
-          <Link to="/como-funciona" className="registry-landing__seelink">Ver o passo a passo interativo →</Link>
+          <Link to="/como-funciona/" className="registry-landing__seelink">Ver o passo a passo interativo →</Link>
           {' · '}
           <Link to="/quizzes/como-funciona-a-lista-de-presentes" className="registry-landing__seelink">
             Teste o que você sabe sobre a lista →

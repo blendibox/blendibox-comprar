@@ -128,7 +128,7 @@ export function PriceTargetForm({ product }: { product: FavoriteItem }) {
           </button>
 
           <label className="price-target__consent">
-            <input type="checkbox" required /> Aceito a <Link to="/privacidade">Política de Privacidade</Link>
+            <input type="checkbox" required /> Aceito a <Link to="/privacidade/">Política de Privacidade</Link>
           </label>
 
           <div className="price-target__trust">

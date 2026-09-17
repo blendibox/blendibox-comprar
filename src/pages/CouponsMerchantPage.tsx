@@ -75,7 +75,7 @@ export function CouponsMerchantPage() {
       <nav className="breadcrumbs">
         <Link to="/">Início</Link>
         {' › '}
-        <Link to="/cupons">Cupons</Link>
+        <Link to="/cupons/">Cupons</Link>
         {' › '}
         <span style={{ textTransform: 'capitalize' }}>{displayName}</span>
       </nav>
@@ -95,7 +95,7 @@ export function CouponsMerchantPage() {
       {state === 'ready' && coupons.length === 0 && (
         <p className="status">
           Nenhum cupom ativo da {displayName} no momento — mas as ofertas mudam todo dia.{' '}
-          <Link to={`/${loja}`}>Ver as ofertas da {displayName} →</Link>
+          <Link to={`/${loja}/`}>Ver as ofertas da {displayName} →</Link>
         </p>
       )}
 
@@ -108,8 +108,8 @@ export function CouponsMerchantPage() {
       )}
 
       <section className="coupons-merchant__links">
-        <Link to={`/${loja}`}>Ver todas as ofertas da {displayName} →</Link>
-        <Link to="/cupons">Ver cupons de todas as lojas →</Link>
+        <Link to={`/${loja}/`}>Ver todas as ofertas da {displayName} →</Link>
+        <Link to="/cupons/">Ver cupons de todas as lojas →</Link>
       </section>
 
       <section className="coupons-merchant__faq">

@@ -177,9 +177,9 @@ export function ProductPage() {
       <nav className="breadcrumbs">
         <Link to="/">Início</Link>
         {' › '}
-        <Link to={`/${product.vertical}`}>{product.vertical}</Link>
+        <Link to={`/${product.vertical}/`}>{product.vertical}</Link>
         {' › '}
-        <Link to={`/${product.merchantSlug}`}>{product.merchantDisplayName}</Link>
+        <Link to={`/${product.merchantSlug}/`}>{product.merchantDisplayName}</Link>
       </nav>
 
       <div className="product-detail">

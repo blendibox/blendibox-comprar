@@ -280,7 +280,7 @@ function CouponWheelModal({ segments, onClose }: { segments: CouponEntry[]; onCl
             <label className="coupon-wheel__consent">
               <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required />
               {' Aceito a '}
-              <Link to="/privacidade">Política de Privacidade</Link>
+              <Link to="/privacidade/">Política de Privacidade</Link>
             </label>
             <button type="submit" disabled={gateStatus === 'sending'}>
               {gateStatus === 'sending' ? 'Enviando...' : 'Revelar cupom'}

@@ -136,7 +136,7 @@ export function BlogPostPage() {
     return (
       <div className="page blog-page">
         <p className="status status--error">Artigo não encontrado.</p>
-        <Link to="/blog">← Voltar pro blog</Link>
+        <Link to="/blog/">← Voltar pro blog</Link>
       </div>
     )
   }
@@ -147,7 +147,7 @@ export function BlogPostPage() {
   return (
     <article className="page blog-post">
       <nav className="blog-post__breadcrumb" aria-label="Breadcrumb">
-        <Link to="/">Início</Link> <span aria-hidden="true">›</span> <Link to="/blog">Blog</Link>{' '}
+        <Link to="/">Início</Link> <span aria-hidden="true">›</span> <Link to="/blog/">Blog</Link>{' '}
         <span aria-hidden="true">›</span> <span aria-current="page">{post.title}</span>
       </nav>
       <header className="blog-post__header">

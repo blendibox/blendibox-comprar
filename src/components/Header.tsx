@@ -4,13 +4,13 @@ import { ArrowLeftRight, BookOpen, Gift, Heart, HelpCircle, Home, Menu, Ticket, 
 
 const NAV_LINKS = [
   { to: '/', label: 'Início', Icon: Home },
-  { to: '/lista-de-presentes', label: 'Presentes', Icon: Gift },
-  { to: '/cupons', label: 'Cupons', Icon: Ticket },
+  { to: '/lista-de-presentes/', label: 'Presentes', Icon: Gift },
+  { to: '/cupons/', label: 'Cupons', Icon: Ticket },
   { to: '/favoritos', label: 'Favoritos', Icon: Heart },
-  { to: '/comparar', label: 'Comparar', Icon: ArrowLeftRight },
-  { to: '/blog', label: 'Blog', Icon: BookOpen },
-  { to: '/quizzes', label: 'Quiz', Icon: Vote },
-  { to: '/como-funciona', label: 'Como funciona', Icon: HelpCircle },
+  { to: '/comparar/', label: 'Comparar', Icon: ArrowLeftRight },
+  { to: '/blog/', label: 'Blog', Icon: BookOpen },
+  { to: '/quizzes/', label: 'Quiz', Icon: Vote },
+  { to: '/como-funciona/', label: 'Como funciona', Icon: HelpCircle },
 ]
 
 export function Header() {

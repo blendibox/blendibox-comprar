@@ -142,7 +142,7 @@ export function HubPage() {
         {!isVertical && vertical && (
           <>
             {' › '}
-            <Link to={`/${vertical}`}>{vertical}</Link>
+            <Link to={`/${vertical}/`}>{vertical}</Link>
           </>
         )}
       </nav>
@@ -168,7 +168,7 @@ export function HubPage() {
               <CouponCard key={coupon.id} coupon={coupon} />
             ))}
           </div>
-          <Link to={`/cupons/${slug}`} className="hub-links__more">
+          <Link to={`/cupons/${slug}/`} className="hub-links__more">
             Ver todos os cupons da {displayName} →
           </Link>
         </section>
@@ -179,7 +179,7 @@ export function HubPage() {
           <h2>Lojas</h2>
           <div className="hub-links__list">
             {displayMerchants.map((m) => (
-              <Link key={m.slug} to={`/${m.slug}`} className="hub-chip">
+              <Link key={m.slug} to={`/${m.slug}/`} className="hub-chip">
                 <MerchantLogo merchantId={merchantIdBySlug.get(m.slug)} displayName={m.displayName} className="hub-chip__logo" />
                 {m.displayName} <span>({m.count})</span>
               </Link>
@@ -208,7 +208,7 @@ export function HubPage() {
           {catsOpen && (
             <div className="hub-links__list">
               {displayCategories.map(([catSlug, count]) => (
-                <Link key={catSlug} to={`/${vertical}/categoria/${catSlug}`} className="hub-chip">
+                <Link key={catSlug} to={`/${vertical}/categoria/${catSlug}/`} className="hub-chip">
                   {categoryHubLabel(catSlug)} <span>({count})</span>
                 </Link>
               ))}

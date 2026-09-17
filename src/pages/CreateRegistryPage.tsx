@@ -130,7 +130,7 @@ export function CreateRegistryPage() {
           {status === 'sending' ? 'Criando...' : 'Criar lista'}
         </button>
         <p className="registry-form__note">
-          Ao criar, você aceita a nossa <Link to="/privacidade">Política de Privacidade</Link>. Guardamos seu e-mail só
+          Ao criar, você aceita a nossa <Link to="/privacidade/">Política de Privacidade</Link>. Guardamos seu e-mail só
           pra você gerenciar a lista.
         </p>
       </form>

@@ -59,7 +59,7 @@ export function NewsletterSignup() {
         <label className="newsletter__consent">
           <input type="checkbox" required />
           {' Concordo em receber e-mails com cupons e ofertas, e li e aceito a '}
-          <Link to="/privacidade">Política de Privacidade</Link>
+          <Link to="/privacidade/">Política de Privacidade</Link>
           {'.'}
         </label>
         <button type="submit" disabled={status === 'sending'}>

@@ -155,7 +155,7 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
           <label className="pricedrop-bar__consent">
             <input type="checkbox" required />
             {' Aceito a '}
-            <Link to="/privacidade">Política de Privacidade</Link>
+            <Link to="/privacidade/">Política de Privacidade</Link>
           </label>
           {status === 'error' && <span className="pricedrop-bar__error">Erro, tente de novo.</span>}
         </div>
