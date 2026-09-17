@@ -307,7 +307,18 @@ async function main() {
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
   rawRows.push(...(await fetchAmazonRows()))
-  rawRows.push(...(await fetchShopeeRows()))
+  // Shopee desativada (2026-09-17) — catálogo trocava rápido demais (top-N
+  // reselecionado todo dia) pro sistema de redirect (updateShopeeRedirects
+  // abaixo) aguentar: o teto de 10 mil entradas ficava sempre saturado, com
+  // idade média de ~4 dias em vez dos 30 planejados, então a maioria dos
+  // produtos que caíam do catálogo virava 404 de verdade quase sem proteção.
+  // Confirmado no Search Console: boa parte dos ~55 mil "não encontrado"
+  // eram produtos da Shopee, e não gerava venda que justificasse o custo de
+  // indexação. updateShopeeRedirects() continua rodando (ver abaixo) — com
+  // zero produto Shopee publicado, ela mesma gera os redirects dos ~4.300
+  // produtos que já estavam no ar, sem precisar de nenhum passo manual.
+  // Import mantido pra reativar fácil se um dia fizer sentido de novo.
+  // rawRows.push(...(await fetchShopeeRows()))
 
   // Monta cada produto com slug/vertical/merchant resolvidos, e um índice por
   // "vertical/categoria" pra depois calcular os produtos similares.
