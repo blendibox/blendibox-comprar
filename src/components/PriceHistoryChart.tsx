@@ -33,10 +33,18 @@ export function PriceHistoryChart({
   points,
   currency,
   currentPrice: currentPriceProp,
+  habitualPrice,
+  dropPercent,
 }: {
   points: PricePoint[]
   currency: string
   currentPrice?: number | null
+  // Preço habitual (mediana dos últimos meses) e a queda contra ele — quando o
+  // produto tem uma queda válida (src/lib/priceDrop.ts). A legenda passa a
+  // dizer isso em vez de "caiu de X", que, num sobe e desce (pico de preço e
+  // volta ao normal), parecia desconto.
+  habitualPrice?: number | null
+  dropPercent?: number | null
 }) {
   const [period, setPeriod] = useState<PeriodKey>('30d')
   // "Agora" só é definido depois de montado no cliente. No servidor
@@ -184,9 +192,11 @@ export function PriceHistoryChart({
         ))}
       </div>
       <p className="price-history__caption">
-        {prevDistinct == null
-          ? `Estável em ${formatPrice(last.price, currency)}.`
-          : `${trendDown ? 'Caiu' : 'Subiu'} de ${formatPrice(prevDistinct, currency)} para ${formatPrice(last.price, currency)} (${formatSimpleDateBr(last.date)}).`}
+        {habitualPrice != null && dropPercent != null
+          ? `Preço habitual ${formatPrice(habitualPrice, currency)} · hoje ${formatPrice(last.price, currency)} (${dropPercent}% abaixo).`
+          : prevDistinct == null
+            ? `Estável em ${formatPrice(last.price, currency)}.`
+            : `${trendDown ? 'Passou' : 'Subiu'} de ${formatPrice(prevDistinct, currency)} para ${formatPrice(last.price, currency)} (${formatSimpleDateBr(last.date)}).`}
       </p>
     </div>
   )

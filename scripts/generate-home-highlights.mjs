@@ -12,9 +12,11 @@
 import { readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadPriceDrop } from './lib/price-drop.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '..')
+// PRICE_HISTORY_ROOT redireciona os caminhos (só pra testar com dados de mentira)
+const ROOT = process.env.PRICE_HISTORY_ROOT ? path.resolve(process.env.PRICE_HISTORY_ROOT) : path.resolve(__dirname, '..')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 
 const MAX_RECENT_SALES = 32
@@ -71,9 +73,13 @@ function pickFeatured(products, merchants) {
   return featured
 }
 
+// Só quedas VERIFICADAS (ver src/lib/priceDrop.ts): contra o preço habitual, com
+// histórico mínimo, no menor preço do período e sem sobe e desce recente. O
+// selo comum (qualquer queda válida) continua nos cards; o que é destacado na
+// home e nas campanhas precisa desse rigor.
 function pickPriceDrops(products) {
   return products
-    .filter((p) => p.priceDropPercent != null)
+    .filter((p) => p.priceDropVerified === true && p.priceDropPercent != null)
     .sort((a, b) => (b.priceDropPercent ?? 0) - (a.priceDropPercent ?? 0))
     .slice(0, MAX_PRICE_DROPS)
 }
@@ -82,6 +88,7 @@ function rankTopDrops(products, maxItems) {
   const qualifying = products
     .filter(
       (p) =>
+        p.priceDropVerified === true &&
         p.priceDropPercent != null &&
         p.priceDropPercent >= TOP_DROPS_MIN_PERCENT &&
         p.priceDropPercent <= TOP_DROPS_MAX_PLAUSIBLE_PERCENT
@@ -107,7 +114,7 @@ function rankTopDrops(products, maxItems) {
   return { total: qualifying.length, items }
 }
 
-function pickTopPriceDrops(products) {
+function pickTopPriceDrops(products, minHistoryDays) {
   const byVertical = {}
   const verticals = [...new Set(products.map((p) => p.vertical).filter(Boolean))].sort()
   for (const vertical of verticals) {
@@ -117,6 +124,9 @@ function pickTopPriceDrops(products) {
   return {
     generatedAt: new Date().toISOString(),
     minDropPercent: TOP_DROPS_MIN_PERCENT,
+    // Histórico mínimo (dias) exigido hoje — a página de campanha mostra esse
+    // número no texto de método, então precisa vir daqui
+    minHistoryDays,
     all: rankTopDrops(products, TOP_DROPS_MAX_ALL),
     byVertical,
   }
@@ -149,14 +159,18 @@ async function main() {
       .catch(() => []),
   ])
 
+  const { verifiedMinHistoryDays } = await loadPriceDrop()
+  const minHistoryDays =
+    Number(process.env.VERIFIED_MIN_HISTORY_DAYS) || verifiedMinHistoryDays(new Date().toISOString().slice(0, 10))
+
   const highlights = {
     featured: pickFeatured(index, merchants),
     priceDrops: pickPriceDrops(index),
     recentSales: pickRecentSales(socialProof, index),
-    // Total real de produtos com queda de preço confirmada (não só os ~10 do
+    // Total real de produtos com queda de preço VERIFICADA (não só os ~10 do
     // carrossel) — usado na linha de "prova de valor" do hero da home. Mesma
-    // definição de queda do priceDropPercent (ver update-price-history.mjs).
-    priceDropsCount: index.filter((p) => p.priceDropPercent != null).length,
+    // definição do carrossel (ver update-price-history.mjs).
+    priceDropsCount: index.filter((p) => p.priceDropVerified === true && p.priceDropPercent != null).length,
   }
 
   await writeFile(path.join(DATA_DIR, 'home-highlights.json'), JSON.stringify(highlights))
@@ -168,7 +182,7 @@ async function main() {
     `home-highlights.json: ${highlights.featured.length} destaques, ${highlights.priceDrops.length} quedas de preço no carrossel (${highlights.priceDropsCount} no total), ${highlights.recentSales.length} vendas recentes (${sizeKb} KB).`
   )
 
-  const topPriceDrops = pickTopPriceDrops(index)
+  const topPriceDrops = pickTopPriceDrops(index, minHistoryDays)
   await writeFile(path.join(DATA_DIR, 'top-price-drops.json'), JSON.stringify(topPriceDrops))
   const perVertical = Object.entries(topPriceDrops.byVertical)
     .map(([v, g]) => `${v}:${g.total}`)

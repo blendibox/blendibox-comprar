@@ -7,9 +7,11 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadPriceDrop } from './lib/price-drop.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ROOT = path.resolve(__dirname, '..')
+// PRICE_HISTORY_ROOT redireciona todos os caminhos (só pra testar com dados de mentira)
+const ROOT = process.env.PRICE_HISTORY_ROOT ? path.resolve(process.env.PRICE_HISTORY_ROOT) : path.resolve(__dirname, '..')
 const DATA_DIR = path.join(ROOT, 'public', 'data')
 const INDEX_PATH = path.join(DATA_DIR, 'index.json')
 // meta.json é gravado pelo fetch-feeds.mjs a cada rodada com generatedAt — usamos
@@ -36,18 +38,14 @@ const PRICE_DROPS_TODAY_COMMITTED_PATH = path.join(ROOT, 'data', 'price-drops-to
 // teto só protege contra um produto que mude de preço todo dia por muito tempo.
 const MAX_POINTS = 180
 
-// Abaixo disso é ruído de arredondamento/variação de câmbio, não uma queda
-// que valha destacar pro usuário.
-const MIN_DROP_PERCENT = 5
-
-// Janela do selo "caiu de preço" (badge diz "X% essa semana" — ver
-// ProductCard.tsx). Comparar só contra o último ponto REGISTRADO (que podia
-// ser de semanas atrás, se o preço ficou parado) fazia o selo sumir no dia
-// seguinte à queda mesmo com o produto ainda mais barato que na semana
-// anterior. Comparando sempre contra o preço de ~7 dias atrás, o selo continua
-// aparecendo enquanto a queda for recente E o preço não subir de novo.
-const DAY_MS = 24 * 60 * 60 * 1000
-const WEEKLY_LOOKBACK_DAYS = 7
+// A regra de "queda de preço" mora em src/lib/priceDrop.ts (compilada aqui com
+// esbuild): a queda é medida contra o PREÇO HABITUAL (mediana dos últimos até 90
+// dias), não contra o preço de 7 dias atrás — que caía na armadilha do "sobe e
+// desce" (pico de preço seguido de uma "queda" falsa de 70%). O selo comum
+// ("X% essa semana") e o selo "verificada" (campanhas, vídeo, Telegram: histórico
+// mínimo, menor preço do período, sem pico nem subida nos últimos 30 dias) saem
+// do mesmo cálculo. VERIFIED_MIN_HISTORY_DAYS afrouxa/aperta o histórico mínimo.
+const VERIFIED_MIN_HISTORY_OVERRIDE = Number(process.env.VERIFIED_MIN_HISTORY_DAYS) || undefined
 
 // Colapsa pontos consecutivos de mesmo preço, mantendo o 1o de cada "corrida"
 // (= o dia em que o preço passou a ser aquele). Transforma uma série de
@@ -73,17 +71,6 @@ function dedupeByDate(series) {
   return [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date))
 }
 
-// Preço vigente numa data X = carry-forward do último ponto <= X (a série só
-// grava mudança, então o preço fica valendo até o próximo ponto).
-function priceAtDate(series, iso) {
-  let price = null
-  for (const pt of series) {
-    if (pt.date > iso) break
-    price = pt.price
-  }
-  return price
-}
-
 async function walkProductFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true })
   const files = []
@@ -96,6 +83,7 @@ async function walkProductFiles(dir) {
 }
 
 async function main() {
+  const { assessPriceDrop } = await loadPriceDrop()
   let history = {}
   try {
     history = JSON.parse(await readFile(HISTORY_PATH, 'utf-8'))
@@ -143,6 +131,7 @@ async function main() {
 
   let updated = 0
   let priceDrops = 0
+  let verifiedDrops = 0
   let skipped = 0
   const droppedProducts = []
   const droppedTodayProducts = []
@@ -187,26 +176,22 @@ async function main() {
     product.priceHistory =
       stored[stored.length - 1]?.date === today ? stored : [...stored, { date: today, price: product.searchPrice }]
 
-    // "Caiu de preço" = mais barato que o preço de ~7 dias atrás (não o último
-    // registro, que pode ser de semanas atrás se o preço ficou parado — nesse
-    // caso previousPrice e o preço de 7 dias atrás são o mesmo valor, então dá
-    // no mesmo). Comparando contra uma janela fixa em vez do último ponto, o
-    // selo continua valendo a semana inteira em que a queda aconteceu, não só
-    // no dia exato — e some sozinho quando o preço volta a subir ou quando a
-    // queda "sai" da janela de 7 dias.
-    const weekAgoIso = new Date(now.getTime() - WEEKLY_LOOKBACK_DAYS * DAY_MS).toISOString().slice(0, 10)
-    const priceWeekAgo = priceAtDate(stored, weekAgoIso)
-    let priceDropPercent = null
-    let previousPriceForDrop = null
-    if (priceWeekAgo != null && product.searchPrice < priceWeekAgo) {
-      const pct = ((priceWeekAgo - product.searchPrice) / priceWeekAgo) * 100
-      if (pct >= MIN_DROP_PERCENT) {
-        priceDropPercent = Math.round(pct * 10) / 10
-        previousPriceForDrop = priceWeekAgo
-      }
-    }
+    // Queda medida contra o preço habitual (ver src/lib/priceDrop.ts). Os campos
+    // extras só são gravados quando verdadeiros, pra não engordar os ~145 mil
+    // arquivos de produto nem o index.json.
+    const assessment = assessPriceDrop(stored, product.searchPrice, today, VERIFIED_MIN_HISTORY_OVERRIDE)
+    const priceDropPercent = assessment.dropPercent
+    const previousPriceForDrop = priceDropPercent != null ? assessment.reference : null
     product.previousPrice = previousPriceForDrop
     product.priceDropPercent = priceDropPercent
+    if (assessment.verified) {
+      product.priceDropVerified = true
+      product.lowestPriceDays = assessment.lowestPriceDays
+      verifiedDrops++
+    } else {
+      delete product.priceDropVerified
+      delete product.lowestPriceDays
+    }
     if (priceDropPercent != null) {
       priceDrops++
       droppedProducts.push({
@@ -222,45 +207,43 @@ async function main() {
       })
     }
 
-    // Queda "de verdade hoje" (mudou desde o último ponto registrado, não só
-    // dentro da janela de 7 dias) — só pro vídeo diário, pra reduzir o risco
-    // de repetir o mesmo produto em dias seguidos (algo que caiu há 3 dias e
-    // ficou parado desde então continua contando pro selo semanal do site,
-    // de propósito, mas não deveria voltar a aparecer no vídeo de hoje).
-    if (previousPrice != null && product.searchPrice < previousPrice) {
-      const pctToday = ((previousPrice - product.searchPrice) / previousPrice) * 100
-      if (pctToday >= MIN_DROP_PERCENT) {
-        // Só marca "menor preço já registrado" quando é verdade de fato —
-        // comparado contra TODO o histórico rastreado (stored), não só a
-        // janela recente. Usado pra não inventar esse selo em canais de
-        // divulgação (Telegram etc.) quando não é real.
-        const isAllTimeLow = product.searchPrice <= Math.min(...stored.map((p) => p.price))
-        droppedTodayProducts.push({
-          merchantSlug: product.merchantSlug,
-          slug: product.slug,
-          productName: product.productName,
-          merchantDisplayName: product.merchantDisplayName,
-          vertical: product.vertical,
-          awImageUrl: product.awImageUrl,
-          searchPrice: product.searchPrice,
-          previousPrice,
-          priceDropPercent: Math.round(pctToday * 10) / 10,
-          currency: product.currency,
-          isAllTimeLow,
-        })
-      }
+    // Queda "de verdade hoje" (o preço mudou HOJE, não só dentro da janela de 7
+    // dias) — pro vídeo diário, o Telegram e o IndexNow, que não devem repetir o
+    // mesmo produto em dias seguidos. Só entra quem passa no selo "verificada":
+    // sem isso, um pico de preço seguido de uma "queda" viraria post/vídeo. Os
+    // valores mostrados (De/percentual) são os do preço habitual.
+    if (assessment.verified && previousPrice != null && product.searchPrice < previousPrice) {
+      // Só marca "menor preço já registrado" quando é verdade de fato —
+      // comparado contra TODO o histórico rastreado (stored), não só a
+      // janela recente. Usado pra não inventar esse selo em canais de
+      // divulgação (Telegram etc.) quando não é real.
+      const isAllTimeLow = product.searchPrice <= Math.min(...stored.map((p) => p.price))
+      droppedTodayProducts.push({
+        merchantSlug: product.merchantSlug,
+        slug: product.slug,
+        productName: product.productName,
+        merchantDisplayName: product.merchantDisplayName,
+        vertical: product.vertical,
+        awImageUrl: product.awImageUrl,
+        searchPrice: product.searchPrice,
+        previousPrice: previousPriceForDrop,
+        priceDropPercent,
+        currency: product.currency,
+        isAllTimeLow,
+      })
     }
 
     if (indexEntry) {
-      // Mesmo valor gravado em product.previousPrice (linha acima) — precisa
-      // ser o preço de referência do cálculo (previousPriceForDrop), não a
-      // variável `previousPrice` (último ponto do histórico antes de hoje).
-      // Bug real: quando o preço cai e fica estável desde então, o histórico
-      // não grava ponto novo (só grava em mudança), então "último ponto"
-      // acaba sendo igual ao preço atual — DE: e POR: saíam iguais no vídeo
-      // mesmo com priceDropPercent correto (calculado contra os 7 dias atrás).
+      // Mesmos valores gravados em product.* acima (preço habitual e %).
       indexEntry.previousPrice = previousPriceForDrop
       indexEntry.priceDropPercent = priceDropPercent
+      if (assessment.verified) {
+        indexEntry.priceDropVerified = true
+        indexEntry.lowestPriceDays = assessment.lowestPriceDays
+      } else {
+        delete indexEntry.priceDropVerified
+        delete indexEntry.lowestPriceDays
+      }
     }
 
     await writeFile(file, JSON.stringify(product))
@@ -276,7 +259,7 @@ async function main() {
   console.log(
     `Histórico de preço: ${updated} produtos atualizados, ${skipped} pulados (sem página), ` +
       `${Object.keys(nextHistory).length} chaves no total (antes: ${Object.keys(history).length}), ` +
-      `${priceDrops} com preço em queda vs. o anterior (${droppedTodayProducts.length} caíram hoje de verdade).`
+      `${priceDrops} com queda vs. o preço habitual (${verifiedDrops} verificadas; ${droppedTodayProducts.length} verificadas que caíram hoje).`
   )
 }
 

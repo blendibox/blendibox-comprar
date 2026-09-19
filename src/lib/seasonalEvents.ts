@@ -140,7 +140,7 @@ function defineLanding<Id extends string>(landing: SeasonalLandingDef<Id>): Seas
 }
 
 const VERIFIED_LEAD =
-  'Só entra produto que ficou mais barato de verdade, comparado ao preço que a gente vinha monitorando.'
+  'Só entra produto que ficou mais barato de verdade, comparado ao preço habitual que a gente monitora.'
 
 export const SEASONAL_LANDINGS = [
   defineLanding({
@@ -627,7 +627,11 @@ export function selectDrops(
   verticals: readonly string[] | null,
   max: number
 ): SeasonalDropsSlice {
-  const meta = { generatedAt: file.generatedAt, minDropPercent: file.minDropPercent }
+  const meta = {
+    generatedAt: file.generatedAt,
+    minDropPercent: file.minDropPercent,
+    minHistoryDays: file.minHistoryDays,
+  }
   if (!verticals) return { ...meta, total: file.all.total, items: file.all.items.slice(0, max) }
   const groups = verticals.map((v) => file.byVertical[v]).filter((g) => g != null)
   return {

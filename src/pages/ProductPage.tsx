@@ -6,7 +6,15 @@ import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { getGalleryImages } from '../lib/images'
 import type { CouponEntry, Product, ProductIndexEntry } from '../types/product'
-import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
+import {
+  DiscountBadge,
+  LowestPriceBadge,
+  OriginalPrice,
+  PriceDropBadge,
+  ProductCard,
+  RatingBadge,
+  formatPrice,
+} from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { CouponCodeButton } from '../components/CouponCodeButton'
 import { SeasonalTag } from '../components/SeasonalTag'
@@ -282,7 +290,7 @@ export function ProductPage() {
               {product.productName}
             </a>
           </h1>
-          <SeasonalTag eligible={product.priceDropPercent != null || highlightCoupon != null} vertical={product.vertical} />
+          <SeasonalTag eligible={product.priceDropVerified === true || highlightCoupon != null} vertical={product.vertical} />
           <div className="product-detail__price">
             <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
             {formatPrice(product.searchPrice, product.currency)}
@@ -292,6 +300,7 @@ export function ProductPage() {
               discountPercentage={product.discountPercentage}
             />
             <PriceDropBadge priceDropPercent={product.priceDropPercent} href={product.awDeepLink} />
+            {product.priceDropVerified === true && <LowestPriceBadge days={product.lowestPriceDays} />}
             {merchantCoupons.length > 0 && (
               <Link to={`/cupons/${product.merchantSlug}`} className="product-detail__coupon-badge">
                 <Ticket size={14} aria-hidden="true" /> Cupom {product.merchantDisplayName}
@@ -341,6 +350,8 @@ export function ProductPage() {
               points={product.priceHistory}
               currency={product.currency}
               currentPrice={product.searchPrice}
+              habitualPrice={product.previousPrice}
+              dropPercent={product.priceDropPercent}
             />
           )}
           {lowestPricePoint && (

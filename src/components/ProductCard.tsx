@@ -1,5 +1,5 @@
 import { Link } from './Link'
-import { Check, Heart, Plus, Star, TrendingDown } from './Icon'
+import { BadgeCheck, Check, Heart, Plus, Star, TrendingDown } from './Icon'
 import type { ProductIndexEntry } from '../types/product'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
@@ -46,7 +46,8 @@ export function DiscountBadge({
 }
 
 // Preenchido só quando scripts/update-price-history.mjs confirma uma queda
-// real de ≥5% em relação ao preço de ~7 dias atrás — não é o mesmo dado do
+// real de ≥5% em relação ao preço HABITUAL do produto (mediana dos últimos
+// meses de monitoramento, ver src/lib/priceDrop.ts) — não é o mesmo dado do
 // DiscountBadge (que compara contra o preço "de loja" informado no feed).
 //
 // `href` é opcional: só passe quando o selo NÃO estiver dentro de outro link
@@ -62,6 +63,7 @@ export function PriceDropBadge({
 }) {
   if (priceDropPercent == null) return null
   const label = `${priceDropPercent}% essa semana`
+  const hint = 'Queda recente comparada ao preço habitual do produto (mediana do que monitoramos nos últimos meses)'
   const inner = (
     <>
       <TrendingDown size={13} strokeWidth={2.5} aria-hidden="true" /> {label}
@@ -69,12 +71,30 @@ export function PriceDropBadge({
   )
   if (href) {
     return (
-      <a className="price-drop-badge" href={href} target="_blank" rel="noopener noreferrer sponsored">
+      <a className="price-drop-badge" href={href} target="_blank" rel="noopener noreferrer sponsored" title={hint}>
         {inner}
       </a>
     )
   }
-  return <span className="price-drop-badge">{inner}</span>
+  return (
+    <span className="price-drop-badge" title={hint}>
+      {inner}
+    </span>
+  )
+}
+
+// Régua do desconto real: "menor preço em N dias" — só pra queda VERIFICADA
+// (ver src/lib/priceDrop.ts). Quanto mais dias de histórico, mais o selo vale.
+export function LowestPriceBadge({ days }: { days: number | null | undefined }) {
+  if (days == null || days < 1) return null
+  return (
+    <span
+      className="lowest-price-badge"
+      title={`O preço de hoje é o menor que monitoramos em ${days} dias, sem sobe e desce recente`}
+    >
+      <BadgeCheck size={13} strokeWidth={2.5} aria-hidden="true" /> Menor preço em {days} dias
+    </span>
+  )
 }
 
 export function OriginalPrice({

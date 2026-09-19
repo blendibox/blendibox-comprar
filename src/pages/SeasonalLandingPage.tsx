@@ -69,6 +69,7 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
 
   const items = data?.items ?? []
   const minDrop = data?.minDropPercent ?? 10
+  const minHistory = data?.minHistoryDays ?? 45
   // Só depois de montar (o tema é null no servidor e na primeira renderização)
   const event = getSeasonalEvent(useSeasonalTheme())
   const eventName = page.eventEyebrow && event?.landing === page.id ? event.banner.badge : null
@@ -139,9 +140,16 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
         <div className="seasonal-landing__verify-body">
           <p className="seasonal-landing__verify-key">Não comparamos apenas com o preço anterior.</p>
           <p>
-            Para identificar uma queda, comparamos o preço atual com o preço que estávamos monitorando cerca de 7 dias
-            antes. Só entram aqui produtos que ficaram pelo menos {minDrop}% mais baratos nesse período.
+            Para identificar uma queda, comparamos o preço atual com o preço habitual do produto — o que ele custou na
+            maior parte dos últimos meses de monitoramento (até 90 dias) — e não com o preço de uma semana atrás. Só
+            entra aqui quem cumpre tudo isto:
           </p>
+          <ul className="seasonal-landing__verify-list">
+            <li>preço atual pelo menos {minDrop}% abaixo do preço habitual;</li>
+            <li>o menor preço que já monitoramos para o produto;</li>
+            <li>pelo menos {minHistory} dias de histórico;</li>
+            <li>sem pico artificial de preço no período e sem nenhuma subida nos últimos 30 dias.</li>
+          </ul>
           <p>
             Quedas acima de 80% são desconsideradas porque podem indicar erro ou inconsistência de preço na loja, e não
             uma redução real.

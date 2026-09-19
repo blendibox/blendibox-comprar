@@ -79,11 +79,20 @@ export interface Product {
   similar: SimilarStub[]
   eligibleForStaticPage: boolean
   priceHistory?: PricePoint[]
-  // Preenchido só quando o preço de hoje é uma queda real de ≥5% em relação
-  // ao preço de ~7 dias atrás no priceHistory (scripts/update-price-history.mjs)
-  // — null quando não há dado de uma semana atrás ainda ou o preço não caiu.
+  // Preenchido só quando o preço de hoje é uma queda real de ≥5% em relação ao
+  // PREÇO HABITUAL do produto (mediana dos últimos até 90 dias — não o preço de
+  // uma semana atrás, que caía na armadilha do pico de preço); regra em
+  // src/lib/priceDrop.ts, calculada em scripts/update-price-history.mjs.
+  // previousPrice é o preço habitual. null quando não há histórico suficiente
+  // ou o preço não caiu.
   previousPrice: number | null
   priceDropPercent: number | null
+  // Queda VERIFICADA (só gravada quando true): histórico mínimo, menor preço
+  // monitorado, sem pico nem subida nos últimos 30 dias. Campanhas, vídeo e
+  // Telegram só usam essas.
+  priceDropVerified?: boolean
+  // Há quantos dias monitorados o preço atual é o menor (só nas verificadas)
+  lowestPriceDays?: number | null
   // Mesmo produto vendido num canal diferente da mesma marca (ex: Eudora via
   // Awin x Eudora via revenda direta) — casamento por nome, ver
   // scripts/fetch-feeds.mjs (CROSS_CHANNEL_PAIRS).
@@ -120,6 +129,8 @@ export interface ProductIndexEntry {
   // precisar buscar o JSON de cada produto individualmente.
   previousPrice: number | null
   priceDropPercent: number | null
+  priceDropVerified?: boolean
+  lowestPriceDays?: number | null
 }
 
 export interface MerchantMeta {
@@ -215,6 +226,8 @@ export interface SeasonalDropsFile {
   generatedAt: string
   // Queda mínima (%) pra entrar
   minDropPercent: number
+  // Histórico mínimo (dias) exigido hoje (a página mostra isso no método)
+  minHistoryDays?: number
   all: SeasonalDropsGroup
   byVertical: Record<string, SeasonalDropsGroup>
 }
@@ -222,6 +235,7 @@ export interface SeasonalDropsFile {
 export interface SeasonalDropsSlice {
   generatedAt: string
   minDropPercent: number
+  minHistoryDays?: number
   total: number
   items: ProductIndexEntry[]
 }
