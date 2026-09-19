@@ -20,6 +20,25 @@ const DATA_DIR = path.join(ROOT, 'public', 'data')
 const MAX_RECENT_SALES = 32
 const MAX_PRICE_DROPS = 10
 
+// Páginas e seções de campanha (/black-friday/, /dia-das-maes/, a home em
+// data comemorativa...) — só quedas grandes o bastante pra valer o destaque,
+// no máximo N por loja (sem isso uma loja com muita queda ao mesmo tempo,
+// como a Kabum com licenças de antivírus, ocupa a lista inteira) e sem as
+// "quedas" implausíveis: acima de 80% quase sempre é erro de preço no feed
+// (peça avulsa que passa de R$2 mil pra R$360, por exemplo), e uma página que
+// promete queda verificada não pode abrir com isso.
+//
+// Guarda o top do catálogo todo e o top de cada departamento (vertical) —
+// cada época usa os departamentos dela (ver SEASONAL_LANDINGS em
+// src/lib/seasonalEvents.ts). Tamanhos: uma página lista até 48 itens, então
+// o "todos" guarda 48, e cada departamento 24 (duas fatias somadas já cobrem
+// o que uma página mostra).
+const TOP_DROPS_MIN_PERCENT = 10
+const TOP_DROPS_MAX_PLAUSIBLE_PERCENT = 80
+const TOP_DROPS_MAX_ALL = 48
+const TOP_DROPS_MAX_PER_VERTICAL = 24
+const TOP_DROPS_MAX_PER_MERCHANT = 10
+
 // Vivara, Centauro e Nike são, na prática, os merchants com melhor histórico
 // real de vendas — sempre aparecem primeiro nos Destaques, antes dos outros
 // merchants "priority". Mantém em sincronia com FEATURED_ORDER em
@@ -57,6 +76,50 @@ function pickPriceDrops(products) {
     .filter((p) => p.priceDropPercent != null)
     .sort((a, b) => (b.priceDropPercent ?? 0) - (a.priceDropPercent ?? 0))
     .slice(0, MAX_PRICE_DROPS)
+}
+
+function rankTopDrops(products, maxItems) {
+  const qualifying = products
+    .filter(
+      (p) =>
+        p.priceDropPercent != null &&
+        p.priceDropPercent >= TOP_DROPS_MIN_PERCENT &&
+        p.priceDropPercent <= TOP_DROPS_MAX_PLAUSIBLE_PERCENT
+    )
+    // Desempate por nome/loja pra a ordem ser estável entre builds (senão a
+    // lista "embaralha" à toa quando várias quedas têm o mesmo percentual).
+    .sort(
+      (a, b) =>
+        b.priceDropPercent - a.priceDropPercent ||
+        a.merchantSlug.localeCompare(b.merchantSlug) ||
+        a.slug.localeCompare(b.slug)
+    )
+
+  const perMerchant = new Map()
+  const items = []
+  for (const p of qualifying) {
+    const count = perMerchant.get(p.merchantSlug) ?? 0
+    if (count >= TOP_DROPS_MAX_PER_MERCHANT) continue
+    perMerchant.set(p.merchantSlug, count + 1)
+    items.push(p)
+    if (items.length >= maxItems) break
+  }
+  return { total: qualifying.length, items }
+}
+
+function pickTopPriceDrops(products) {
+  const byVertical = {}
+  const verticals = [...new Set(products.map((p) => p.vertical).filter(Boolean))].sort()
+  for (const vertical of verticals) {
+    const group = rankTopDrops(products.filter((p) => p.vertical === vertical), TOP_DROPS_MAX_PER_VERTICAL)
+    if (group.items.length > 0) byVertical[vertical] = group
+  }
+  return {
+    generatedAt: new Date().toISOString(),
+    minDropPercent: TOP_DROPS_MIN_PERCENT,
+    all: rankTopDrops(products, TOP_DROPS_MAX_ALL),
+    byVertical,
+  }
 }
 
 // social-proof.json (scripts/parse-sales-highlights.mjs) só guarda
@@ -103,6 +166,15 @@ async function main() {
   ).toFixed(1)
   console.log(
     `home-highlights.json: ${highlights.featured.length} destaques, ${highlights.priceDrops.length} quedas de preço no carrossel (${highlights.priceDropsCount} no total), ${highlights.recentSales.length} vendas recentes (${sizeKb} KB).`
+  )
+
+  const topPriceDrops = pickTopPriceDrops(index)
+  await writeFile(path.join(DATA_DIR, 'top-price-drops.json'), JSON.stringify(topPriceDrops))
+  const perVertical = Object.entries(topPriceDrops.byVertical)
+    .map(([v, g]) => `${v}:${g.total}`)
+    .join(' ')
+  console.log(
+    `top-price-drops.json: ${topPriceDrops.all.items.length} de ${topPriceDrops.all.total} quedas ≥${TOP_DROPS_MIN_PERCENT}% (páginas de campanha). Por departamento: ${perVertical || '(nenhum)'}`
   )
 }
 

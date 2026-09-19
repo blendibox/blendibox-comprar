@@ -6,6 +6,7 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { getSeasonalContext } from './lib/seasonal.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -109,12 +110,28 @@ async function main() {
     .slice(0, MAX_COUPONS)
     .map((c) => ({ advertiser: c.advertiser, code: c.code, title: c.title }))
 
+  // Em época comemorativa (Dia das Mães, Black Friday...) o e-mail ganha o nome
+  // da época no assunto e um link pra página de campanha, onde estão as quedas
+  // de preço confirmadas. Os produtos do resumo continuam sendo a seleção
+  // semanal de sempre (não são "quedas") — por isso o assunto só situa a
+  // época, sem prometer desconto. O Worker usa esses campos e cai no texto
+  // padrão se não existirem (worker/newsletter-worker.js, sendWeeklyDigest).
+  const season = await getSeasonalContext()
+  const seasonal = season
+    ? {
+        subject: `${season.label}: ofertas da semana no Compare Ofertas`,
+        heading: `${season.label}: ofertas da semana`,
+        season: { label: season.label, url: season.landingUrl },
+      }
+    : {}
+
   await mkdir(OUTPUT_DIR, { recursive: true })
   await writeFile(
     path.join(OUTPUT_DIR, 'digest.json'),
-    JSON.stringify({ generatedAt: new Date().toISOString(), items, coupons: activeCoupons })
+    JSON.stringify({ generatedAt: new Date().toISOString(), items, coupons: activeCoupons, ...seasonal })
   )
   console.log(`digest.json: ${items.length} produtos e ${activeCoupons.length} cupons gravados.`)
+  if (season) console.log(`[sazonal] resumo semanal marcado como "${season.label}".`)
 }
 
 main().catch((err) => {

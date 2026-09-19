@@ -9,6 +9,7 @@ import type { CouponEntry, Product, ProductIndexEntry } from '../types/product'
 import { DiscountBadge, OriginalPrice, PriceDropBadge, ProductCard, RatingBadge, formatPrice } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { CouponCodeButton } from '../components/CouponCodeButton'
+import { SeasonalTag } from '../components/SeasonalTag'
 import { ProductExitIntentCoupon } from '../components/ProductExitIntentCoupon'
 import { PriceHistoryChart } from '../components/PriceHistoryChart'
 import { PriceTargetForm } from '../components/PriceTargetForm'
@@ -281,6 +282,7 @@ export function ProductPage() {
               {product.productName}
             </a>
           </h1>
+          <SeasonalTag eligible={product.priceDropPercent != null || highlightCoupon != null} vertical={product.vertical} />
           <div className="product-detail__price">
             <OriginalPrice storePrice={product.storePrice} searchPrice={product.searchPrice} currency={product.currency} />
             {formatPrice(product.searchPrice, product.currency)}

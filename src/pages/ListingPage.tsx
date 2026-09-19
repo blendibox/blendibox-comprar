@@ -8,6 +8,10 @@ import { Carousel } from '../components/Carousel'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
 import { timeAgo } from '../lib/timeAgo'
+import { getSeasonalEvent, seasonalVerticals } from '../lib/seasonalEvents'
+import { useSeasonalTheme } from '../lib/useSeasonalTheme'
+import { SeasonalHomeSection } from '../components/SeasonalHomeSection'
+import { SeasonalIcon } from '../components/SeasonalIcon'
 
 const PAGE_SIZE = 60
 const HOME_PATH = '/'
@@ -52,6 +56,13 @@ export function ListingPage() {
   useEffect(() => {
     clearInitialData(HOME_PATH)
   }, [])
+
+  // Épocas sem filtro de departamento (Black Friday, Natal, Dia do Consumidor):
+  // o carrossel "Caiu de preço" já é a mesma lista da campanha, então só ganha
+  // o título dela. As épocas com departamentos ganham uma seção própria
+  // (SeasonalHomeSection). Definido só após montar, igual ao banner.
+  const season = getSeasonalEvent(useSeasonalTheme())
+  const dropsRetitle = season?.home && !seasonalVerticals(season) ? season : null
 
   useEffect(() => {
     fetchMeta().then(setMeta).catch(() => setMeta(null))
@@ -226,6 +237,7 @@ export function ListingPage() {
 
       {!hasActiveFilter && (
         <>
+          <SeasonalHomeSection />
           {/* "Baixou de preço" primeiro: é o diferencial do site (descobrir
               oferta boa), não só mais um catálogo. A altura mínima de cada
               seção (via CSS) é reservada desde o primeiro paint, antes do
@@ -236,10 +248,16 @@ export function ListingPage() {
               {showPriceDrops ? (
                 <>
                   <h2 className="section-title">
-                    <TrendingDown className="section-title__icon section-title__icon--drop" size={22} strokeWidth={2.5} />
-                    Caiu de preço
+                    {dropsRetitle ? (
+                      <SeasonalIcon name={dropsRetitle.icon} className="section-title__icon" size={22} strokeWidth={2.5} />
+                    ) : (
+                      <TrendingDown className="section-title__icon section-title__icon--drop" size={22} strokeWidth={2.5} />
+                    )}
+                    {dropsRetitle ? dropsRetitle.home!.title : 'Caiu de preço'}
                   </h2>
-                  <p className="price-drop-section__hint">Produtos que ficaram mais baratos nas últimas atualizações.</p>
+                  <p className="price-drop-section__hint">
+                    {dropsRetitle ? dropsRetitle.home!.hint : 'Produtos que ficaram mais baratos nas últimas atualizações.'}
+                  </p>
                   <Carousel>
                     {priceDrops.map((product, i) => (
                       <ProductCard

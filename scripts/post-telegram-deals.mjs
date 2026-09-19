@@ -17,6 +17,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { focusDropsOnSeason, getSeasonalContext } from './lib/seasonal.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -188,7 +189,7 @@ function productLink(item) {
   return `${SITE_URL}/${item.merchantSlug}/${item.slug}/`
 }
 
-async function postSingle(item) {
+async function postSingle(item, season) {
   const emoji = VERTICAL_EMOJI[item.vertical] || '🛍️'
   // "Menor preço já registrado" só entra quando é verdade de fato
   // (isAllTimeLow, calculado contra TODO o histórico rastreado em
@@ -199,7 +200,7 @@ async function postSingle(item) {
     : `Queda de ${item.priceDropPercent}% detectada hoje.`
 
   const caption =
-    `📉 <b>Caiu de preço</b>\n\n` +
+    `📉 <b>Caiu de preço${season ? ` · ${escapeHtml(season.label)}` : ''}</b>\n\n` +
     `${emoji} <b>${escapeHtml(item.productName)}</b>\n` +
     `${escapeHtml(item.merchantDisplayName)}\n\n` +
     `De: <s>${escapeHtml(formatPrice(item.previousPrice, item.currency))}</s>\n` +
@@ -215,18 +216,22 @@ async function postSingle(item) {
   })
 }
 
-async function postDigest(items) {
+async function postDigest(items, season) {
   // Nome/preço/desconto de cada item já aparecem na imagem (buildDigestImage)
   // — a legenda fica curta de propósito (limite de 1024 caracteres em foto,
   // bem menor que o de mensagem de texto). O clique em cada oferta vem do
   // teclado inline, um botão por produto, não de link dentro do texto.
   const caption =
-    `🔥 <b>Ofertas do dia</b>\n\n` +
+    `🔥 <b>Ofertas do dia${season ? ` · ${escapeHtml(season.label)}` : ''}</b>\n\n` +
     `As maiores quedas de preço que encontramos hoje.\n\n` +
     `🔎 Monitorado pelo Compare Ofertas`
 
   const buttons = items.map((item, i) => [{ text: `${i + 1}. ${truncate(item.productName, 40)}`, url: productLink(item) }])
-  buttons.push([{ text: 'Ver todas as ofertas', url: `${SITE_URL}/` }])
+  buttons.push(
+    season
+      ? [{ text: `Ver as quedas de ${season.label}`, url: season.landingUrl }]
+      : [{ text: 'Ver todas as ofertas', url: `${SITE_URL}/` }]
+  )
 
   const image = await buildDigestImage(items)
   await sendPhotoBuffer({ buffer: image, caption, replyMarkup: { inline_keyboard: buttons } })
@@ -244,10 +249,18 @@ async function main() {
     return
   }
 
+  // Em época comemorativa o post ganha o nome da época e, nas que têm
+  // departamentos, só usa produtos deles (com fallback pro conteúdo normal se
+  // houver pouca queda — ver focusDropsOnSeason). Os dois horários (single e
+  // digest) leem o mesmo arquivo, então escolhem a mesma lista e o digest
+  // continua pulando a #1 que o single já publicou.
+  const { drops: seasonDrops, season } = focusDropsOnSeason(drops, await getSeasonalContext(), 2 * (1 + DIGEST_SIZE))
+  if (season) console.log(`[sazonal] posts de "${season.label}" (${seasonDrops.length} quedas elegíveis).`)
+
   // Evita duas ofertas com o mesmo preço final na mesma seleção.
   const seenPrices = new Set()
   const ranked = []
-  for (const item of drops) {
+  for (const item of seasonDrops) {
     if (seenPrices.has(item.searchPrice)) continue
     seenPrices.add(item.searchPrice)
     ranked.push(item)
@@ -260,7 +273,7 @@ async function main() {
       return
     }
     console.log(`Publicando 1 oferta avulsa: "${item.productName}"...`)
-    await postSingle(item)
+    await postSingle(item, season)
     console.log('\n✅ Oferta publicada no Telegram.')
     return
   }
@@ -273,7 +286,7 @@ async function main() {
     return
   }
   console.log(`Publicando resumo com ${items.length} oferta(s)...`)
-  await postDigest(items)
+  await postDigest(items, season)
   console.log('\n✅ Resumo publicado no Telegram.')
 }
 

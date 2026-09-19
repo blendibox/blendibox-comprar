@@ -6039,3 +6039,565 @@ body.has-fixed-bottombar .coupon-wheel-fab {
 .product-detail__title-link:hover {
   text-decoration: underline;
 }
+
+/* ===== Temas sazonais (Black Friday, Natal, Dia das Mães...) =====
+   Datas e regras em src/lib/seasonalEvents.ts. Cores por paleta via variáveis —
+   banner, tag do produto, cabeçalho das páginas de campanha e seção da home
+   usam as mesmas:
+   --sz-bg/--sz-fg   fundo e texto dos blocos coloridos
+   --sz-accent       destaque sobre o fundo colorido
+   --sz-glow         brilho do canto do banner/hero
+   --sz-cta-*        botão do banner
+   --sz-ink          cor legível sobre FUNDO BRANCO (ícone/link da seção da home)
+   --sz-pill         fundo das pílulas sobre o bloco colorido (default no uso) */
+.seasonal-theme--black {
+  --sz-bg: #0b0b10;
+  --sz-glow: rgba(219, 39, 119, 0.5);
+  --sz-fg: #ffffff;
+  --sz-accent: #ff4fa3;
+  --sz-cta-bg: linear-gradient(90deg, #db2777, #f0429a);
+  --sz-cta-fg: #ffffff;
+  --sz-ink: #db2777;
+}
+.seasonal-theme--criancas {
+  --sz-bg: #1f2a7a;
+  --sz-glow: rgba(255, 210, 63, 0.32);
+  --sz-fg: #ffffff;
+  --sz-accent: #ffd23f;
+  --sz-cta-bg: linear-gradient(90deg, #ffd23f, #ffe27a);
+  --sz-cta-fg: #1f2a7a;
+  --sz-ink: #1f2a7a;
+}
+.seasonal-theme--natal {
+  --sz-bg: #5c0f14;
+  --sz-glow: rgba(242, 198, 109, 0.3);
+  --sz-fg: #fff7e6;
+  --sz-accent: #f2c66d;
+  --sz-cta-bg: linear-gradient(90deg, #f2c66d, #f8dc97);
+  --sz-cta-fg: #5c0f14;
+  --sz-ink: #a3161f;
+}
+/* Dia do Consumidor: azul institucional, sem festa — a mensagem é "confira" */
+.seasonal-theme--consumidor {
+  --sz-bg: #0b3a6b;
+  --sz-glow: rgba(127, 209, 255, 0.34);
+  --sz-fg: #ffffff;
+  --sz-accent: #7fd1ff;
+  --sz-cta-bg: linear-gradient(90deg, #7fd1ff, #b3e5ff);
+  --sz-cta-fg: #0b3a6b;
+  --sz-ink: #0b3a6b;
+}
+/* Dia das Mães (e Dia da Mulher): ameixa com rosa */
+.seasonal-theme--maes {
+  --sz-bg: #5b2149;
+  --sz-glow: rgba(255, 179, 209, 0.34);
+  --sz-fg: #fff2f8;
+  --sz-accent: #ffb3d1;
+  --sz-cta-bg: linear-gradient(90deg, #ffb3d1, #ffd3e4);
+  --sz-cta-fg: #5b2149;
+  --sz-ink: #a02c75;
+}
+/* Dia dos Namorados: vinho */
+.seasonal-theme--namorados {
+  --sz-bg: #7d0f26;
+  --sz-glow: rgba(255, 154, 168, 0.36);
+  --sz-fg: #fff1f2;
+  --sz-accent: #ff9aa8;
+  --sz-cta-bg: linear-gradient(90deg, #ff9aa8, #ffc2ca);
+  --sz-cta-fg: #7d0f26;
+  --sz-ink: #c81e3d;
+}
+/* Mês das Noivas: marfim e dourado — a única paleta clara */
+.seasonal-theme--noivas {
+  --sz-bg: #fbf3e4;
+  --sz-glow: rgba(201, 164, 92, 0.32);
+  --sz-fg: #4a3a1f;
+  --sz-accent: #9a6b12;
+  --sz-cta-bg: linear-gradient(90deg, #a8791c, #c9a45c);
+  --sz-cta-fg: #ffffff;
+  --sz-ink: #9a6b12;
+  --sz-pill: rgba(74, 58, 31, 0.1);
+  /* fundo marfim quase não se distingue da página: o halo usa o dourado */
+  --sz-halo-c: #c9a45c;
+  --sz-halo: 44%;
+}
+/* Dia dos Pais: petróleo com âmbar */
+.seasonal-theme--pais {
+  --sz-bg: #14303a;
+  --sz-glow: rgba(245, 166, 35, 0.3);
+  --sz-fg: #f4f8fa;
+  --sz-accent: #f5a623;
+  --sz-cta-bg: linear-gradient(90deg, #f5a623, #ffc45c);
+  --sz-cta-fg: #14303a;
+  --sz-ink: #9a5b00;
+}
+/* Páscoa: roxo com amarelo */
+.seasonal-theme--pascoa {
+  --sz-bg: #47257a;
+  --sz-glow: rgba(255, 224, 102, 0.3);
+  --sz-fg: #fbf7ff;
+  --sz-accent: #ffe066;
+  --sz-cta-bg: linear-gradient(90deg, #ffe066, #fff0a3);
+  --sz-cta-fg: #47257a;
+  --sz-ink: #47257a;
+}
+/* Volta às aulas: verde-lousa com giz */
+.seasonal-theme--aulas {
+  --sz-bg: #16382f;
+  --sz-glow: rgba(255, 226, 122, 0.28);
+  --sz-fg: #f6fff9;
+  --sz-accent: #ffe27a;
+  --sz-cta-bg: linear-gradient(90deg, #ffe27a, #fff0ad);
+  --sz-cta-fg: #16382f;
+  --sz-ink: #16382f;
+}
+
+/* A altura do slot é reservada antes da pintura pelo atributo data-season que
+   o prerender coloca no <html> (ver SeasonalBanner.tsx) — o banner entra sem
+   empurrar a página. Altura fixa (uma linha só, texto com reticências) pra a
+   reserva sempre bater com o banner de verdade. */
+.seasonal-slot {
+  --seasonal-h: 52px;
+}
+html[data-season] .seasonal-slot {
+  height: var(--seasonal-h);
+}
+/* Seção extra da home (SeasonalHomeSection): mesmo esquema. 484 = os 452px de
+   .featured-section + 32px de margem; o prerender só liga data-season-home
+   quando há produto suficiente pra a seção aparecer. */
+html[data-season-home] .seasonal-home-slot {
+  min-height: 484px;
+}
+
+.seasonal-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: var(--seasonal-h);
+  overflow: hidden;
+  color: var(--sz-fg);
+  background: radial-gradient(46% 240% at 92% 50%, var(--sz-glow), transparent 70%), var(--sz-bg);
+}
+.seasonal-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.seasonal-banner.seasonal-theme--black {
+  box-shadow: inset 0 -2px 0 rgba(219, 39, 119, 0.65);
+}
+.seasonal-banner.seasonal-theme--black::before {
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 79, 163, 0.16) 50%, transparent 62%);
+}
+.seasonal-banner.seasonal-theme--criancas {
+  box-shadow: inset 0 -3px 0 #ff5fa2;
+}
+.seasonal-banner.seasonal-theme--criancas::before {
+  background-image:
+    radial-gradient(circle at 7% 30%, #ff5fa2 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 19% 72%, #4dd4ff 0 2px, transparent 3px),
+    radial-gradient(circle at 44% 24%, #ffd23f 0 2px, transparent 3px),
+    radial-gradient(circle at 63% 76%, #ff5fa2 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 83% 28%, #4dd4ff 0 2px, transparent 3px);
+  animation: seasonal-twinkle 4s ease-in-out infinite alternate;
+}
+.seasonal-banner.seasonal-theme--natal {
+  box-shadow: inset 0 -3px 0 #1f6b45;
+}
+.seasonal-banner.seasonal-theme--natal::before {
+  background-image:
+    radial-gradient(circle at 7% 30%, var(--sz-accent) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 19% 72%, var(--sz-accent) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 24%, var(--sz-accent) 0 1px, transparent 2px),
+    radial-gradient(circle at 63% 76%, var(--sz-accent) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 83% 28%, var(--sz-accent) 0 1px, transparent 2px);
+  animation: seasonal-twinkle 4s ease-in-out infinite alternate;
+}
+/* Paletas sem enfeite próprio: um brilho diagonal discreto */
+.seasonal-banner.seasonal-theme--consumidor,
+.seasonal-banner.seasonal-theme--pais {
+  box-shadow: inset 0 -2px 0 var(--sz-accent);
+}
+.seasonal-banner.seasonal-theme--aulas {
+  box-shadow: inset 0 -3px 0 #ff8a3d;
+}
+.seasonal-banner.seasonal-theme--consumidor::before,
+.seasonal-banner.seasonal-theme--pais::before,
+.seasonal-banner.seasonal-theme--aulas::before {
+  background: linear-gradient(115deg, transparent 38%, var(--sz-glow) 50%, transparent 62%);
+}
+/* Pontinhos que piscam (pétalas, corações, ovos): mesma técnica do Natal */
+.seasonal-banner.seasonal-theme--maes,
+.seasonal-banner.seasonal-theme--namorados,
+.seasonal-banner.seasonal-theme--pascoa {
+  box-shadow: inset 0 -3px 0 var(--sz-accent);
+}
+.seasonal-banner.seasonal-theme--noivas {
+  box-shadow: inset 0 -2px 0 #c9a45c;
+}
+.seasonal-banner.seasonal-theme--maes::before,
+.seasonal-banner.seasonal-theme--namorados::before,
+.seasonal-banner.seasonal-theme--noivas::before {
+  background-image:
+    radial-gradient(circle at 7% 30%, var(--sz-accent) 0 2px, transparent 3px),
+    radial-gradient(circle at 19% 72%, var(--sz-accent) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 44% 24%, var(--sz-accent) 0 1.5px, transparent 2.5px),
+    radial-gradient(circle at 63% 76%, var(--sz-accent) 0 2px, transparent 3px),
+    radial-gradient(circle at 83% 28%, var(--sz-accent) 0 1.5px, transparent 2.5px);
+  animation: seasonal-twinkle 4s ease-in-out infinite alternate;
+}
+.seasonal-banner.seasonal-theme--pascoa::before {
+  background-image:
+    radial-gradient(circle at 7% 30%, #ff9ccf 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 19% 72%, #8fe3ff 0 2px, transparent 3px),
+    radial-gradient(circle at 44% 24%, #ffe066 0 2px, transparent 3px),
+    radial-gradient(circle at 63% 76%, #b6f2a5 0 2.5px, transparent 3.5px),
+    radial-gradient(circle at 83% 28%, #ff9ccf 0 2px, transparent 3px);
+  animation: seasonal-twinkle 4s ease-in-out infinite alternate;
+}
+@keyframes seasonal-twinkle {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 0.95;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seasonal-banner.seasonal-theme--natal::before,
+  .seasonal-banner.seasonal-theme--criancas::before,
+  .seasonal-banner.seasonal-theme--maes::before,
+  .seasonal-banner.seasonal-theme--namorados::before,
+  .seasonal-banner.seasonal-theme--noivas::before,
+  .seasonal-banner.seasonal-theme--pascoa::before {
+    animation: none;
+  }
+}
+
+.seasonal-banner__inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.seasonal-banner__badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  color: var(--sz-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.seasonal-banner__badge-short {
+  display: none;
+}
+.seasonal-banner__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seasonal-banner__sub {
+  margin-left: 10px;
+  opacity: 0.75;
+}
+.seasonal-banner__cta {
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--sz-cta-bg);
+  color: var(--sz-cta-fg);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.seasonal-banner__cta:hover {
+  filter: brightness(1.08);
+}
+.seasonal-banner__cta:focus-visible {
+  outline: 2px solid var(--sz-fg);
+  outline-offset: 2px;
+}
+/* "Esquenta": mesma identidade, mas o botão vazado — ainda não é o grande dia */
+.seasonal-banner--soft .seasonal-banner__cta {
+  background: transparent;
+  color: var(--sz-accent);
+  box-shadow: inset 0 0 0 1.5px var(--sz-accent);
+}
+
+@media (max-width: 900px) {
+  .seasonal-banner__sub {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .seasonal-slot {
+    --seasonal-h: 44px;
+  }
+  .seasonal-banner__inner {
+    gap: 10px;
+    justify-content: space-between;
+    padding: 0 12px;
+  }
+  .seasonal-banner__badge {
+    font-size: 11px;
+  }
+  .seasonal-banner__text {
+    display: none;
+  }
+  .seasonal-banner__cta {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+@media (min-width: 480px) and (max-width: 640px) {
+  .seasonal-banner__text {
+    display: block;
+    font-size: 12px;
+  }
+}
+@media (max-width: 400px) {
+  .seasonal-banner__badge-full {
+    display: none;
+  }
+  .seasonal-banner__badge-short {
+    display: inline;
+  }
+}
+
+/* Tag do evento na página do produto (só com queda de preço confirmada ou
+   cupom ativo — ver SeasonalTag.tsx) */
+.product-detail__event {
+  margin-bottom: 8px;
+}
+.seasonal-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--sz-bg);
+  color: var(--sz-fg);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+.seasonal-tag__accent {
+  color: var(--sz-accent);
+}
+.seasonal-tag.seasonal-theme--noivas {
+  box-shadow: inset 0 0 0 1px #c9a45c;
+}
+
+/* Páginas /black-friday/ e /natal/ */
+.seasonal-landing__hero {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 28px 24px;
+  overflow: hidden;
+  border-radius: 14px;
+  color: var(--sz-fg);
+  background: radial-gradient(60% 170% at 100% 0%, var(--sz-glow), transparent 65%), var(--sz-bg);
+}
+.seasonal-landing__hero.seasonal-theme--noivas {
+  border: 1px solid #eadcb8;
+}
+.seasonal-landing__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--sz-accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.seasonal-landing__hero h1 {
+  margin: 8px 0;
+  color: var(--sz-fg);
+  font-size: clamp(24px, 4vw, 36px);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.seasonal-landing__lead {
+  max-width: 62ch;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  opacity: 0.92;
+}
+.seasonal-landing__status {
+  display: inline-block;
+  margin: 14px 0 0;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--sz-pill, rgba(255, 255, 255, 0.14));
+  font-size: 13px;
+  font-weight: 700;
+}
+.seasonal-landing__verify {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  border: 1px solid #e6e8ee;
+  border-radius: 12px;
+  background: #fff;
+}
+.seasonal-landing__verify svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--color-green);
+}
+.seasonal-landing__verify p {
+  margin: 4px 0 0;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.seasonal-landing__more {
+  margin-top: 28px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+/* Mês das Noivas: chamada pra lista de presentes */
+.seasonal-landing__registry {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid #eadcb8;
+  border-radius: 12px;
+  background: #fbf3e4;
+}
+.seasonal-landing__registry > svg {
+  flex: none;
+  color: #9a6b12;
+}
+.seasonal-landing__registry > div {
+  flex: 1;
+  min-width: 0;
+}
+.seasonal-landing__registry p {
+  margin: 4px 0 0;
+  color: #4a3a1f;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.seasonal-landing__registry-cta {
+  flex: none;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #a8791c, #c9a45c);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.seasonal-landing__registry-cta:hover {
+  filter: brightness(1.06);
+}
+@media (max-width: 640px) {
+  .seasonal-landing__registry {
+    flex-wrap: wrap;
+  }
+  .seasonal-landing__registry-cta {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Seção da home nas épocas com departamentos (SeasonalHomeSection) */
+.seasonal-home .section-title__icon {
+  color: var(--sz-ink);
+}
+.seasonal-home__hint {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.seasonal-home__hint > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.seasonal-home__more {
+  flex: none;
+  color: var(--sz-ink);
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.seasonal-home__more:hover {
+  text-decoration: underline;
+}
+
+/* Halo da época: degradê suave no topo do conteúdo, na cor de fundo do banner. Fica atrás
+   do conteúdo (z-index:-1, SEM criar contexto de empilhamento em <main> — senão
+   modais/popups de dentro dele passariam por baixo do header sticky) e não
+   captura clique; é só pintura, então não desloca nada. Entra com um fade curto
+   depois que o tema é definido. */
+main.seasonal-halo {
+  position: relative;
+}
+main.seasonal-halo::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: -1;
+  height: 96px;
+  pointer-events: none;
+  /* Elipse achatada com centro no canto superior direito (onde fica o brilho do
+     banner): mais escura ali e sumindo em ~92px, ~8px no canto esquerdo.
+     Cor do FUNDO do banner (não a do botão); --sz-halo é o quanto dela entra. */
+  background: radial-gradient(
+    ellipse 104% 92px at 100% 0,
+    color-mix(in srgb, var(--sz-halo-c, var(--sz-bg)) var(--sz-halo, 65%), transparent),
+    transparent
+  );
+  animation: seasonal-halo-in 0.8s ease-out both;
+}
+@keyframes seasonal-halo-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (max-width: 640px) {
+  main.seasonal-halo::before {
+    /* mais curto no celular: só uma faixa sob o cabeçalho, sem chegar no título */
+    height: 42px;
+    background: radial-gradient(
+      ellipse 108% 38px at 100% 0,
+      color-mix(in srgb, var(--sz-halo-c, var(--sz-bg)) var(--sz-halo, 65%), transparent),
+      transparent
+    );
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  main.seasonal-halo::before {
+    animation: none;
+  }
+}

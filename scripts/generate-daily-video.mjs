@@ -11,6 +11,7 @@ import { fileURLToPath } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
+import { focusDropsOnSeason, getSeasonalContext } from './lib/seasonal.mjs'
 
 const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -291,16 +292,25 @@ async function renderProductSlide(item, rank, outPath) {
 // dia. Nunca cita uma marca que não apareceu no vídeo, nem um total de
 // produtos desatualizado (armadilhas fáceis de cair copiando um texto
 // genérico pronto).
-function buildVideoMetadata({ drops, shortDate, dateLabel, totalProducts, merchantsCount }) {
+function buildVideoMetadata({ drops, season, shortDate, dateLabel, totalProducts, merchantsCount }) {
   const uniqueMerchants = [...new Map(drops.map((d) => [d.merchantSlug, d.merchantDisplayName])).values()]
   const soleMerchant = uniqueMerchants.length === 1 ? uniqueMerchants[0] : null
 
-  const title = soleMerchant
+  let title = soleMerchant
     ? `🔥 ${soleMerchant}: as ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
     : `🔥 As ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
+  // Nome da época na frente ("Dia das Mães: as 5 Maiores..."), desde que caiba
+  // nos 100 caracteres que o YouTube aceita no título.
+  if (season) {
+    const seasonalTitle = soleMerchant
+      ? `🔥 ${season.label} · ${soleMerchant}: as ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
+      : `🔥 ${season.label}: as ${drops.length} Maiores Quedas de Preço de Hoje | ${shortDate}`
+    if (seasonalTitle.length <= 100) title = seasonalTitle
+  }
 
   const merchantTags = [...new Set(drops.map((d) => `#${d.merchantSlug}`))]
-  const tags = ['#ofertas', '#promocao', '#desconto', '#precobaixo', ...merchantTags]
+  const tags = ['#ofertas', '#promocao', '#desconto', '#precobaixo', ...(season ? [`#${season.hashtag}`] : []), ...merchantTags]
+  const seasonLine = season ? `🗓️ ${season.label} — todas as quedas de preço verificadas: ${season.landingUrl}\n\n` : ''
 
   // Um link direto por produto do vídeo — além de facilitar quem assistiu
   // achar o item exato (hoje só linkava pra home/cupons, genérico), o nome
@@ -327,7 +337,7 @@ Neste vídeo você vê:
 Produtos deste vídeo:
 ${productLines}
 
-🔎 Compare preços: https://${SITE_DOMAIN}
+${seasonLine}🔎 Compare preços: https://${SITE_DOMAIN}
 🎁 Lista de presentes: https://${SITE_DOMAIN}/lista-de-presentes
 🎟️ Cupons oficiais: https://${SITE_DOMAIN}/cupons
 
@@ -351,9 +361,14 @@ async function main() {
   // Evita mostrar dois produtos com o mesmo preço final lado a lado no vídeo
   // (fica estranho no ranking) — pula duplicatas de preço, mantendo a ordem
   // original (já vem ordenado por priceDropPercent desc).
+  // Em época comemorativa (Dia das Mães, Black Friday...) o vídeo ganha o nome
+  // da época e, nas que têm departamentos, só mostra produtos deles — mas só se
+  // houver queda suficiente (ver focusDropsOnSeason); senão sai o vídeo normal.
+  const { drops: rankedDrops, season } = focusDropsOnSeason(priceDropsToday, await getSeasonalContext(), TOP_N * 2)
+  if (season) console.log(`[sazonal] vídeo de "${season.label}" (${rankedDrops.length} quedas elegíveis).`)
   const seenPrices = new Set()
   const drops = []
-  for (const item of priceDropsToday) {
+  for (const item of rankedDrops) {
     if (drops.length >= TOP_N) break
     if (seenPrices.has(item.searchPrice)) continue
     seenPrices.add(item.searchPrice)
@@ -460,6 +475,7 @@ async function main() {
 
   const metadata = buildVideoMetadata({
     drops,
+    season,
     shortDate,
     dateLabel,
     totalProducts: meta.totalProducts,

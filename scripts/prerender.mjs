@@ -48,6 +48,32 @@ function categoryLabel(merchantCategory) {
   return CATEGORY_TRANSLATIONS[merchantCategory] || merchantCategory.split('>').pop().trim()
 }
 
+// Bing sinaliza título de página com mais de 70 caracteres como aviso
+// (fica truncado feio no resultado de busca). Nome real de produto já passa
+// disso sozinho com frequência — em vez de deixar truncar em qualquer ponto
+// aleatório, corta os segmentos menos essenciais primeiro (categoria, depois
+// o sufixo "| Compare Ofertas"), e só trunca o nome do produto em último
+// caso, sempre preservando "Comprar" + loja (o que importa pra quem já vai
+// decidir comprar e precisa saber onde).
+const MAX_TITLE_LENGTH = 70
+function buildProductTitle(productName, titleCategory, merchantDisplayName) {
+  const full = titleCategory
+    ? `Comprar ${productName} – ${titleCategory} – ${merchantDisplayName} | Compare Ofertas`
+    : `Comprar ${productName} – ${merchantDisplayName} | Compare Ofertas`
+  if (full.length <= MAX_TITLE_LENGTH) return full
+
+  const withoutCategory = `Comprar ${productName} – ${merchantDisplayName} | Compare Ofertas`
+  if (withoutCategory.length <= MAX_TITLE_LENGTH) return withoutCategory
+
+  const withoutSuffix = `Comprar ${productName} – ${merchantDisplayName}`
+  if (withoutSuffix.length <= MAX_TITLE_LENGTH) return withoutSuffix
+
+  const prefix = 'Comprar '
+  const suffix = ` – ${merchantDisplayName}`
+  const budget = Math.max(MAX_TITLE_LENGTH - prefix.length - suffix.length - 1, 10)
+  return `${prefix}${productName.slice(0, budget).trimEnd()}…${suffix}`
+}
+
 // buildCategorySlug() em fetch-feeds.mjs gera o categorySlug a partir do
 // último trecho do merchantCategory BRUTO (antes de qualquer tradução) — pra
 // LG isso significa slugs em inglês ("televisions", "speakers", etc.) nas
@@ -441,8 +467,51 @@ async function walkProductFiles(dir) {
 }
 
 async function main() {
-  const template = await readFile(path.join(DIST_DIR, 'index.html'), 'utf-8')
-  const { renderRoute, blogPosts, quizzes } = await buildEntryServer()
+  const baseTemplate = await readFile(path.join(DIST_DIR, 'index.html'), 'utf-8')
+  const {
+    renderRoute,
+    blogPosts,
+    quizzes,
+    resolveSeasonalTheme,
+    getSeasonalEvent,
+    getSeasonalLanding,
+    parseSeasonalOverride,
+    seasonalVerticals,
+    selectDrops,
+    SEASONAL_LANDINGS,
+    LANDING_MAX_ITEMS,
+    HOME_SECTION_MAX_ITEMS,
+    HOME_SECTION_MIN_ITEMS,
+  } = await buildEntryServer()
+
+  // Quedas de preço confirmadas (public/data/top-price-drops.json, gerado por
+  // generate-home-highlights.mjs): alimentam as páginas de campanha e a seção
+  // da home, e decidem se a home reserva altura pra ela (abaixo).
+  const topPriceDrops = JSON.parse(await readFile(path.join(DATA_DIR, 'top-price-drops.json'), 'utf-8').catch(() => 'null'))
+  const hasDropsFile = Array.isArray(topPriceDrops?.all?.items)
+
+  // Se o build cai dentro de uma época sazonal (Black Friday, Natal, Dia das
+  // Mães... ver src/lib/seasonalEvents.ts), marca o <html> com data-season: o
+  // CSS usa isso pra reservar a altura do banner ANTES da pintura, e ele entra
+  // depois sem empurrar a página (CLS). O banner em si nunca vai no HTML
+  // estático — decidido no cliente por data — então o custo por página é só
+  // esse atributo, e só durante a época. O build roda todo dia, então a virada
+  // acompanha o calendário com no máximo algumas horas de defasagem.
+  // data-season-home faz o mesmo pra seção extra da home (épocas com
+  // departamentos), mas só se há produto suficiente pra ela aparecer.
+  // SEASONAL_OVERRIDE (id ou apelido, ex.: maes | black | off) força a época pra
+  // testar o build antes da data; sem a variável vale o calendário.
+  const override = process.env.SEASONAL_OVERRIDE ? parseSeasonalOverride(process.env.SEASONAL_OVERRIDE.trim()) : undefined
+  const season = override !== undefined ? override : resolveSeasonalTheme(new Date())
+  const seasonEvent = getSeasonalEvent(season)
+  const seasonVerticals = seasonalVerticals(seasonEvent)
+  const seasonHomeSection =
+    hasDropsFile &&
+    Boolean(seasonEvent?.home && seasonVerticals) &&
+    selectDrops(topPriceDrops, seasonVerticals, HOME_SECTION_MAX_ITEMS).items.length >= HOME_SECTION_MIN_ITEMS
+  const seasonAttrs = season ? ` data-season="${season}"${seasonHomeSection ? ' data-season-home' : ''}` : ''
+  const template = season ? baseTemplate.replace(/<html(\s[^>]*)?>/, `<html$1${seasonAttrs}>`) : baseTemplate
+  if (season) console.log(`[sazonal] build dentro da época "${season}" —${seasonAttrs} no <html>.`)
 
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
@@ -518,9 +587,7 @@ async function main() {
       routePath,
       initialData: product,
       head: {
-        title: titleCategory
-          ? `Comprar ${product.productName} – ${titleCategory} – ${product.merchantDisplayName} | Compare Ofertas`
-          : `Comprar ${product.productName} – ${product.merchantDisplayName} | Compare Ofertas`,
+        title: buildProductTitle(product.productName, titleCategory, product.merchantDisplayName),
         description,
         canonical,
         image: product.awImageUrl || product.merchantImageUrl,
@@ -699,6 +766,52 @@ async function main() {
       head: { title, description, canonical, jsonLd },
     })
     generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
+  }
+
+  // --- Páginas de campanha (/black-friday/, /natal/): as maiores quedas de
+  // preço confirmadas (public/data/top-price-drops.json, gerado por
+  // generate-home-highlights.mjs). Existem o ano todo de propósito — a URL
+  // precisa estar indexada bem antes da campanha (o Google/Bing demoram
+  // semanas pra indexar página nova aqui), e o conteúdo é útil fora de
+  // temporada também. ---
+  if (hasDropsFile) {
+    // Rotas, títulos, textos e departamentos vêm da tabela em
+    // src/lib/seasonalEvents.ts — a mesma que o cliente usa, então não dá pra
+    // divergir. Cada página recebe a fatia dela (selectDrops).
+    for (const landing of SEASONAL_LANDINGS) {
+      const routePath = landing.path.replace(/\/$/, '')
+      const { breadcrumb: name, seoTitle: title, seoDescription: description } = getSeasonalLanding(landing.id)
+      const slice = selectDrops(topPriceDrops, landing.verticals, LANDING_MAX_ITEMS)
+      const canonical = `${SITE_URL}${routePath}/`
+      const jsonLd = [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+            { '@type': 'ListItem', position: 2, name, item: canonical },
+          ],
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: slice.items.slice(0, 20).map((p, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${SITE_URL}/${p.merchantSlug}/${p.slug}/`,
+            name: p.productName,
+          })),
+        },
+      ]
+      const url = await renderPage({
+        template,
+        renderRoute,
+        routePath,
+        initialData: slice,
+        head: { title, description, canonical, jsonLd },
+      })
+      generatedUrls.push({ url, changefreq: 'daily', priority: 0.7, lastmod: buildDate })
+    }
   }
 
   // --- Páginas de cupom por loja (/cupons/{merchantSlug}) — SEO pra buscas

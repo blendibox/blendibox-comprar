@@ -7,6 +7,7 @@ import type {
   Product,
   ProductIndexEntry,
   SalesHighlight,
+  SeasonalDropsFile,
 } from '../types/product'
 
 function dataUrl(path: string) {
@@ -49,4 +50,8 @@ export function fetchSalesHighlights() {
 
 export function fetchHomeHighlights() {
   return getJson<HomeHighlights>('home-highlights.json')
+}
+
+export function fetchTopPriceDrops() {
+  return getJson<SeasonalDropsFile>('top-price-drops.json')
 }

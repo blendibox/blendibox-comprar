@@ -199,6 +199,33 @@ export interface HomeHighlights {
   priceDropsCount?: number
 }
 
+// Páginas e seções de campanha (/black-friday/, /dia-das-maes/, a home em
+// época de data comemorativa...): as maiores quedas de preço CONFIRMADAS,
+// já limitadas por loja e separadas por departamento no build
+// (scripts/generate-home-highlights.mjs) — arquivo pequeno, sem depender do
+// index.json inteiro. Cada página pega a sua fatia (selectDrops em
+// lib/seasonalEvents.ts).
+export interface SeasonalDropsGroup {
+  // Quantos produtos passam do corte de queda mínima no grupo (a lista em si
+  // traz só os `items` de maior queda)
+  total: number
+  items: ProductIndexEntry[]
+}
+export interface SeasonalDropsFile {
+  generatedAt: string
+  // Queda mínima (%) pra entrar
+  minDropPercent: number
+  all: SeasonalDropsGroup
+  byVertical: Record<string, SeasonalDropsGroup>
+}
+// A fatia de uma página: também é o dado inicial injetado no HTML estático.
+export interface SeasonalDropsSlice {
+  generatedAt: string
+  minDropPercent: number
+  total: number
+  items: ProductIndexEntry[]
+}
+
 // Dado injetado por scripts/prerender.mjs pra a home renderizar as seções
 // curadas já no HTML estático (sem esperar os fetches no cliente) — mesma
 // fonte que o home-highlights.json/merchants.json/meta.json do build.

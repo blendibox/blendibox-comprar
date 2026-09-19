@@ -232,7 +232,18 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
 }
 
+// Assunto/título do resumo semanal. Em época comemorativa o generate-digest.mjs
+// grava `subject`/`heading`/`season` no digest.json; sem eles (digest antigo ou
+// fora de época) fica o texto de sempre.
+const DEFAULT_DIGEST_TITLE = 'Ofertas da semana no Compare Ofertas'
+
 function buildDigestHtml(digest) {
+  const seasonHtml = digest.season?.url
+    ? `<p style="margin:0 0 16px;font-size:14px;color:#444;">
+        ${escapeHtml(digest.season.label)}: veja também as
+        <a href="${escapeHtml(digest.season.url)}" style="color:#db2777;font-weight:700;">quedas de preço confirmadas</a>.
+      </p>`
+    : ''
   const itemsHtml = digest.items
     .map(
       (item) => `
@@ -267,7 +278,8 @@ function buildDigestHtml(digest) {
 
   return `
     <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;">
-      <h2 style="color:#0f172a;">Ofertas da semana no Compare Ofertas</h2>
+      <h2 style="color:#0f172a;">${escapeHtml(digest.heading || DEFAULT_DIGEST_TITLE)}</h2>
+      ${seasonHtml}
       <table style="width:100%;border-collapse:collapse;">${itemsHtml}</table>
       ${couponsHtml}
       <p style="margin-top:24px;font-size:12px;color:#888;">
@@ -280,7 +292,13 @@ function buildDigestHtml(digest) {
 // Versão em texto puro do mesmo conteúdo — e-mails só-HTML (sem a parte
 // text/plain) são um sinal que filtros de spam penalizam.
 function buildDigestText(digest) {
-  const lines = ['Ofertas da semana no Compare Ofertas', '']
+  const lines = [digest.heading || DEFAULT_DIGEST_TITLE, '']
+
+  if (digest.season?.url) {
+    lines.push(`${digest.season.label}: veja também as quedas de preço confirmadas:`)
+    lines.push(digest.season.url)
+    lines.push('')
+  }
 
   for (const item of digest.items) {
     lines.push(`${item.merchantDisplayName} — ${item.productName}`)
@@ -325,7 +343,7 @@ async function sendWeeklyDigest(env) {
     body: JSON.stringify({
       segment_id: env.RESEND_SEGMENT_ID,
       from: env.DIGEST_FROM_EMAIL,
-      subject: 'Ofertas da semana no Compare Ofertas',
+      subject: digest.subject || DEFAULT_DIGEST_TITLE,
       name: `Resumo semanal ${new Date().toISOString().slice(0, 10)}`,
       html: buildDigestHtml(digest),
       text: buildDigestText(digest),

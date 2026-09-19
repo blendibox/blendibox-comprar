@@ -21,6 +21,8 @@ import { BlogPage } from './pages/BlogPage'
 import { BlogPostPage } from './pages/BlogPostPage'
 import { QuizzesPage } from './pages/QuizzesPage'
 import { QuizDetailPage } from './pages/QuizDetailPage'
+import { SeasonalLandingPage } from './pages/SeasonalLandingPage'
+import { SEASONAL_LANDINGS } from './lib/seasonalEvents'
 
 export function AppRoutes() {
   return (
@@ -41,6 +43,9 @@ export function AppRoutes() {
         <Route path="blog/:slug" element={<BlogPostPage />} />
         <Route path="quizzes" element={<QuizzesPage />} />
         <Route path="quizzes/:slug" element={<QuizDetailPage />} />
+        {SEASONAL_LANDINGS.map((landing) => (
+          <Route key={landing.id} path={landing.path.replace(/\//g, '')} element={<SeasonalLandingPage id={landing.id} />} />
+        ))}
         <Route path="listas/nova" element={<CreateRegistryPage />} />
         <Route path="lista/:id" element={<RegistryPublicPage />} />
         <Route path="lista/:id/editar" element={<RegistryManagePage />} />

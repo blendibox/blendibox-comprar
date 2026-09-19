@@ -8,6 +8,20 @@ import { setInitialData } from './lib/initialData'
 export { blogPosts } from './data/blog'
 // Mesmo motivo do reexport acima, mas pros quizzes (src/data/quizzes).
 export { quizzes } from './data/quizzes'
+// prerender.mjs usa a MESMA função do cliente pra saber se o build cai dentro
+// de uma campanha sazonal (e reservar o espaço do banner) — uma regra só.
+export {
+  HOME_SECTION_MAX_ITEMS,
+  HOME_SECTION_MIN_ITEMS,
+  LANDING_MAX_ITEMS,
+  SEASONAL_LANDINGS,
+  getSeasonalEvent,
+  getSeasonalLanding,
+  parseSeasonalOverride,
+  resolveSeasonalTheme,
+  seasonalVerticals,
+  selectDrops,
+} from './lib/seasonalEvents'
 
 export function renderRoute(routePath: string, initialData?: unknown) {
   if (initialData !== undefined) setInitialData(routePath, initialData)

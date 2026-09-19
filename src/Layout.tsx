@@ -3,6 +3,9 @@ import { Header } from './components/Header'
 import { Footer } from './components/Footer'
 import { ComparatorTray } from './components/ComparatorTray'
 import { TopBar } from './components/TopBar'
+import { SeasonalBanner } from './components/SeasonalBanner'
+import { getSeasonalEvent } from './lib/seasonalEvents'
+import { useSeasonalTheme } from './lib/useSeasonalTheme'
 import { CouponWheelButton } from './components/CouponWheel'
 import { ScrollToTop } from './components/ScrollToTop'
 import { ComparatorProvider } from './context/ComparatorContext'
@@ -21,14 +24,18 @@ export function Layout() {
   // loja, em ProductExitIntentCoupon) — suprime o da roleta sitewide aqui
   // pra não empilhar os dois popups na mesma saída (ver CouponWheel.tsx).
   const onProductPage = Boolean(useMatch(':merchant/:slug'))
+  // Halo suave da época no topo do conteúdo (mesma paleta do banner). Só
+  // pintura, definido após montar como o banner — não mexe no layout.
+  const season = getSeasonalEvent(useSeasonalTheme())
 
   return (
     <ComparatorProvider>
       <FavoritesProvider>
         <ScrollToTop />
+        <SeasonalBanner />
         <TopBar />
         <Header />
-        <main>
+        <main className={season ? `seasonal-halo seasonal-theme--${season.palette}` : undefined}>
           <Outlet />
         </main>
         <Footer />
