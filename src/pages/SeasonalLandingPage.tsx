@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react'
 import { Link } from '../components/Link'
 import { ProductCard } from '../components/ProductCard'
 import { SeasonalIcon } from '../components/SeasonalIcon'
-import { Gift, ShieldCheck } from '../components/Icon'
+import { ChevronDown, Gift, ShieldCheck } from '../components/Icon'
 import { fetchTopPriceDrops } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
 import {
   LANDING_MAX_ITEMS,
   brazilYear,
   daysUntil,
+  getSeasonalEvent,
   getSeasonalLanding,
   selectDrops,
   type SeasonalLandingId,
 } from '../lib/seasonalEvents'
 import { timeAgo } from '../lib/timeAgo'
+import { useSeasonalTheme } from '../lib/useSeasonalTheme'
 import type { SeasonalDropsSlice } from '../types/product'
 
 // Páginas de campanha (/black-friday/, /dia-das-maes/...): as maiores quedas de
@@ -44,6 +46,10 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
   // (erro de hidratação #418).
   const [status, setStatus] = useState<string | null>(null)
   const [now, setNow] = useState<number | null>(null)
+  // Texto de apoio do card do topo: aberto no desktop, recolhido no celular
+  // (regra no CSS; este estado só vale no celular). Começa fechado igual no
+  // servidor e no cliente — não muda a hidratação.
+  const [leadOpen, setLeadOpen] = useState(false)
 
   useEffect(() => {
     clearInitialData(page.path)
@@ -62,6 +68,10 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
   }, [page])
 
   const items = data?.items ?? []
+  const minDrop = data?.minDropPercent ?? 10
+  // Só depois de montar (o tema é null no servidor e na primeira renderização)
+  const event = getSeasonalEvent(useSeasonalTheme())
+  const eventName = page.eventEyebrow && event?.landing === page.id ? event.banner.badge : null
 
   return (
     <div className="page seasonal-landing">
@@ -75,9 +85,25 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
         <span className="seasonal-landing__eyebrow">
           <SeasonalIcon name={page.icon} size={16} strokeWidth={2.5} aria-hidden="true" />
           {page.eyebrow}
+          {eventName && ` · ${eventName}`}
         </span>
         <h1>{page.title}</h1>
-        <p className="seasonal-landing__lead">{page.lead}</p>
+        {page.tagline && <p className="seasonal-landing__tagline">{page.tagline}</p>}
+        <div className={`seasonal-landing__lead-wrap${leadOpen ? ' is-open' : ''}`}>
+          <button
+            type="button"
+            className="seasonal-landing__lead-toggle"
+            aria-expanded={leadOpen}
+            aria-controls="seasonal-landing-lead"
+            onClick={() => setLeadOpen((open) => !open)}
+          >
+            {leadOpen ? 'Fechar' : 'Saiba mais'}
+            <ChevronDown size={16} aria-hidden="true" />
+          </button>
+          <p id="seasonal-landing-lead" className="seasonal-landing__lead">
+            {page.lead}
+          </p>
+        </div>
         {status && <p className="seasonal-landing__status">{status}</p>}
       </header>
 
@@ -97,17 +123,34 @@ export function SeasonalLandingPage({ id }: { id: SeasonalLandingId }) {
         </section>
       )}
 
-      <section className="seasonal-landing__verify">
-        <ShieldCheck size={22} aria-hidden="true" />
-        <div>
+      {/* Recolhido por padrão (no celular o texto ocupava a primeira tela
+          inteira). <details> nativo: abre com teclado/toque sem JS, e o texto
+          continua no HTML estático. */}
+      <details className="seasonal-landing__verify">
+        <summary>
+          <ShieldCheck size={22} aria-hidden="true" />
           <strong>Como a gente verifica</strong>
+          <span className="seasonal-landing__verify-toggle">
+            <span className="seasonal-landing__verify-toggle-closed">Saiba mais</span>
+            <span className="seasonal-landing__verify-toggle-open">Fechar</span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </span>
+        </summary>
+        <div className="seasonal-landing__verify-body">
+          <p className="seasonal-landing__verify-key">Não comparamos apenas com o preço anterior.</p>
           <p>
-            Todo dia comparamos o preço de cada produto com o histórico que monitoramos. Só listamos queda de{' '}
-            {data?.minDropPercent ?? 10}% ou mais em relação ao preço de cerca de 7 dias atrás. Variações acima de
-            80% ficam de fora — quase sempre são erro de preço na loja, não desconto de verdade.
+            Para identificar uma queda, comparamos o preço atual com o preço que estávamos monitorando cerca de 7 dias
+            antes. Só entram aqui produtos que ficaram pelo menos {minDrop}% mais baratos nesse período.
+          </p>
+          <p>
+            Quedas acima de 80% são desconsideradas porque podem indicar erro ou inconsistência de preço na loja, e não
+            uma redução real.
+          </p>
+          <p className="seasonal-landing__verify-sum">
+            Aqui você vê quanto o preço caiu em relação ao histórico que monitoramos pra você.
           </p>
         </div>
-      </section>
+      </details>
 
       {data === null && <p className="status">Carregando ofertas...</p>}
 

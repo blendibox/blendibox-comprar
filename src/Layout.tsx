@@ -35,7 +35,13 @@ export function Layout() {
         <SeasonalBanner />
         <TopBar />
         <Header />
-        <main className={season ? `seasonal-halo seasonal-theme--${season.palette}` : undefined}>
+        <main
+          className={
+            season
+              ? `seasonal-halo seasonal-theme--${season.palette}${season.soft ? ' seasonal-halo--soft' : ''}`
+              : undefined
+          }
+        >
           <Outlet />
         </main>
         <Footer />

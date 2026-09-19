@@ -38,6 +38,7 @@ export type SeasonalPalette =
   | 'pais'
   | 'pascoa'
   | 'aulas'
+  | 'posnatal'
 
 const TIME_ZONE = 'America/Sao_Paulo'
 const DAY_MS = 86_400_000
@@ -115,7 +116,14 @@ interface SeasonalLandingDef<Id extends string> {
   eyebrow: string
   breadcrumb: string
   title: string
+  // Frase logo abaixo do título (a "venda" da página); o lead explica um pouco
+  // mais, e o método fica no bloco "Como a gente verifica" da própria página
+  tagline?: string
   lead: string
+  // Durante uma época que aponta pra esta página, o eyebrow ganha o nome dela
+  // ("Quedas de preço · Dia do Consumidor"). O H1 não muda: fica igual no HTML
+  // estático e no cliente (SEO, hidratação e sem deslocamento de layout).
+  eventEyebrow?: boolean
   seoTitle: string
   seoDescription: string
   // Departamentos (vertical) que a página lista — null = catálogo todo
@@ -142,8 +150,10 @@ export const SEASONAL_LANDINGS = [
     icon: 'shield-check',
     eyebrow: 'Quedas de preço',
     breadcrumb: 'Quedas de preço',
-    title: 'Maiores quedas de preço verificadas',
-    lead: `Todo dia comparamos o preço de cada produto com o histórico que monitoramos. ${VERIFIED_LEAD}`,
+    title: 'Maiores quedas de preço',
+    tagline: 'Produtos que ficaram mais baratos — de verdade.',
+    lead: 'A gente acompanha os preços ao longo do tempo e destaca os produtos que tiveram uma queda relevante em relação ao histórico recente. Assim, você vê onde o preço realmente mudou antes de comprar.',
+    eventEyebrow: true,
     seoTitle: 'Maiores quedas de preço de hoje | Compare Ofertas',
     seoDescription:
       'As maiores quedas de preço confirmadas hoje, de várias lojas: comparamos com o histórico que monitoramos e listamos só o que ficou mais barato de verdade.',
@@ -492,7 +502,7 @@ export const SEASONAL_EVENTS = [
     banner: {
       badge: 'Esquenta Black Friday',
       badgeShort: 'Esquenta Black',
-      headline: (y) => `A Black Friday é dia ${blackFridayDayOfMonth(y)}/11. Não compre antes de comparar.`,
+      headline: () => 'Comece comparando antes de comprar.',
       sub: 'Acompanhe o preço de hoje pra saber quem baixa de verdade.',
       cta: 'Ver quedas reais',
       to: '/black-friday/',
@@ -549,6 +559,27 @@ export const SEASONAL_EVENTS = [
       hint: 'Presentes que baixaram de preço de verdade.',
     },
     hashtag: 'natal',
+  }),
+  defineEvent({
+    id: 'pos-natal',
+    palette: 'posnatal',
+    icon: 'sparkles',
+    // 26/12 a 31/12: o Natal acaba no dia 25 (sem arrastar o tema até a virada)
+    window: (y) => ({ start: dayNumber(y, 12, 26), end: dayNumber(y, 12, 31) }),
+    banner: {
+      badge: 'Fim de ano',
+      headline: () => 'Últimas ofertas do ano.',
+      sub: 'Compare preços antes de comprar.',
+      cta: 'Ver quedas de preço',
+      to: '/quedas-de-preco/',
+    },
+    tag: { lead: 'Fim de', accent: 'ano' },
+    landing: 'quedas-de-preco',
+    home: {
+      title: 'Últimas quedas do ano',
+      hint: 'Só o que ficou mais barato de verdade.',
+    },
+    hashtag: 'fimdeano',
   }),
 ]
 
@@ -629,6 +660,8 @@ const OVERRIDE_ALIASES: Record<string, SeasonalThemeId> = {
   consumidor: 'dia-do-consumidor',
   aulas: 'volta-as-aulas',
   mulher: 'dia-da-mulher',
+  posnatal: 'pos-natal',
+  fimdeano: 'pos-natal',
 }
 
 // undefined = valor inválido; null = "sem tema"

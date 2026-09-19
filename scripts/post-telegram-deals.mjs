@@ -229,7 +229,7 @@ async function postDigest(items, season) {
   const buttons = items.map((item, i) => [{ text: `${i + 1}. ${truncate(item.productName, 40)}`, url: productLink(item) }])
   buttons.push(
     season
-      ? [{ text: `Ver as quedas de ${season.label}`, url: season.landingUrl }]
+      ? [{ text: `Ver quedas de preço · ${season.label}`, url: season.landingUrl }]
       : [{ text: 'Ver todas as ofertas', url: `${SITE_URL}/` }]
   )
 
