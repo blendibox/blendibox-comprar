@@ -482,6 +482,10 @@ async function main() {
     LANDING_MAX_ITEMS,
     HOME_SECTION_MAX_ITEMS,
     HOME_SECTION_MIN_ITEMS,
+    buildCategoryInsights,
+    buildProductFaq,
+    faqJsonLd: buildFaqJsonLd,
+    isSitemapCategory,
   } = await buildEntryServer()
 
   // Quedas de preço confirmadas (public/data/top-price-drops.json, gerado por
@@ -515,6 +519,12 @@ async function main() {
 
   const index = JSON.parse(await readFile(path.join(DATA_DIR, 'index.json'), 'utf-8'))
   const generatedUrls = []
+  // FAQ gerado do histórico de preço (mesma função da página, ver
+  // src/lib/priceInsights.ts) — só produto com queda de preço ganha.
+  const productFaqJsonLd = (product) => {
+    const faq = buildProductFaq(product)
+    return faq.length > 0 ? [buildFaqJsonLd(faq)] : []
+  }
 
   // product.similar no disco só tem {slug, merchantSlug} (ver fetch-feeds.mjs
   // — o snapshot completo repetido em até 6 cópias por produto era ~70% do
@@ -591,7 +601,7 @@ async function main() {
         description,
         canonical,
         image: product.awImageUrl || product.merchantImageUrl,
-        jsonLd: productJsonLd(product, canonical),
+        jsonLd: [...productJsonLd(product, canonical), ...productFaqJsonLd(product)],
         product: { price: product.searchPrice, currency: product.currency },
       },
     })
@@ -608,7 +618,10 @@ async function main() {
   const byVertical = new Map()
   const byMerchant = new Map()
   const byCategory = new Map()
-  for (const entry of debugLimit ? [] : index) {
+  // DEBUG_ONLY_CATEGORY=vertical/categoria: com DEBUG_LIMIT, ainda monta os hubs
+  // e renderiza só essa categoria (pra testar o bloco de dados sem prerenderizar tudo)
+  const onlyCategory = process.env.DEBUG_ONLY_CATEGORY || null
+  for (const entry of debugLimit && !onlyCategory ? [] : index) {
     if (!byVertical.has(entry.vertical)) byVertical.set(entry.vertical, [])
     byVertical.get(entry.vertical).push(entry)
 
@@ -682,23 +695,72 @@ async function main() {
     generatedUrls.push({ url, changefreq: 'daily', priority: 0.7 })
   }
 
+  let skippedCategoryUrls = 0
   for (const [key, items] of byCategory) {
+    if (onlyCategory && key !== onlyCategory) continue
     const [vertical, categorySlug] = key.split('/')
     const routePath = `/${vertical}/categoria/${categorySlug}`
     const canonical = `${SITE_URL}${routePath}/`
+    const categoryLabelText = categoryHubLabel(categorySlug)
+    // Bloco de dados (faixa de preço, quedas verificadas, FAQ) — só em categoria
+    // com produto suficiente; o mesmo objeto vai no HTML e no JSON-LD.
+    const insights = buildCategoryInsights(items, categorySlug, categoryLabelText, buildDate)
+    const categoryJsonLd = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Início', item: `${SITE_URL}/` },
+          { '@type': 'ListItem', position: 2, name: vertical, item: `${SITE_URL}/${vertical}/` },
+          { '@type': 'ListItem', position: 3, name: categoryLabelText, item: canonical },
+        ],
+      },
+    ]
+    if (insights) {
+      categoryJsonLd.push({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: `${categoryLabelText} em ${vertical}`,
+        url: canonical,
+        dateModified: buildDate,
+      })
+      categoryJsonLd.push(buildFaqJsonLd(insights.faq))
+      if (insights.drops.length > 0) {
+        categoryJsonLd.push({
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          name: `Maiores quedas verificadas de ${categoryLabelText}`,
+          itemListElement: insights.drops.map((drop, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `${SITE_URL}${drop.path}`,
+            name: drop.name,
+          })),
+        })
+      }
+    }
     const url = await renderPage({
       template,
       renderRoute,
       routePath,
-      initialData: { items: items.slice(0, PAGE_SIZE), totalCount: items.length },
+      initialData: { items: items.slice(0, PAGE_SIZE), totalCount: items.length, insights },
       head: {
-        title: `${categoryHubLabel(categorySlug)} em ${vertical} | Compare Ofertas`,
-        description: `Compare ${items.length.toLocaleString('pt-BR')} ofertas de ${categoryHubLabel(categorySlug)} em ${vertical}.`,
+        title: `${categoryLabelText} em ${vertical} | Compare Ofertas`,
+        description: `Compare ${items.length.toLocaleString('pt-BR')} ofertas de ${categoryLabelText} em ${vertical}.`,
         canonical,
+        jsonLd: categoryJsonLd,
       },
     })
-    generatedUrls.push({ url, changefreq: 'weekly', priority: 0.6 })
+    // Categoria sem nome que sirva (só número, espanhol/inglês do feed, "geral")
+    // ou minúscula continua existindo, mas não vai pro sitemap (ver
+    // isSitemapCategory em src/lib/priceInsights.ts).
+    if (isSitemapCategory(categorySlug, items.length)) {
+      generatedUrls.push({ url, changefreq: 'weekly', priority: 0.6 })
+    } else {
+      skippedCategoryUrls++
+    }
   }
+  if (skippedCategoryUrls > 0) console.log(`[sitemap] ${skippedCategoryUrls} categorias de baixo valor ficaram de fora do sitemap.`)
 
   // --- Páginas institucionais (estáticas, sem dado de produto) ---
   const faqItems = JSON.parse(await readFile(path.join(ROOT, 'src', 'data', 'faq.json'), 'utf-8'))

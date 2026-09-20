@@ -6,6 +6,9 @@ import { clearInitialData, peekInitialData } from '../lib/initialData'
 import { categoryHubLabel } from '../lib/categoryLabels'
 import type { ListInitialData } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
+import { CategoryInsightsBlock } from '../components/CategoryInsightsBlock'
+import { FaqBlock } from '../components/FaqBlock'
+import { accentuateLabel } from '../lib/priceInsights'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
 
@@ -16,6 +19,7 @@ export function CategoryPage() {
   const categoryLabel = categoryHubLabel(categorySlug)
   const path = `/${vertical}/categoria/${categorySlug}/`
   const [initial] = useState<ListInitialData | null>(() => peekInitialData<ListInitialData>(path))
+  const insights = initial?.insights ?? null
   const { products, state } = useIndex()
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')
@@ -62,6 +66,10 @@ export function CategoryPage() {
         <h1 style={{ textTransform: 'capitalize' }}>{categoryLabel}</h1>
         <p className="page__meta">{totalCount.toLocaleString('pt-BR')} produtos</p>
       </header>
+
+      {/* Só vem no HTML estático (calculado no build, com a data do build): o
+          mesmo dado no servidor e na primeira renderização do cliente. */}
+      {insights && <CategoryInsightsBlock insights={insights} label={accentuateLabel(categoryLabel)} />}
 
       {state === 'loading' && !initial && <p className="status">Carregando...</p>}
       {state === 'ready' && filtered.length === 0 && <p className="status">Nenhum produto encontrado nesta categoria.</p>}
@@ -114,6 +122,8 @@ export function CategoryPage() {
           )}
         </>
       )}
+
+      {insights && <FaqBlock title={`Perguntas frequentes sobre ${accentuateLabel(categoryLabel)}`} items={insights.faq} />}
     </div>
   )
 }

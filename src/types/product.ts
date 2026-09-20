@@ -146,9 +146,36 @@ export interface MerchantMeta {
   merchantId: string | null
 }
 
+// Pergunta/resposta gerada dos dados (menor preço, preço habitual, queda...) —
+// ver src/lib/priceInsights.ts
+export interface FaqItem {
+  question: string
+  answer: string
+}
+
+// Bloco de dados de uma página de categoria (calculado no build e injetado no
+// HTML estático; ver buildCategoryInsights em src/lib/priceInsights.ts)
+export interface CategoryInsights {
+  // AAAA-MM-DD do build — a data que a página mostra em "atualizado em"
+  updatedIso: string
+  count: number
+  merchantCount: number
+  minPrice: number
+  maxPrice: number
+  medianPrice: number
+  cheapest: { name: string; merchant: string; price: number; path: string }
+  // Quedas VERIFICADAS (ver src/lib/priceDrop.ts): total e as maiores
+  verifiedDropCount: number
+  validDropCount: number
+  drops: { name: string; merchant: string; price: number; percent: number; path: string }[]
+  faq: FaqItem[]
+}
+
 export interface ListInitialData {
   items: ProductIndexEntry[]
   totalCount: number
+  // Só nas categorias com produto suficiente (ver buildCategoryInsights)
+  insights?: CategoryInsights | null
 }
 
 export interface HubInitialData extends ListInitialData {

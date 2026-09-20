@@ -24,6 +24,8 @@ import { PriceTargetForm } from '../components/PriceTargetForm'
 import { Carousel } from '../components/Carousel'
 import { ShareBar } from '../components/ShareBar'
 import { ProductNotFound } from '../components/ProductNotFound'
+import { FaqBlock } from '../components/FaqBlock'
+import { buildProductFaq } from '../lib/priceInsights'
 import { useComparator } from '../context/ComparatorContext'
 import { useFavorites } from '../context/FavoritesContext'
 import { formatSimpleDateBr, isoDateMs, parseBrDate } from '../lib/date'
@@ -382,6 +384,10 @@ export function ProductPage() {
           )}
         </div>
       </div>
+
+      {/* FAQ gerado do histórico de preço — só em produto com queda (ver
+          buildProductFaq); o mesmo texto vai no JSON-LD FAQPage do prerender. */}
+      <FaqBlock title="Perguntas frequentes sobre o preço" items={buildProductFaq(product)} />
 
       {product.crossChannel && (
         <section className="cross-channel-section">

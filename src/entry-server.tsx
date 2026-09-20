@@ -23,6 +23,10 @@ export {
   selectDrops,
 } from './lib/seasonalEvents'
 
+// Texto gerado dos dados (bloco de categoria + FAQ de produto): o prerender usa
+// as MESMAS funções pra gravar o JSON-LD, senão o HTML e o schema divergiriam.
+export { buildCategoryInsights, buildProductFaq, faqJsonLd, isSitemapCategory } from './lib/priceInsights'
+
 export function renderRoute(routePath: string, initialData?: unknown) {
   if (initialData !== undefined) setInitialData(routePath, initialData)
   const html = renderToStaticMarkup(

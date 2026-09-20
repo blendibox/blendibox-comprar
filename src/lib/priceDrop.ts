@@ -154,3 +154,60 @@ export function assessPriceDrop(
     upwardMoves,
   }
 }
+
+// ---- Resumo do histórico (pra texto: FAQ da página do produto) --------------
+
+export interface PriceHistorySummary {
+  // Dias desde o primeiro preço monitorado
+  historyDays: number
+  // Menor e maior preço monitorados (data = primeiro dia em que chegou nele)
+  lowest: PricePoint
+  highest: PricePoint
+  // Preço habitual: mediana diária dos últimos até 90 dias, até hoje
+  habitual: number
+  // Quantas vezes o preço mudou
+  changes: number
+}
+
+// `series` = pontos de mudança de preço (o preço vale até o próximo); o preço
+// de hoje é `currentPrice`. Determinístico: só usa `todayIso`, nunca o relógio.
+export function summarizePriceHistory(
+  series: PricePoint[],
+  currentPrice: number,
+  todayIso: string
+): PriceHistorySummary | null {
+  const points = series.filter((p) => p.date <= todayIso)
+  if (points.length === 0) return null
+  const all = [...points]
+  if (all[all.length - 1].price !== currentPrice) all.push({ date: todayIso, price: currentPrice })
+
+  let lowest = all[0]
+  let highest = all[0]
+  let changes = 0
+  for (let i = 0; i < all.length; i++) {
+    if (all[i].price < lowest.price) lowest = all[i]
+    if (all[i].price > highest.price) highest = all[i]
+    if (i > 0 && all[i].price !== all[i - 1].price) changes++
+  }
+
+  const first = dayNumber(all[0].date)
+  const today = dayNumber(todayIso)
+  const daily: number[] = []
+  let pointer = 0
+  let price = all[0].price
+  for (let day = first; day <= today; day++) {
+    while (pointer < all.length && dayNumber(all[pointer].date) <= day) {
+      price = all[pointer].price
+      pointer++
+    }
+    daily.push(price)
+  }
+  const sorted = daily.slice(-REFERENCE_WINDOW_DAYS).sort((a, b) => a - b)
+  return {
+    historyDays: today - first,
+    lowest,
+    highest,
+    habitual: sorted[Math.floor((sorted.length - 1) / 2)],
+    changes,
+  }
+}
