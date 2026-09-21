@@ -70,6 +70,17 @@ function hasBlacklistedWord(title) {
   return TITLE_BLACKLIST.some((word) => normalized.includes(stripAccents(word).toLowerCase()))
 }
 
+// Trechos de título que derrubam o produto SÓ no merchant que os lista em
+// "excludeTitles" (merchants.config.json) — lixo de feed que não é produto real
+// (SKU de teste, taxa de conexão de chip etc.). Casamento por substring, sem
+// acento nem maiúscula.
+function hasExcludedTitle(merchant, title) {
+  const list = merchant.excludeTitles
+  if (!Array.isArray(list) || list.length === 0) return false
+  const normalized = stripAccents(title).toLowerCase()
+  return list.some((word) => normalized.includes(stripAccents(word).toLowerCase()))
+}
+
 const NUMERIC_FIELDS = new Set([
   'searchPrice',
   'storePrice',
@@ -328,6 +339,7 @@ async function main() {
   let skippedNoImage = 0
   let skippedBrokenLiveImage = 0
   let skippedBlacklistedTitle = 0
+  let skippedExcludedTitle = 0
 
   function finalizeProduct(mapped, merchant, realImage) {
     mapped.awImageUrl = realImage
@@ -386,6 +398,10 @@ async function main() {
       skippedBlacklistedTitle++
       continue
     }
+    if (hasExcludedTitle(merchant, mapped.productName)) {
+      skippedExcludedTitle++
+      continue
+    }
     const candidates = getRealImageCandidates(mapped)
     if (!candidates.length) {
       skippedNoImage++
@@ -440,6 +456,9 @@ async function main() {
       `[imagens] ${skippedNoImage} produtos sem foto real ignorados (placeholder ou campo vazio)` +
         (skippedBrokenLiveImage > 0 ? `, ${skippedBrokenLiveImage} deles confirmados via checagem ao vivo` : '')
     )
+  }
+  if (skippedExcludedTitle > 0) {
+    console.log(`[excludeTitles] ${skippedExcludedTitle} produtos ignorados por título de lixo do feed`)
   }
   if (skippedBlacklistedTitle > 0) {
     console.log(`[blacklist] ${skippedBlacklistedTitle} produtos ignorados por palavra bloqueada no título`)
