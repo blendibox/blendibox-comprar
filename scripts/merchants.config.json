@@ -1,11 +1,11 @@
 {
   "_comment": "Chave = merchant_id (ID do anunciante na Awin, campo merchant_id do feed). 'active' = está incluído no fid list de scripts/feeds.config.json agora. 'priority' = sempre gera página estática, ignora o limiar de produtos similares (reservado para marcas com histórico de vendas comprovado). 'verifyImages' = faz checagem ao vivo (HTTP HEAD) das imagens antes de publicar — a proxy images2.productserve.com retorna HTTP 200 mesmo pra imagem quebrada (redireciona pra /noimage.gif), então o filtro por string na URL não pega; reservado pra merchants com muita foto quebrada, já que checar todo o catálogo seria caro demais. 'titleBlacklistEnabled' = descarta o produto se o título bater com alguma palavra de TITLE_BLACKLIST em scripts/fetch-feeds.mjs (lista única, compartilhada — reservado pra feeds de marketplace/nicho com risco maior de título impróprio). 'forceCurrency' = ignora o campo currency do feed e usa este valor fixo — reservado pra merchant cujo feed manda a moeda errada (ex: LG BR manda tudo como USD mesmo os preços sendo em reais).",
   "merchants": {
-    "17780": { "slug": "mac", "displayName": "MAC Cosmeticos BR", "vertical": "beleza", "active": true },
+    "17780": { "slug": "mac", "displayName": "MAC Cosmeticos BR", "vertical": "beleza", "active": false },
     "17619": { "slug": "foreverliss", "displayName": "Forever Liss BR", "vertical": "beleza", "active": true, "verifyImages": true },
     "17837": { "slug": "eudora", "displayName": "Eudora BR", "vertical": "beleza", "active": true },
-    "21055": { "slug": "vult", "displayName": "Vult BR", "vertical": "beleza", "active": true },
-    "100869": { "slug": "amobeleza", "displayName": "AMOBELEZA BR", "vertical": "beleza", "active": true, "verifyImages": true },
+    "21055": { "slug": "vult", "displayName": "Vult BR", "vertical": "beleza", "active": false },
+    "100869": { "slug": "amobeleza", "displayName": "AMOBELEZA BR", "vertical": "beleza", "active": false, "verifyImages": true },
     "127159": { "slug": "oceane", "displayName": "Oceane BR", "vertical": "beleza", "active": true, "titleBlacklistEnabled": true },
     "17662": { "slug": "vivara", "displayName": "Vivara BR", "vertical": "joias", "active": true, "priority": true },
     "ouiparis": { "slug": "ouiparis", "displayName": "O.U.i Paris", "vertical": "beleza", "active": true, "priority": true },
@@ -23,7 +23,7 @@
     "30511": { "slug": "lego", "displayName": "Lego BR", "vertical": "brinquedos", "active": true },
     "17740": { "slug": "kippling", "displayName": "Kipling BR", "vertical": "moda", "active": true },
     "51271": { "slug": "mizuno", "displayName": "Mizuno BR", "vertical": "esporte", "active": true, "priority": true },
-    "23659": { "slug": "asics", "displayName": "ASICS BR", "vertical": "esporte", "active": true, "priority": true },
+    "23659": { "slug": "asics", "displayName": "ASICS BR", "vertical": "esporte", "active": false, "priority": true },
 
     "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": true },
     "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": true },
@@ -48,7 +48,7 @@
 
     "17648": { "slug": "cea", "displayName": "C&A BR", "vertical": "moda", "active": false },
     "100553": { "slug": "calvinklein", "displayName": "Calvin Klein BR", "vertical": "moda", "active": true },
-    "78310": { "slug": "chillibeans", "displayName": "Chilli Beans BR", "vertical": "moda", "active": true },
+    "78310": { "slug": "chillibeans", "displayName": "Chilli Beans BR", "vertical": "moda", "active": false },
     "124920": { "slug": "lojaybera", "displayName": "Loja Ybera BR", "vertical": "beleza", "active": true },
     "17846": { "slug": "diesel", "displayName": "Diesel BR", "vertical": "moda", "active": true },
     "124520": { "slug": "guess", "displayName": "Guess BR", "vertical": "moda", "active": true },
@@ -59,11 +59,11 @@
     "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": true },
     "118895": { "slug": "lojadomecanico", "displayName": "Loja do Mecanico BR", "vertical": "moda", "active": false },
     "17893": { "slug": "futfanatics", "displayName": "Fut Fanatics BR", "vertical": "esporte", "active": false },
-    "118977": { "slug": "lauriesporte", "displayName": "Lauri Esporte", "vertical": "esporte", "active": true, "verifyImages": true  },
+    "118977": { "slug": "lauriesporte", "displayName": "Lauri Esporte", "vertical": "esporte", "active": false, "verifyImages": true  },
     "17698": { "slug": "olympikus", "displayName": "Olympikus BR", "vertical": "esporte", "active": true, "priority": true },
-    "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": true, "verifyImages": true },
+    "17870": { "slug": "cobasi", "displayName": "Cobasi BR", "vertical": "pet", "active": false, "verifyImages": true },
     "127555": { "slug": "zeedog", "displayName": "Zee Dog BR", "vertical": "pet", "active": true },
-    "127557": { "slug": "zeenow", "displayName": "Zee Now BR", "vertical": "pet", "active": false },
+    "127557": { "slug": "zeenow", "displayName": "Zee Now BR", "vertical": "pet", "active": true },
     "17824": { "slug": "compracerta", "displayName": "Compra Certa BR", "vertical": "casa", "active": true },
     "30615": { "slug": "spicy", "displayName": "Spicy BR", "vertical": "casa", "active": true },
     "30599": { "slug": "stanley", "displayName": "Stanley BR", "vertical": "casa", "active": true, "verifyImages": true  },
@@ -74,6 +74,9 @@
     "126515": { "slug": "radialepneus", "displayName": "Radiale Pneus", "vertical": "automotivo", "active": true },
 
     "17729": { "slug": "kabum", "displayName": "Kabum BR", "vertical": "eletronicos", "active": true },
+    "25539": { "slug": "samsung", "displayName": "Samsung BR", "vertical": "eletronicos", "active": true },
+    "23524": { "slug": "dufrio", "displayName": "Dufrio BR", "vertical": "casa", "active": true },
+    "17608": { "slug": "centralar", "displayName": "Central Ar BR", "vertical": "casa", "active": true },
     "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": false },
 
     "126693": { "slug": "exypna", "displayName": "Exypna", "vertical": "saude", "active": true },

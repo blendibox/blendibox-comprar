@@ -30,7 +30,7 @@ export const presenteDiaDasMaes: BlogPost = {
     { type: 'h2', text: 'Maquiagem' },
     {
       type: 'p',
-      text: 'Pra mães que curtem make, a seção de [maquiagem](/beleza/categoria/maquiagem) tem opções de MAC e Vult.',
+      text: 'Pra mães que curtem make, a seção de [maquiagem](/beleza/categoria/maquiagem) reúne opções de marcas como a Océane.',
     },
     { type: 'h2', text: 'Bolsas' },
     {

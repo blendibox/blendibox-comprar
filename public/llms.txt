@@ -1,10 +1,10 @@
 # Compare Ofertas
 
-> Comparador de preços que reúne ofertas de marcas conhecidas (Vivara, Nike, Centauro, Mizuno, Olympikus, MAC, Eudora, Amazon, Shopee e outras) vendidas por lojas parceiras, atualizado diariamente. Não é uma loja — cada oferta redireciona para a loja parceira (link de afiliado) ou, em alguns casos, para o WhatsApp de uma representante de vendas autorizada.
+> Comparador de preços que reúne ofertas de marcas conhecidas (Vivara, Nike, Centauro, Mizuno, Olympikus, Eudora, Samsung, Amazon e outras) vendidas por lojas parceiras, atualizado diariamente. Não é uma loja — cada oferta redireciona para a loja parceira (link de afiliado) ou, em alguns casos, para o WhatsApp de uma representante de vendas autorizada.
 
 ## Como o site funciona
 
-- Preços são coletados diariamente dos feeds oficiais dos parceiros (Awin, Shopee, Amazon e catálogos de revenda do Grupo Boticário) e podem ficar desatualizados até a próxima atualização.
+- Preços são coletados diariamente dos feeds oficiais dos parceiros (Awin, Amazon e catálogos de revenda do Grupo Boticário) e podem ficar desatualizados até a próxima atualização.
 - O Compare Ofertas não vende nem processa pagamentos diretamente; a compra final acontece sempre no site da loja parceira ou com a representante de vendas.
 - Links de produto são majoritariamente links de afiliado — cliques que resultam em compra podem gerar comissão para o Compare Ofertas, sem custo extra para quem compra.
 - Nem todo produto tem nota de avaliação ou desconto exibido — esses campos só aparecem quando a loja parceira realmente informa esse dado; nada é inventado.
