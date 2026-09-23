@@ -73,13 +73,16 @@ function pickFeatured(products, merchants) {
   return featured
 }
 
-// Só quedas VERIFICADAS (ver src/lib/priceDrop.ts): contra o preço habitual, com
-// histórico mínimo, no menor preço do período e sem sobe e desce recente. O
-// selo comum (qualquer queda válida) continua nos cards; o que é destacado na
-// home e nas campanhas precisa desse rigor.
+// Carrossel "Caiu de preço": qualquer queda válida (contra o preço habitual —
+// ver src/lib/priceDrop.ts — mas SEM o rigor extra de "verificada": não exige
+// histórico mínimo nem "sem sobe e desce"). O rigor de "verificada" fica
+// reservado pras páginas de campanha/vídeo/Telegram, que fazem uma afirmação
+// mais forte ("Black Friday: quedas verificadas"); aqui a home só mostra "isso
+// caiu de preço essa semana", o mesmo padrão do selo dos cards — sem isso, a
+// contagem da home ficava artificialmente baixa (dezenas em vez de milhares).
 function pickPriceDrops(products) {
   return products
-    .filter((p) => p.priceDropVerified === true && p.priceDropPercent != null)
+    .filter((p) => p.priceDropPercent != null)
     .sort((a, b) => (b.priceDropPercent ?? 0) - (a.priceDropPercent ?? 0))
     .slice(0, MAX_PRICE_DROPS)
 }
@@ -167,10 +170,10 @@ async function main() {
     featured: pickFeatured(index, merchants),
     priceDrops: pickPriceDrops(index),
     recentSales: pickRecentSales(socialProof, index),
-    // Total real de produtos com queda de preço VERIFICADA (não só os ~10 do
+    // Total real de produtos com queda de preço válida (não só os ~10 do
     // carrossel) — usado na linha de "prova de valor" do hero da home. Mesma
-    // definição do carrossel (ver update-price-history.mjs).
-    priceDropsCount: index.filter((p) => p.priceDropVerified === true && p.priceDropPercent != null).length,
+    // definição do carrossel acima (não exige "verificada" — ver pickPriceDrops).
+    priceDropsCount: index.filter((p) => p.priceDropPercent != null).length,
   }
 
   await writeFile(path.join(DATA_DIR, 'home-highlights.json'), JSON.stringify(highlights))

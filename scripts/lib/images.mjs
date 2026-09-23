@@ -35,11 +35,40 @@ const IMAGE_FALLBACK_FIELDS = [
   'largeImage',
 ]
 
+// A proxy da Awin embute a URL original do lojista no parâmetro `url`
+// (ex.: ?url=ssl%3Awww.dufrio.com.br%2Fmedia%2F...jpg). Quando a proxy quebra
+// (redireciona pra noimage.gif) mas o arquivo no lojista continua lá — caso real
+// da Dufrio e da Jo Malone, com 100% das fotos "No image available" no site —,
+// essa URL original ainda serve. Devolve null se não for uma URL da proxy.
+export function productServeOriginUrl(url) {
+  if (!url || !url.includes('images2.productserve.com')) return null
+  try {
+    const raw = new URL(url).searchParams.get('url')
+    if (!raw) return null
+    return `https://${raw.replace(/^ssl:/, '')}`
+  } catch {
+    return null
+  }
+}
+
 // Mesma ordem de fallback, mas retorna a lista inteira de candidatos válidos
 // por string (não só o primeiro) — usado quando é preciso testar mais de um
 // ao vivo (ver verifyImageUrl) em vez de confiar no primeiro.
 export function getRealImageCandidates(product) {
   return IMAGE_FALLBACK_FIELDS.map((field) => product[field]).filter(isRealImageUrl)
+}
+
+// Os candidatos de cima + a URL original embutida em cada URL da proxy, por
+// ÚLTIMO (só é tentada se nenhum campo do feed funcionou). Usada só na
+// verificação ao vivo dos merchants com verifyImages (fetch-feeds.mjs) — NÃO
+// no JSON-LD do prerender, que usa getRealImageCandidates.
+export function getVerifiableImageCandidates(product) {
+  const candidates = getRealImageCandidates(product)
+  for (const url of [...candidates]) {
+    const origin = productServeOriginUrl(url)
+    if (origin && !candidates.includes(origin)) candidates.push(origin)
+  }
+  return candidates
 }
 
 export function pickRealImage(product) {

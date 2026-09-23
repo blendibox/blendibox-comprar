@@ -26,7 +26,7 @@
     "23659": { "slug": "asics", "displayName": "ASICS BR", "vertical": "esporte", "active": false, "priority": true },
 
     "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": true },
-    "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": true },
+    "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": true, "verifyImages": true },
     "106747": { "slug": "aliancas-imperiais", "displayName": "Alianças Imperiais BR", "vertical": "joias", "active": true },
     "17772": { "slug": "brastemp", "displayName": "Brastemp BR", "vertical": "casa", "active": true },
     "17639": { "slug": "consul", "displayName": "Consul BR", "vertical": "casa", "active": true },
@@ -55,7 +55,7 @@
     "17631": { "slug": "loccitane", "displayName": "L'Occitane au Brésil BR", "vertical": "beleza", "active": true },
     "17891": { "slug": "loccitaneenprovence", "displayName": "L'Occitane en Provence BR", "vertical": "beleza", "active": true },
     "17612": { "slug": "elens", "displayName": "eLens BR", "vertical": "moda", "active": true, "verifyImages": true  },
-    "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": true },
+    "22390": { "slug": "jomalone", "displayName": "Jo Malone BR", "vertical": "beleza", "active": true, "verifyImages": true },
     "109298": { "slug": "legalelover", "displayName": "Legale Lover BR", "vertical": "moda", "active": true },
     "118895": { "slug": "lojadomecanico", "displayName": "Loja do Mecanico BR", "vertical": "moda", "active": false },
     "17893": { "slug": "futfanatics", "displayName": "Fut Fanatics BR", "vertical": "esporte", "active": false },
@@ -76,7 +76,7 @@
     "17729": { "slug": "kabum", "displayName": "Kabum BR", "vertical": "eletronicos", "active": true },
     "25539": { "slug": "samsung", "displayName": "Samsung BR", "vertical": "eletronicos", "active": true, "excludeTitles": ["dummy sku", "conexao do sim card"] },
     "48557": { "slug": "elements", "displayName": "Elements BR", "vertical": "casa", "active": true },
-    "23524": { "slug": "dufrio", "displayName": "Dufrio BR", "vertical": "casa", "active": true },
+    "23524": { "slug": "dufrio", "displayName": "Dufrio BR", "vertical": "casa", "active": true, "verifyImages": true },
     "17608": { "slug": "centralar", "displayName": "Central Ar BR", "vertical": "casa", "active": true },
     "68224": { "slug": "drogal", "displayName": "Drogal BR", "vertical": "saude", "active": false },
 

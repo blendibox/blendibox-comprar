@@ -15,7 +15,14 @@ import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
-import { upsizeProductServeImage, pickRealImage, getRealImageCandidates, verifyImageUrl, mapWithConcurrency } from './lib/images.mjs'
+import {
+  upsizeProductServeImage,
+  pickRealImage,
+  getRealImageCandidates,
+  getVerifiableImageCandidates,
+  verifyImageUrl,
+  mapWithConcurrency,
+} from './lib/images.mjs'
 import { decodeHtmlEntities } from './lib/htmlEntities.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -402,7 +409,9 @@ async function main() {
       skippedExcludedTitle++
       continue
     }
-    const candidates = getRealImageCandidates(mapped)
+    // verifyImages: testa também a URL original embutida na proxy da Awin (a
+    // proxy às vezes quebra e o arquivo no lojista continua lá — Dufrio, Jo Malone)
+    const candidates = merchant.verifyImages ? getVerifiableImageCandidates(mapped) : getRealImageCandidates(mapped)
     if (!candidates.length) {
       skippedNoImage++
       continue
