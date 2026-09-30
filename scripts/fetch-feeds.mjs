@@ -142,6 +142,18 @@ const FIELD_MAP = {
   warranty: 'warranty',
   terms_of_contract: 'termsOfContract',
   delivery_time: 'deliveryTime',
+  // Colunas reais de cor/tamanho/material/marca/tipo — existem na Awin
+  // (genéricas + o bloco "Moda"), mas não pedíamos antes. generate-google-
+  // merchant-feed.mjs já lia product.color/product.size como primeira
+  // opção (fallback pra extractJewelryColor/defaults) — só nunca vinham
+  // preenchidos. Sem essas colunas, a recomendação do Merchant Center
+  // "adicione detalhes que os clientes procuram" (cor/tamanho/material)
+  // batia em ~11 mil produtos só na categoria de calçados esportivos.
+  colour: 'color',
+  size: 'size',
+  material: 'material',
+  brand_name: 'brandName',
+  product_type: 'productType',
 }
 
 // Campos "opcionais" da Awin — nem todo anunciante preenche. Contados aqui
@@ -158,6 +170,15 @@ const OPTIONAL_FIELD_LABELS = {
   inStock: 'in_stock',
   stockQuantity: 'stock_quantity',
   deliveryCost: 'delivery_cost',
+  // Preenchimento de colour/size/material/brand_name/product_type varia MUITO
+  // por merchant (ex: Centauro não manda nada disso hoje, feeds diretos de
+  // marca costumam mandar) — esse log mostra a taxa real depois do primeiro
+  // fetch com as colunas novas.
+  color: 'colour',
+  size: 'size',
+  material: 'material',
+  brandName: 'brand_name',
+  productType: 'product_type',
 }
 
 // Aplica em toda imagem servida pela proxy images2.productserve.com (não só
@@ -176,7 +197,7 @@ const IMAGE_FIELDS = [
 
 // Campos de texto livre — alguns anunciantes (ex: Kabum) mandam entidade
 // HTML crua aqui ("Incompar&aacute;veis" em vez de "Incomparáveis").
-const TEXT_FIELDS = ['productName', 'description', 'merchantCategory', 'categoryName']
+const TEXT_FIELDS = ['productName', 'description', 'merchantCategory', 'categoryName', 'color', 'size', 'material', 'brandName', 'productType']
 
 function mapRow(row) {
   const mapped = {}

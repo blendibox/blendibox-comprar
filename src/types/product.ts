@@ -34,6 +34,15 @@ export interface Product {
   merchantImageUrl: string
   description: string
   merchantCategory: string
+  // Colunas "Especificação do Produto"/"Moda" da Awin — nem todo merchant
+  // preenche (varia por advertiser, ver log "[campos opcionais]" do
+  // fetch-feeds.mjs). Usadas no feed do Google Merchant (description/g:color/
+  // g:size/g:brand/g:product_type) — ver generate-google-merchant-feed.mjs.
+  color?: string
+  size?: string
+  material?: string
+  brandName?: string
+  productType?: string
   searchPrice: number | null
   merchantName: string
   merchantId: string

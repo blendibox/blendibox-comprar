@@ -94,18 +94,33 @@ function buildItemXml(product) {
   const link = `${SITE_URL}/${product.merchantSlug}/${product.slug}/`
   const available = isInStock(product) ? 'in stock' : 'out of stock'
   const hasGtin = Boolean(product.productGtin)
-  const color = product.color || extractJewelryColor(product) || 'Branco'
-  const size = product.size || 'Único'
+  // Cor real: coluna própria da Awin (colour) quando o merchant preenche;
+  // extractJewelryColor como fallback só pra joias (a Awin não tem coluna de
+  // cor específica pra esse vertical, mas o nome quase sempre menciona o
+  // metal/acabamento). realSize só existe quando a coluna "size" vem
+  // preenchida — não tenta extrair do nome (arriscado, número no nome pode
+  // ser modelo, não tamanho).
+  const realColor = product.color || extractJewelryColor(product)
+  const realSize = product.size
+  const color = realColor || 'Branco'
+  const size = realSize || 'Único'
 
   // O Merchant Center sinaliza "adicione detalhes que os clientes procuram"
-  // quando cor/tamanho não aparecem como TEXTO na descrição — os campos
-  // estruturados g:color/g:size abaixo não contam pra essa recomendação
-  // específica, então repete a mesma informação em texto legível. Só pra
-  // joias, onde a cor é dado real extraído do nome (não o "Branco" genérico
-  // que os outros verticais recebem por falta de coluna própria no feed).
+  // quando cor/tamanho/material não aparecem como TEXTO na descrição — os
+  // campos estruturados abaixo (g:color/g:size) não contam pra essa
+  // recomendação específica, então repete em texto legível. Só quando o dado
+  // é real (nunca o "Branco"/"Único" genérico usado como fallback pro
+  // atributo estruturado) — achado real: 11 mil produtos (só na categoria de
+  // calçados esportivos) reprovados nessa recomendação por falta das colunas
+  // colour/size/material, que a Awin oferece e a gente não pedia.
   const baseDescription = product.description || product.productName
-  const description =
-    product.vertical === 'joias' ? `${baseDescription} Cor: ${color}. Tamanho: ${size}.` : baseDescription
+  const descriptionDetails = []
+  if (realColor) descriptionDetails.push(`Cor: ${realColor}.`)
+  if (realSize) descriptionDetails.push(`Tamanho: ${realSize}.`)
+  if (product.material) descriptionDetails.push(`Material: ${product.material}.`)
+  const description = descriptionDetails.length
+    ? `${baseDescription} ${descriptionDetails.join(' ')}`
+    : baseDescription
 
   const fields = [
     `<g:id>${escapeXml(id)}</g:id>`,
@@ -132,7 +147,11 @@ function buildItemXml(product) {
   fields.push(
     `<g:availability>${available}</g:availability>`,
     `<g:price>${price}</g:price>`,
-    `<g:brand>${cdata(product.merchantDisplayName)}</g:brand>`,
+    // brand_name é a marca real do produto (ex: "Nike") — merchantDisplayName
+    // é a LOJA (ex: "Centauro BR"), errado pro g:brand em qualquer merchant
+    // que revenda várias marcas. Cai pro nome da loja só quando o merchant
+    // não preenche brand_name na Awin.
+    `<g:brand>${cdata(product.brandName || product.merchantDisplayName)}</g:brand>`,
     `<g:condition>new</g:condition>`
   )
 
@@ -143,14 +162,18 @@ function buildItemXml(product) {
     fields.push(`<g:identifier_exists>no</g:identifier_exists>`)
   }
 
-  const productType = product.merchantCategory || product.categoryName
+  // product_type é a taxonomia do próprio Awin/Google quando o merchant
+  // preenche — mais específica que a categoria bruta do feed; cai pra
+  // merchant_category/category_name quando ausente (comportamento anterior).
+  const productType = product.productType || product.merchantCategory || product.categoryName
   if (productType) fields.push(`<g:product_type>${cdata(productType)}</g:product_type>`)
 
-  // O feed da Awin não traz cor/tamanho/gênero/faixa etária — pra produtos
-  // que o Google classifica como "Roupas e acessórios", esses atributos são
-  // obrigatórios e a ausência reprova o item. Sem esse dado real, usamos um
-  // valor default neutro em vez de deixar o campo de fora (nunca reprova por
-  // falta do atributo; só não é tão específico quanto um dado real seria).
+  // Nem todo merchant preenche colour/size na Awin (gênero/faixa etária a
+  // Awin não tem coluna nenhuma) — pra produtos que o Google classifica como
+  // "Roupas e acessórios", esses atributos são obrigatórios e a ausência
+  // reprova o item. Quando falta dado real, usamos um valor default neutro
+  // em vez de deixar o campo de fora (nunca reprova por falta do atributo;
+  // só não é tão específico quanto um dado real seria).
   // gender/age_group usam os valores em inglês exigidos pelo Google
   // (https://support.google.com/merchants/answer/6324479 e 6324463) — um
   // valor em português aqui reprovaria de novo, só que por "valor inválido"
