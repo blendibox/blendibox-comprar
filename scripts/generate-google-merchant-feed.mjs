@@ -19,6 +19,33 @@ const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').re
 
 const ITEMS_PER_FILE = 10000
 
+// Promoções (https://support.google.com/merchants/answer/2906014) — gera
+// dist/promotions.txt junto com o feed de produtos. Método "sem código"
+// (offer_type=no_code): o desconto já está no preço mostrado (queda de
+// preço VERIFICADA, ver src/lib/priceDrop.ts), não é cupom nosso. Faixas em
+// vez de 1 promoção por produto — mantém o total de promoções ativas na
+// conta baixo (Google limita isso) e sempre honesto: o produto sempre tem
+// PELO MENOS o percentual da faixa (às vezes mais, nunca menos). O mesmo
+// teto de 80% do carrossel de quedas (generate-home-highlights.mjs) evita
+// anunciar queda implausível (erro de preço no feed).
+const PROMO_BUCKETS = [70, 60, 50, 40, 30, 20, 10]
+const PROMO_MAX_PLAUSIBLE_PERCENT = 80
+// Quantos dias a promoção fica "válida" antes do próximo build renovar —
+// folga de alguns dias além de "hoje" pra sobreviver um build perdido sem a
+// promoção parecer expirada pro Google.
+const PROMO_VALID_DAYS = 3
+
+function getPromotionBucket(product) {
+  if (!product.priceDropVerified) return null
+  const pct = product.priceDropPercent
+  if (pct == null || pct > PROMO_MAX_PLAUSIBLE_PERCENT) return null
+  return PROMO_BUCKETS.find((tier) => pct >= tier) ?? null
+}
+
+function promotionIdFor(bucket) {
+  return `queda-verificada-${bucket}`
+}
+
 // Disponibilidade real do feed Awin (in_stock/stock_quantity), com fallback
 // pro legado number_available; só assume "disponível" sem nenhum sinal. Mesma
 // regra usada no JSON-LD do site (prerender.mjs) pra manter consistência.
@@ -81,7 +108,7 @@ function extractJewelryColor(product) {
   return match?.label ?? null
 }
 
-function buildItemXml(product) {
+function buildItemXml(product, promotionBucket) {
   const price = formatPrice(product.searchPrice, product.currency)
   // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
   // images2.productserve.com (ver scripts/lib/images.mjs) e já garante que
@@ -193,6 +220,15 @@ function buildItemXml(product) {
     fields.push(`<g:custom_label_0>${cdata('Silhueta')}</g:custom_label_0>`)
   }
 
+  // Vincula esse produto à faixa de promoção correspondente (ver
+  // promotions.txt, gerado em main() a partir dos mesmos buckets) — é o
+  // método que a própria Google recomenda pra product_applicability=
+  // specific_products, em vez de listar item_id um a um no feed de
+  // promoções (tem teto de 1.000 por promoção lá).
+  if (promotionBucket != null) {
+    fields.push(`<g:promotion_id>${escapeXml(promotionIdFor(promotionBucket))}</g:promotion_id>`)
+  }
+
   return `  <item>\n    ${fields.join('\n    ')}\n  </item>`
 }
 
@@ -220,6 +256,7 @@ async function main() {
 
   const items = []
   let skipped = 0
+  const activeBuckets = new Set()
   await readInBatches(productFiles, 500, async (file) => {
     const product = JSON.parse(await readFile(file, 'utf-8'))
     const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
@@ -227,10 +264,12 @@ async function main() {
       skippedDuplicateId++
       return
     }
-    const itemXml = buildItemXml(product)
+    const promotionBucket = getPromotionBucket(product)
+    const itemXml = buildItemXml(product, promotionBucket)
     if (itemXml) {
       seenIds.add(id)
       items.push(itemXml)
+      if (promotionBucket != null) activeBuckets.add(promotionBucket)
     } else skipped++
   })
   if (skippedDuplicateId > 0) {
@@ -261,6 +300,71 @@ async function main() {
 
   console.log(
     `Google Merchant: ${items.length} produtos em ${files.length} arquivo(s) (${skipped} pulados por falta de dado essencial).`
+  )
+
+  await writePromotionsFeed(activeBuckets)
+}
+
+// Um valor com vírgula/aspas/quebra de linha precisa ser envolvido em aspas
+// (regra padrão de CSV) — nenhum dos nossos campos tem isso hoje (percentual
+// fixo, texto sem vírgula), mas melhor não confiar nisso silenciosamente.
+function csvField(value) {
+  const s = String(value ?? '')
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+}
+
+function isoUtc(date) {
+  return date.toISOString().replace(/\.\d{3}Z$/, '+00:00')
+}
+
+async function writePromotionsFeed(activeBuckets) {
+  const header = [
+    'promotion_id',
+    'product_applicability',
+    'offer_type',
+    'long_title',
+    'promotion_effective_dates',
+    'redemption_channel',
+    'promotion_destination',
+    'coupon_value_type',
+    'percent_off',
+    'fine_print',
+    'promotion_url',
+  ]
+
+  const now = new Date()
+  const until = new Date(now.getTime() + PROMO_VALID_DAYS * 24 * 60 * 60 * 1000)
+  const effectiveDates = `${isoUtc(now)}/${isoUtc(until)}`
+
+  const rows = [...activeBuckets]
+    .sort((a, b) => b - a)
+    .map((bucket) =>
+      [
+        promotionIdFor(bucket),
+        'specific_products',
+        'no_code',
+        `A partir de ${bucket}% off`,
+        effectiveDates,
+        'online',
+        // Só listagem gratuita — não fazemos Shopping ads (a maioria dos
+        // programas de afiliado que usamos proíbe SEM, ver contexto da
+        // decisão de não rodar ads pagos).
+        'free_listings',
+        'percent_off',
+        bucket,
+        'Desconto já aplicado no preço mostrado, calculado sobre o preço habitual monitorado do produto. Sujeito a disponibilidade e variação de preço no site do parceiro.',
+        `${SITE_URL}/quedas-de-preco/`,
+      ]
+        .map(csvField)
+        .join(',')
+    )
+
+  const csv = [header.join(','), ...rows].join('\n') + '\n'
+  await writeFile(path.join(DIST_DIR, 'promotions.txt'), csv)
+  console.log(
+    rows.length
+      ? `Promoções: ${rows.length} faixa(s) de queda verificada ativa(s) (${[...activeBuckets].sort((a, b) => b - a).map((b) => `${b}%+`).join(', ')}).`
+      : 'Promoções: nenhuma faixa de queda verificada ativa hoje — promotions.txt gerado só com cabeçalho.'
   )
 }
 
