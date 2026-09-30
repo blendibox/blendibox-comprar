@@ -325,6 +325,35 @@ async function main() {
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
   rawRows.push(...(await fetchAmazonRows()))
+  // Alguns merchants têm mais de um fid combinado na URL (ex: Eudora 67677 +
+  // 116994, LG, Nike) e os catálogos quase sempre se completam — mas quando o
+  // MESMO SKU (merchant_product_id) aparece nas duas feeds com dado diferente
+  // (preço, descrição...), sem isso o produto físico vira duas linhas: dois
+  // slugs, dois preços, e um <g:id> duplicado no feed do Google
+  // Merchant/Pinterest (que rejeita o arquivo inteiro por causa disso — achado
+  // real: erro 9156 do Pinterest, 14 IDs duplicados de Eudora num único
+  // arquivo). Mantém só a primeira ocorrência, na ordem em que as fids
+  // aparecem na URL de feeds.config.json — a fid listada primeiro é tratada
+  // como a fonte "principal" desse merchant.
+  const seenProductKeys = new Set()
+  let skippedDuplicateProductId = 0
+  const dedupedRows = []
+  for (const row of rawRows) {
+    const merchantId = row.merchant_id
+    const merchantProductId = row.merchant_product_id
+    if (merchantId && merchantProductId) {
+      const key = `${merchantId}::${merchantProductId}`
+      if (seenProductKeys.has(key)) {
+        skippedDuplicateProductId++
+        continue
+      }
+      seenProductKeys.add(key)
+    }
+    dedupedRows.push(row)
+  }
+  if (skippedDuplicateProductId > 0) {
+    console.log(`[dedup] ${skippedDuplicateProductId} linhas ignoradas por merchant_product_id repetido entre feeds combinadas do mesmo merchant`)
+  }
   // Shopee desativada (2026-09-17) — catálogo trocava rápido demais (top-N
   // reselecionado todo dia) pro sistema de redirect (updateShopeeRedirects
   // abaixo) aguentar: o teto de 10 mil entradas ficava sempre saturado, com
@@ -398,7 +427,7 @@ async function main() {
   // assíncrono e caro demais pra rodar em todo o catálogo.
   const pendingVerification = []
 
-  for (const row of rawRows) {
+  for (const row of dedupedRows) {
     const mapped = mapRow(row)
     const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
     if (merchant.titleBlacklistEnabled && hasBlacklistedWord(mapped.productName)) {
@@ -584,6 +613,40 @@ async function main() {
 
   await updateShopeeRedirects(publishedProducts)
 
+  // Agrupa por merchant+modelo (mesmo baseProductKey usado acima pra excluir
+  // irmãos de tamanho/cor da lista de "similares") pra escolher um único
+  // representante por grupo — o de menor preço. Usado em dois lugares: (1)
+  // a vitrine (index.json, abaixo) só lista o representante, em vez de
+  // repetir o mesmo modelo uma vez por tamanho/cor; (2) todo produto grava
+  // o slug do representante do seu grupo em `canonicalSlug` — o prerender usa
+  // isso pra apontar o <link rel="canonical"> dos outros membros do grupo pro
+  // representante e tirá-los do sitemap, em vez de competir por indexação
+  // com dezenas de páginas praticamente idênticas (achado real: Centauro
+  // sinalizada no Search Console como conteúdo duplicado — "Tênis Feminino
+  // Nike Structure Plus" tem ~24 variações de cor/tamanho, título e
+  // descrição idênticos nas duas, porque o feed não manda nome de cor/
+  // tamanho legível, só embutido no SKU). A página de cada variação continua
+  // existindo normalmente — link direto, comparador, histórico de preço —
+  // só não compete mais por indexação com o representante do grupo.
+  const groupRepresentative = new Map()
+  for (const p of publishedProducts) {
+    const groupKey = `${p.merchantSlug}::${baseKeyByProduct.get(p) || p.slug}`
+    const current = groupRepresentative.get(groupKey)
+    if (!current) {
+      groupRepresentative.set(groupKey, p)
+      continue
+    }
+    const price = p.searchPrice ?? p.displayPrice
+    const currentPrice = current.searchPrice ?? current.displayPrice
+    if (price != null && (currentPrice == null || price < currentPrice)) {
+      groupRepresentative.set(groupKey, p)
+    }
+  }
+  for (const p of publishedProducts) {
+    const groupKey = `${p.merchantSlug}::${baseKeyByProduct.get(p) || p.slug}`
+    p.canonicalSlug = groupRepresentative.get(groupKey).slug
+  }
+
   await writeInBatches(publishedProducts, 500, async (product) => {
     // URL/arquivo fica plano em /{merchant}/{slug} (sem o vertical no path) pra
     // bater com o esquema de URL que já está indexado no Google no site antigo.
@@ -593,7 +656,9 @@ async function main() {
     await writeFile(path.join(dir, `${product.slug}.json`), JSON.stringify(product))
   })
 
-  const index = publishedProducts.map((p) => ({
+  const indexProducts = [...groupRepresentative.values()]
+
+  const index = indexProducts.map((p) => ({
     slug: p.slug,
     vertical: p.vertical,
     merchantSlug: p.merchantSlug,
@@ -621,8 +686,11 @@ async function main() {
         // "produtos monitorados" no rodapé/listagem — precisa ser o que
         // realmente está publicado (tem página, aparece em busca), não o
         // total bruto do feed, senão o número conta produto que ninguém
-        // consegue achar no site.
-        totalProducts: publishedProducts.length,
+        // consegue achar no site. Desde a redução de variação de
+        // tamanho na vitrine, isso é index.length (não publishedProducts):
+        // uma página de tamanho isolado continua existindo, mas só o
+        // representante do grupo "aparece em busca" de verdade.
+        totalProducts: index.length,
         feeds: feedsConfig.feeds.map((f) => f.id),
         merchants: [...merchantsUsed.values()].map((m) => m.slug),
       },

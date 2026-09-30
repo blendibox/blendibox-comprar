@@ -185,14 +185,34 @@ async function readInBatches(files, batchSize, readFn) {
 async function main() {
   const productFiles = await walkProductFiles(path.join(DATA_DIR, 'products'))
 
+  // Rede de segurança: o <g:id> é a chave primária do feed pro Google
+  // Merchant/Pinterest, e um ID repetido derruba a ingestão do ARQUIVO
+  // inteiro (não só do item), em vez de só reprovar o item duplicado (achado
+  // real: erro 9156 do Pinterest, causado por merchant_product_id repetido
+  // quando um merchant tem duas fids da Awin combinadas — ver dedup em
+  // fetch-feeds.mjs). Mantém aqui também, mesmo já deduplicando na fonte,
+  // porque esta é a última linha de defesa antes do arquivo público.
+  const seenIds = new Set()
+  let skippedDuplicateId = 0
+
   const items = []
   let skipped = 0
   await readInBatches(productFiles, 500, async (file) => {
     const product = JSON.parse(await readFile(file, 'utf-8'))
+    const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
+    if (seenIds.has(id)) {
+      skippedDuplicateId++
+      return
+    }
     const itemXml = buildItemXml(product)
-    if (itemXml) items.push(itemXml)
-    else skipped++
+    if (itemXml) {
+      seenIds.add(id)
+      items.push(itemXml)
+    } else skipped++
   })
+  if (skippedDuplicateId > 0) {
+    console.log(`Google Merchant: ${skippedDuplicateId} produtos ignorados por g:id duplicado (mesmo merchant_product_id em feeds combinadas).`)
+  }
 
   const chunks = []
   for (let i = 0; i < items.length; i += ITEMS_PER_FILE) {

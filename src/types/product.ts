@@ -78,6 +78,13 @@ export interface Product {
   categorySlug: string
   similar: SimilarStub[]
   eligibleForStaticPage: boolean
+  // Slug do representante do grupo merchant+modelo (mesmo produto em outro
+  // tamanho/cor — ver baseProductKey em fetch-feeds.mjs). Igual ao próprio
+  // slug quando o produto É o representante. O prerender usa isso pra
+  // apontar o <link rel="canonical"> das outras variações pro representante
+  // e excluí-las do sitemap, evitando páginas quase-idênticas competindo por
+  // indexação (ex: mesmo tênis em 6 tamanhos, título/descrição idênticos).
+  canonicalSlug: string
   priceHistory?: PricePoint[]
   // Preenchido só quando o preço de hoje é uma queda real de ≥5% em relação ao
   // PREÇO HABITUAL do produto (mediana dos últimos até 90 dias — não o preço de

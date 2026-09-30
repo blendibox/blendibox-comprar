@@ -583,7 +583,16 @@ async function main() {
     product.similar = enrichSimilar(product.similar)
 
     const routePath = `/${product.merchantSlug}/${product.slug}`
-    const canonical = `${SITE_URL}${routePath}/`
+    // Variação de tamanho/cor do mesmo modelo (canonicalSlug != o próprio
+    // slug, ver fetch-feeds.mjs): a página continua existindo normalmente
+    // (link direto, comparador, histórico de preço), só o <link
+    // rel="canonical"> aponta pro representante do grupo, e ela fica fora do
+    // sitemap logo abaixo — mesmo padrão recomendado pelo Google pra
+    // variações de produto (cor/tamanho) sem texto que as diferencie.
+    const isCanonicalSelf = product.canonicalSlug === product.slug
+    const canonical = isCanonicalSelf
+      ? `${SITE_URL}${routePath}/`
+      : `${SITE_URL}/${product.merchantSlug}/${product.canonicalSlug}/`
     const description = `Compare o menor preço de ${product.productName} na ${product.merchantDisplayName}. Veja detalhes e produtos similares no Compare Ofertas.`
     const category = categoryLabel(product.merchantCategory)
     // Categoria entra no título só quando existe E não é redundante (produto
@@ -605,12 +614,18 @@ async function main() {
         product: { price: product.searchPrice, currency: product.currency },
       },
     })
-    generatedUrls.push({
-      url,
-      changefreq: 'weekly',
-      priority: 0.7,
-      lastmod: /^\d{4}-\d{2}-\d{2}/.test(product.lastUpdated || '') ? product.lastUpdated.slice(0, 10) : buildDate,
-    })
+    // Só o representante do grupo entra no sitemap — as outras variações de
+    // tamanho/cor têm página (renderPage acima já gravou o HTML) mas não
+    // competem por indexação com um título/descrição idêntico ao do
+    // representante (ver canonical acima).
+    if (isCanonicalSelf) {
+      generatedUrls.push({
+        url,
+        changefreq: 'weekly',
+        priority: 0.7,
+        lastmod: /^\d{4}-\d{2}-\d{2}/.test(product.lastUpdated || '') ? product.lastUpdated.slice(0, 10) : buildDate,
+      })
+    }
     productPageCount++
   }
 
