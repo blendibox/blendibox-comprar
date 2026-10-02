@@ -253,12 +253,27 @@ async function main() {
   // porque esta é a última linha de defesa antes do arquivo público.
   const seenIds = new Set()
   let skippedDuplicateId = 0
+  let skippedNonCanonical = 0
 
   const items = []
   let skipped = 0
   const activeBuckets = new Set()
   await readInBatches(productFiles, 500, async (file) => {
     const product = JSON.parse(await readFile(file, 'utf-8'))
+    // Mesmo corte do sitemap (ver prerender.mjs): só o representante do
+    // grupo merchant+modelo (canonicalSlug == o próprio slug, ver
+    // fetch-feeds.mjs) entra no feed — as outras variações de tamanho/cor
+    // não usam item_group_id (a gente não agrupa variação pro Google hoje),
+    // então mandar todas só inflava o arquivo sem nenhum recurso de
+    // variação funcionando em troca. Achado real: esse feed sozinho pesava
+    // ~281 MB (quase 30% do deploy de ~922 MB). canonicalSlug ausente
+    // (produto antigo, de antes desse campo existir) não é descartado —
+    // trata como representante, mesmo padrão "falha aberto" dos outros
+    // campos opcionais.
+    if (product.canonicalSlug && product.canonicalSlug !== product.slug) {
+      skippedNonCanonical++
+      return
+    }
     const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
     if (seenIds.has(id)) {
       skippedDuplicateId++
@@ -272,6 +287,9 @@ async function main() {
       if (promotionBucket != null) activeBuckets.add(promotionBucket)
     } else skipped++
   })
+  if (skippedNonCanonical > 0) {
+    console.log(`Google Merchant: ${skippedNonCanonical} produtos ignorados por não serem o representante do grupo merchant+modelo (variação de tamanho/cor).`)
+  }
   if (skippedDuplicateId > 0) {
     console.log(`Google Merchant: ${skippedDuplicateId} produtos ignorados por g:id duplicado (mesmo merchant_product_id em feeds combinadas).`)
   }
