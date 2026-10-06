@@ -43,3 +43,9 @@ scripts/.quiz-data.video-tmp.mjs
 .recovered-videos/
 scripts/manual.txt
 scripts/manual.txt
+
+# Lista de telefones de clientes (dado pessoal) e os arquivos gerados a partir
+# dela — o repositório é público, nunca deve ser versionado.
+scripts/lista-telefones*
+# Script avulso de limpeza dessa lista — uso local, não faz parte do site.
+scripts/limpar-telefones.mjs
