@@ -237,6 +237,15 @@ function escapeHtml(value) {
 // fora de época) fica o texto de sempre.
 const DEFAULT_DIGEST_TITLE = 'Ofertas da semana no Compare Ofertas'
 
+// generate-digest.mjs só grava previousPrice em queda verificada (preço atual
+// abaixo do preço habitual monitorado). Digest antigo, ou loja sem queda
+// verificada, vem sem o campo e o item segue só com o preço de hoje.
+function hasDrop(item) {
+  return typeof item.previousPrice === 'number' && typeof item.price === 'number' && item.price < item.previousPrice
+}
+
+const DROP_FOOTNOTE = '“De” é o preço habitual que monitoramos nessa loja nos últimos meses.'
+
 function buildDigestHtml(digest) {
   const seasonHtml = digest.season?.url
     ? `<p style="margin:0 0 16px;font-size:14px;color:#444;">
@@ -254,6 +263,11 @@ function buildDigestHtml(digest) {
               <span>
                 <span style="display:block;font-size:11px;color:#888;text-transform:uppercase;">${escapeHtml(item.merchantDisplayName)}</span>
                 <span style="display:block;font-size:14px;color:#111;margin:2px 0;">${escapeHtml(item.productName)}</span>
+                ${
+                  hasDrop(item)
+                    ? `<span style="display:block;font-size:12px;color:#888;">De <span style="text-decoration:line-through;">${formatPrice(item.previousPrice, item.currency)}</span> por</span>`
+                    : ''
+                }
                 <span style="display:block;font-size:16px;font-weight:700;color:#0a7d3f;">${formatPrice(item.price, item.currency)}</span>
               </span>
             </a>
@@ -281,6 +295,7 @@ function buildDigestHtml(digest) {
       <h2 style="color:#0f172a;">${escapeHtml(digest.heading || DEFAULT_DIGEST_TITLE)}</h2>
       ${seasonHtml}
       <table style="width:100%;border-collapse:collapse;">${itemsHtml}</table>
+      ${digest.items.some(hasDrop) ? `<p style="margin:8px 0 0;font-size:11px;color:#888;">${DROP_FOOTNOTE}</p>` : ''}
       ${couponsHtml}
       <p style="margin-top:24px;font-size:12px;color:#888;">
         Você recebeu esse e-mail porque assinou a newsletter do Compare Ofertas.
@@ -302,8 +317,16 @@ function buildDigestText(digest) {
 
   for (const item of digest.items) {
     lines.push(`${item.merchantDisplayName} — ${item.productName}`)
-    lines.push(`${formatPrice(item.price, item.currency)}`)
+    lines.push(
+      hasDrop(item)
+        ? `De ${formatPrice(item.previousPrice, item.currency)} por ${formatPrice(item.price, item.currency)}`
+        : `${formatPrice(item.price, item.currency)}`
+    )
     lines.push(item.url)
+    lines.push('')
+  }
+  if (digest.items.some(hasDrop)) {
+    lines.push(DROP_FOOTNOTE)
     lines.push('')
   }
 

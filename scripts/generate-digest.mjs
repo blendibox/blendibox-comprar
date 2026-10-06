@@ -17,6 +17,12 @@ const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').re
 const FEATURED_ORDER = ['vivara', 'centauro', 'nike']
 const MAX_ITEMS = 6
 const MAX_COUPONS = 3
+// Mesmos limites das páginas de campanha (generate-home-highlights.mjs): abaixo
+// de 10% não vale destacar, e acima de 80% quase sempre é erro de preço no feed.
+const DROP_MIN_PERCENT = 10
+const DROP_MAX_PLAUSIBLE_PERCENT = 80
+// Quantas das maiores quedas de cada loja entram na rotação semanal.
+const DROP_POOL_SIZE = 10
 
 function weekNumber(date) {
   const start = new Date(date.getFullYear(), 0, 1)
@@ -38,6 +44,19 @@ async function hasReachableImage(url) {
   } catch {
     return false
   }
+}
+
+// Tenta o candidato "da semana" primeiro; se a imagem não resolver, percorre o
+// resto do pool (poucas dezenas de itens, não o catálogo inteiro) até achar um
+// com foto de verdade, em vez de forçar um produto sem imagem só pra manter a
+// rotação semanal.
+async function pickWithReachableImage(pool, week) {
+  const maxAttempts = Math.min(pool.length, 20)
+  for (let i = 0; i < maxAttempts; i++) {
+    const candidate = pool[(week + i) % pool.length]
+    if (await hasReachableImage(candidate.awImageUrl)) return candidate
+  }
+  return null
 }
 
 async function main() {
@@ -64,36 +83,48 @@ async function main() {
 
   const week = weekNumber(new Date())
   const items = []
+  let dropItems = 0
   for (const slug of prioritySlugs) {
     const candidates = index
       .filter((p) => p.merchantSlug === slug && p.searchPrice != null)
       .sort((a, b) => a.searchPrice - b.searchPrice)
     if (candidates.length === 0) continue
-    // Varia a escolha a cada semana (em vez de sempre o mesmo produto), mas
-    // fica no miolo da faixa de preço (evita cair sempre no mais barato ou
-    // mais caro, que tendem a ser pouco representativos da loja).
-    const mid = candidates.slice(
-      Math.floor(candidates.length * 0.2),
-      Math.ceil(candidates.length * 0.8)
-    )
-    const pool = mid.length > 0 ? mid : candidates
-    // Tenta o candidato "da semana" primeiro; se a imagem não resolver,
-    // percorre o resto do pool (poucas dezenas de itens, não o catálogo
-    // inteiro) até achar um com foto de verdade, em vez de forçar um
-    // produto sem imagem só pra manter a rotação semanal.
-    const maxAttempts = Math.min(pool.length, 20)
-    let product = null
-    for (let i = 0; i < maxAttempts; i++) {
-      const candidate = pool[(week + i) % pool.length]
-      if (await hasReachableImage(candidate.awImageUrl)) {
-        product = candidate
-        break
+
+    // Prefere uma queda VERIFICADA da loja (mesma régua das campanhas, do
+    // vídeo e do Telegram — ver src/lib/priceDrop.ts): é a única situação em
+    // que dá pra afirmar "de R$ X por R$ Y" no e-mail sem inventar desconto.
+    // Fica entre as maiores quedas da loja e varia por semana.
+    const dropPool = candidates
+      .filter(
+        (p) =>
+          p.priceDropVerified === true &&
+          p.previousPrice != null &&
+          p.searchPrice < p.previousPrice &&
+          p.priceDropPercent >= DROP_MIN_PERCENT &&
+          p.priceDropPercent <= DROP_MAX_PLAUSIBLE_PERCENT
+      )
+      .sort((a, b) => b.priceDropPercent - a.priceDropPercent || a.slug.localeCompare(b.slug))
+      .slice(0, DROP_POOL_SIZE)
+    let product = await pickWithReachableImage(dropPool, week)
+    const isDrop = product != null
+
+    if (!product) {
+      // Sem queda verificada: seleção semanal de sempre (sem "de/por"). Varia
+      // a escolha a cada semana (em vez de sempre o mesmo produto), mas fica
+      // no miolo da faixa de preço (evita cair sempre no mais barato ou mais
+      // caro, que tendem a ser pouco representativos da loja).
+      const mid = candidates.slice(
+        Math.floor(candidates.length * 0.2),
+        Math.ceil(candidates.length * 0.8)
+      )
+      const pool = mid.length > 0 ? mid : candidates
+      product = await pickWithReachableImage(pool, week)
+      if (!product) {
+        console.log(`[digest] "${slug}": nenhum candidato com imagem válida, pulando merchant`)
+        continue
       }
     }
-    if (!product) {
-      console.log(`[digest] "${slug}": nenhum candidato com imagem válida em ${maxAttempts} tentativas, pulando merchant`)
-      continue
-    }
+
     items.push({
       merchantDisplayName: product.merchantDisplayName,
       productName: product.productName,
@@ -101,7 +132,11 @@ async function main() {
       currency: product.currency,
       image: product.awImageUrl,
       url: `${SITE_URL}/${product.merchantSlug}/${product.slug}/`,
+      // Só nas quedas verificadas — o Worker mostra "De R$ X por R$ Y" quando
+      // previousPrice existe (preço habitual monitorado, não preço de tabela).
+      ...(isDrop ? { previousPrice: product.previousPrice, dropPercent: product.priceDropPercent } : {}),
     })
+    if (isDrop) dropItems++
     if (items.length >= MAX_ITEMS) break
   }
 
@@ -112,10 +147,11 @@ async function main() {
 
   // Em época comemorativa (Dia das Mães, Black Friday...) o e-mail ganha o nome
   // da época no assunto e um link pra página de campanha, onde estão as quedas
-  // de preço confirmadas. Os produtos do resumo continuam sendo a seleção
-  // semanal de sempre (não são "quedas") — por isso o assunto só situa a
-  // época, sem prometer desconto. O Worker usa esses campos e cai no texto
-  // padrão se não existirem (worker/newsletter-worker.js, sendWeeklyDigest).
+  // de preço confirmadas. Nem todo produto do resumo é uma queda (loja sem
+  // queda verificada cai na seleção semanal de sempre, sem "de/por") — por
+  // isso o assunto só situa a época, sem prometer desconto. O Worker usa esses
+  // campos e cai no texto padrão se não existirem (worker/newsletter-worker.js,
+  // sendWeeklyDigest).
   const season = await getSeasonalContext()
   const seasonal = season
     ? {
@@ -130,7 +166,9 @@ async function main() {
     path.join(OUTPUT_DIR, 'digest.json'),
     JSON.stringify({ generatedAt: new Date().toISOString(), items, coupons: activeCoupons, ...seasonal })
   )
-  console.log(`digest.json: ${items.length} produtos e ${activeCoupons.length} cupons gravados.`)
+  console.log(
+    `digest.json: ${items.length} produtos (${dropItems} com queda verificada "de/por") e ${activeCoupons.length} cupons gravados.`
+  )
   if (season) console.log(`[sazonal] resumo semanal marcado como "${season.label}".`)
 }
 
