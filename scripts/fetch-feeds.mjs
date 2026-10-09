@@ -333,6 +333,46 @@ async function writeInBatches(items, batchSize, writeFn) {
   }
 }
 
+// A Awin às vezes devolve o feed combinado INCOMPLETO com HTTP 200 e sem erro
+// nenhum (visto em 09/10/2026: 79.662 linhas em vez de ~190 mil, só 8 das ~50
+// lojas). Sem trava, o build publicava o site com metade do catálogo, e o
+// update-price-history.mjs — que reconstrói o histórico só com o que está no
+// catálogo do dia — apagava o histórico de ~76 mil produtos e o commit
+// automático gravava isso na main. A vitrine do dia anterior é a referência: o
+// price-history.json (versionado) tem exatamente uma chave por produto da
+// vitrine do último build bom. Queda abaixo de 70% aborta o build antes de
+// publicar ou podar qualquer coisa — site "velho e completo" ganha de "novo e
+// pela metade". Se a redução for de propósito (loja desativada), rodar o
+// workflow manualmente com "allow_shrink" marcado.
+const MIN_CATALOG_RATIO = 0.7
+const BASELINE_HISTORY_PATH = path.join(ROOT, 'data', 'price-history.json')
+
+async function assertCatalogNotCollapsed(vitrineCount) {
+  let baseline = 0
+  try {
+    baseline = Object.keys(JSON.parse(await readFile(BASELINE_HISTORY_PATH, 'utf-8'))).length
+  } catch {
+    console.log('[trava] sem price-history.json versionado pra comparar — seguindo sem a checagem.')
+    return
+  }
+  if (!baseline) return
+  const ratio = vitrineCount / baseline
+  const summary = `vitrine de hoje: ${vitrineCount} produtos, referência (último build bom): ${baseline} (${(ratio * 100).toFixed(0)}%)`
+  if (ratio >= MIN_CATALOG_RATIO) {
+    console.log(`[trava] catálogo ok — ${summary}.`)
+    return
+  }
+  if (process.env.ALLOW_FEED_SHRINK === 'true') {
+    console.log(`[trava] ALLOW_FEED_SHRINK=true — publicando mesmo com a queda: ${summary}.`)
+    return
+  }
+  throw new Error(
+    `Feed da Awin parece incompleto (${summary}; mínimo ${MIN_CATALOG_RATIO * 100}%). ` +
+      `Build abortado pra não publicar o catálogo pela metade nem apagar o histórico de preços. ` +
+      `Se a redução é intencional (loja desativada), rode o workflow manualmente com "allow_shrink" marcado.`
+  )
+}
+
 async function main() {
   const [feedsConfig, merchantsConfig] = await Promise.all([
     readFile(path.join(__dirname, 'feeds.config.json'), 'utf-8').then(JSON.parse),
@@ -619,10 +659,6 @@ async function main() {
     }
   }
 
-  // Limpa a saída anterior (evita arquivo órfão de produto removido do feed).
-  await rm(PRODUCTS_DIR, { recursive: true, force: true })
-  await mkdir(PRODUCTS_DIR, { recursive: true })
-
   // Só grava JSON individual (e só entra no index/busca) pro produto elegível
   // a página estática — produto isolado não tem página, não aparece em
   // busca/listagem/destaque em lugar nenhum do site (ver generate-home-
@@ -631,8 +667,6 @@ async function main() {
   // sem nunca ser buscado por ninguém. Mesmo princípio já usado pra produto
   // sem foto ou com título na blacklist — se não vai ser exibido, não entra.
   const publishedProducts = products.filter((p) => p.eligibleForStaticPage)
-
-  await updateShopeeRedirects(publishedProducts)
 
   // Agrupa por merchant+modelo (mesmo baseProductKey usado acima pra excluir
   // irmãos de tamanho/cor da lista de "similares") pra escolher um único
@@ -667,6 +701,17 @@ async function main() {
     const groupKey = `${p.merchantSlug}::${baseKeyByProduct.get(p) || p.slug}`
     p.canonicalSlug = groupRepresentative.get(groupKey).slug
   }
+
+  // Ponto sem volta: daqui pra frente o script apaga/regrava o catálogo e o
+  // estado versionado (redirects da Shopee). Se o feed da Awin veio pela
+  // metade, é aqui que tem que parar — antes de tocar em qualquer coisa.
+  await assertCatalogNotCollapsed(groupRepresentative.size)
+
+  // Limpa a saída anterior (evita arquivo órfão de produto removido do feed).
+  await rm(PRODUCTS_DIR, { recursive: true, force: true })
+  await mkdir(PRODUCTS_DIR, { recursive: true })
+
+  await updateShopeeRedirects(publishedProducts)
 
   await writeInBatches(publishedProducts, 500, async (product) => {
     // URL/arquivo fica plano em /{merchant}/{slug} (sem o vertical no path) pra

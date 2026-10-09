@@ -17,6 +17,10 @@ on:
         description: 'Pular o fetch do feed (reusa o último catálogo salvo em cache — rápido, só pra mudança de código/UI que não depende de dado novo)'
         type: boolean
         default: false
+      allow_shrink:
+        description: 'Publicar mesmo se o catálogo cair mais de 30% vs. o último build bom (use só se desativou lojas de propósito — a trava existe pra feed incompleto da Awin)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -68,6 +72,8 @@ jobs:
           # Domínio próprio (CNAME) serve a partir da raiz, não de /repo-name/.
           VITE_BASE_PATH: /
           SITE_URL: https://comprar.blendibox.com.br
+          # Só existe em disparo manual (ver scripts/fetch-feeds.mjs, trava de feed incompleto).
+          ALLOW_FEED_SHRINK: ${{ github.event.inputs.allow_shrink }}
         run: |
           # skip_fetch só existe em disparo manual (workflow_dispatch) — em
           # push/schedule essa entrada nem existe, então a comparação abaixo
