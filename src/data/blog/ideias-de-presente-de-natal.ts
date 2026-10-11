@@ -20,7 +20,7 @@ export const ideiasDePresenteDeNatal: BlogPost = {
     { type: 'h2', text: 'Tênis e calçados: a categoria mais forte' },
     {
       type: 'p',
-      text: '[Tênis](/esporte/categoria/tenis) é disparado a categoria mais forte do catálogo, com Nike, Centauro, Mizuno e Olympikus e uma variedade enorme de estilo e preço — dificilmente erra a mão. Tem também [chinelos e sandálias](/esporte/categoria/chinelos-e-sandalias) e [botas](/esporte/categoria/bota) pra quem prefere fugir do tênis, além da [Clovis Calçados](/cloviscalcados), uma loja dedicada só a calçados. Pra quem curte futebol, ainda tem [chuteiras](/esporte/categoria/chuteira) de time.',
+      text: '[Tênis](/esporte/categoria/tenis) é disparado a categoria mais forte do catálogo, com Nike, Centauro, Mizuno e Olympikus e uma variedade enorme de estilo e preço — dificilmente erra a mão. Tem também [chinelos e sandálias](/esporte/categoria/chinelos-e-sandalias) e [botas](/esporte/categoria/bota) pra quem prefere fugir do tênis. Pra quem curte futebol, ainda tem [chuteiras](/esporte/categoria/chuteira) de time.',
     },
     { type: 'h2', text: 'Presente para mulher (mãe, esposa, namorada, amiga)' },
     {
