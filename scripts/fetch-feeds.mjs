@@ -241,7 +241,11 @@ function resolveMerchant(merchantsConfig, merchantId, merchantName) {
 // antiga o bastante já não vale mais a pena rastrear.
 const SHOPEE_KNOWN_PATHS_FILE = path.join(ROOT, 'data', 'shopee-known-paths.json')
 const SHOPEE_REDIRECTS_FILE = path.join(ROOT, 'data', 'shopee-redirects.json')
-const SHOPEE_REDIRECT_RETENTION_DAYS = 30
+// 90 dias (era 30): com a Shopee desativada em 17/09 não entra mais produto
+// novo na tabela, então ela só encolhe — e as visitas que ainda chegam pelas
+// URLs antigas (resultados já indexados no Google) preferem cair no hub do
+// vertical a um 404. Os ~10 mil stubs custam poucos MB no deploy.
+const SHOPEE_REDIRECT_RETENTION_DAYS = 90
 const SHOPEE_REDIRECT_MAX_ENTRIES = 10000
 
 async function updateShopeeRedirects(publishedProducts) {
