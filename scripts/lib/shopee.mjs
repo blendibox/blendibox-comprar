@@ -9,7 +9,19 @@
 // autenticação na query string — nunca deve ficar hardcoded no repo, só
 // como secret). Confirmado com o usuário que essa URL é fixa/reutilizável
 // (o conteúdo por trás dela é atualizado pela Shopee, o link não expira).
+//
+// O secret precisa apontar pro feed de 100.000 linhas (o "feed A"), que traz
+// curtidas (like), nota da loja (shop_rating), nome da loja, tipo de envio
+// (cb_option) e condição. O feed de 10.000 linhas (o antigo, sem essas colunas)
+// não serve: sem curtidas o ranking caía só na nota (quase todo item tem 4,9
+// ou 5,0), virava sorteio e o catálogo trocava todo dia.
+import { readFile } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { parse } from 'csv-parse/sync'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..')
+const KNOWN_PATHS_FILE = path.join(ROOT, 'data', 'shopee-known-paths.json')
 
 // Mapeamento categoria (global_category1 do feed) → vertical do site.
 // Nomes conferidos rodando contra o feed real (não são só um chute inicial)
@@ -58,18 +70,80 @@ const CATEGORY3_OVERRIDES = {
   'Hobbies & Collections>Sports Collectibles': 'livros',
 }
 
-// Catálogo começa limitado (não importa o feed inteiro de uma vez) — top N
-// produtos por vertical, ranqueados por avaliação/curtidas como sinal de
-// qualidade (não temos histórico de vendas próprio pra esses produtos).
-// Moda, beleza, eletrônicos e casa são as categorias de maior venda na
-// Shopee em geral — limite maior pra elas; o resto segue mais conservador
-// até termos dado real de conversão pra reajustar.
-const DEFAULT_MAX_PER_VERTICAL = 300
-const VERTICAL_CAPS = {
-  moda: 1000,
-  beleza: 1000,
-  eletronicos: 1000,
-  casa: 1000,
+// Curadoria: só lojas OFICIAIS (o feed não tem coluna de tipo de loja, mas o
+// nome das lojas de marca traz "Oficial"/"Official": Britânia Oficial, Philco
+// Oficial, Casas Bahia Oficial...), produtos caros e muito curtidos. O feed não
+// traz vendas nem comissão — curtidas são o melhor sinal de popularidade que
+// existe nele, e item muito curtido também some menos do feed de um dia pro
+// outro. Medido em 11/10/2026: ~590 itens de ~110 lojas passam nesses cortes.
+const MIN_SHOP_RATING = 4.8
+const MIN_ITEM_RATING = 4.7
+const MIN_LIKES = 1000
+const MIN_PRICE = 100
+const MAX_PRICE = 5000 // teto de sanidade: evita preço de teste/erro no feed
+const MAX_PER_SHOP = 10 // sem isso uma loja (ex: 75 itens de móveis) ocupa o catálogo
+const MAX_TOTAL = 500
+const DEFAULT_MAX_PER_VERTICAL = 20
+const VERTICAL_CAPS = { casa: 200, eletronicos: 110, beleza: 80, moda: 80, esporte: 40, joias: 25 }
+
+// Histerese: item que já estava publicado ontem passa com cortes um pouco mais
+// frouxos (curtidas e preço oscilam, e um item na fronteira entraria e sairia
+// do catálogo a cada build). Estabilidade importa porque cada item que sai
+// vira URL morta.
+const KEEP_FACTOR = 0.7
+const KEEP_BONUS = 0.5
+
+const REQUIRED_COLUMNS = ['like', 'shop_rating', 'shop_name', 'cb_option', 'condition', 'item_rating']
+
+const isOfficialShop = (name) => /\b(oficial|official)\b/i.test(String(name ?? ''))
+
+// "Britânia Oficial" -> "Britânia"; "Casas Bahia Loja Oficial" -> "Casas Bahia".
+// Vai pro g:brand do feed do Google Merchant (a marca real do produto, não o
+// nome do marketplace).
+function brandFromOfficialShop(name) {
+  const brand = String(name ?? '')
+    .replace(/\b(loja\s+)?(oficial|official)(\s+store)?\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+  return brand || ''
+}
+
+function priceOf(row) {
+  const n = Number(row.sale_price || row.price)
+  return Number.isFinite(n) ? n : null
+}
+
+// ids (itemid) dos produtos publicados na última execução — o slug termina em
+// "-{itemid}" (ver finalizeProduct em fetch-feeds.mjs).
+async function loadPreviouslyPublishedIds() {
+  try {
+    const known = JSON.parse(await readFile(KNOWN_PATHS_FILE, 'utf-8'))
+    return new Set(Object.keys(known).map((p) => p.match(/-(\d+)$/)?.[1]).filter(Boolean))
+  } catch {
+    return new Set()
+  }
+}
+
+function passes(row, keeping) {
+  const f = keeping ? KEEP_FACTOR : 1
+  const price = priceOf(row)
+  if (price == null) return false
+  return (
+    row.cb_option === 'Non-Cross border' &&
+    row.condition === 'New' &&
+    isOfficialShop(row.shop_name) &&
+    (Number(row.shop_rating) || 0) >= MIN_SHOP_RATING - (keeping ? 0.1 : 0) &&
+    (Number(row.item_rating) || 0) >= MIN_ITEM_RATING - (keeping ? 0.1 : 0) &&
+    (Number(row.like) || 0) >= MIN_LIKES * f &&
+    price >= MIN_PRICE * (keeping ? 0.8 : 1) &&
+    price <= MAX_PRICE
+  )
+}
+
+// Popularidade (curtidas, em escala log) ponderada pelo preço — "caros e muito
+// curtidos". Quem já estava publicado ganha um bônus pra não oscilar.
+function score(row, keeping) {
+  return Math.log10(1 + (Number(row.like) || 0)) * Math.log10(priceOf(row)) + (keeping ? KEEP_BONUS : 0)
 }
 
 function mapRow(row, vertical) {
@@ -107,6 +181,7 @@ function mapRow(row, vertical) {
     number_available: '',
     product_GTIN: '',
     discount_percentage: row.discount_percentage || '',
+    brand_name: brandFromOfficialShop(row.shop_name),
     // Não existe coluna equivalente no FIELD_MAP do Awin — passa direto pelo
     // mapRow() genérico de fetch-feeds.mjs (chave desconhecida = mantida
     // como está) e tem prioridade sobre o vertical fixo do merchant.
@@ -128,7 +203,8 @@ export async function fetchShopeeRows() {
     return []
   }
 
-  const csvText = await res.text()
+  // O feed já veio com byte NUL no meio de linhas (quebra parsers de CSV).
+  const csvText = (await res.text()).replace(/\0/g, '')
   const records = parse(csvText, {
     columns: true,
     skip_empty_lines: true,
@@ -137,70 +213,55 @@ export async function fetchShopeeRows() {
   })
   console.log(`[shopee] ${records.length} produtos no feed bruto`)
 
-  // Agrupa por vertical e, dentro de cada vertical, por subcategoria
-  // (global_category3) — necessário pra depois ranquear com diversidade em
-  // vez de um corte único por nota/curtidas, que espremia subgêneros
-  // pequenos (ex: bíblia/devocional, autoajuda, adesivos) pra fora do corte
-  // só porque outros subgêneros maiores (ex: literatura de forma geral)
-  // tinham nota média mais alta.
-  const byVertical = new Map()
-  const skipped = new Map()
+  const missing = REQUIRED_COLUMNS.filter((c) => !(records[0] && c in records[0]))
+  if (missing.length) {
+    console.error(
+      `[shopee] feed sem as colunas ${missing.join(', ')} — parece o feed antigo de 10.000 linhas. ` +
+        'Use o feed de 100.000 linhas (com curtidas e dados da loja) em SHOPEE_FEED_URL. Seguindo sem a Shopee.'
+    )
+    return []
+  }
 
+  const previousIds = await loadPreviouslyPublishedIds()
+
+  const candidates = []
+  const skippedCategories = new Map()
   for (const row of records) {
     const overrideKey = `${row.global_category1}>${row.global_category3}`
     const vertical = CATEGORY3_OVERRIDES[overrideKey] || CATEGORY_TO_VERTICAL[row.global_category1]
     if (!vertical) {
-      skipped.set(row.global_category1, (skipped.get(row.global_category1) ?? 0) + 1)
+      skippedCategories.set(row.global_category1, (skippedCategories.get(row.global_category1) ?? 0) + 1)
       continue
     }
-    if (!byVertical.has(vertical)) byVertical.set(vertical, new Map())
-    const bySubcategory = byVertical.get(vertical)
-    const subcategory = row.global_category3 || row.global_category2 || '(geral)'
-    if (!bySubcategory.has(subcategory)) bySubcategory.set(subcategory, [])
-    bySubcategory.get(subcategory).push(row)
+    const keeping = previousIds.has(String(row.itemid))
+    if (!passes(row, keeping)) continue
+    candidates.push({ row, vertical, keeping, score: score(row, keeping) })
+  }
+  candidates.sort((a, b) => b.score - a.score || String(a.row.itemid).localeCompare(String(b.row.itemid)))
+
+  const perShop = new Map()
+  const perVertical = new Map()
+  const selected = []
+  for (const c of candidates) {
+    if (selected.length >= MAX_TOTAL) break
+    const shop = c.row.shop_name
+    const cap = VERTICAL_CAPS[c.vertical] ?? DEFAULT_MAX_PER_VERTICAL
+    if ((perShop.get(shop) ?? 0) >= MAX_PER_SHOP) continue
+    if ((perVertical.get(c.vertical) ?? 0) >= cap) continue
+    perShop.set(shop, (perShop.get(shop) ?? 0) + 1)
+    perVertical.set(c.vertical, (perVertical.get(c.vertical) ?? 0) + 1)
+    selected.push(c)
   }
 
-  for (const [category, count] of skipped) {
+  const kept = selected.filter((c) => c.keeping).length
+  console.log(
+    `[shopee] curadoria: ${selected.length} produtos de ${perShop.size} lojas oficiais ` +
+      `(${candidates.length} passaram nos cortes; ${kept} já estavam publicados). ` +
+      `Por vertical: ${[...perVertical].map(([v, n]) => `${v}:${n}`).join(' ')}`
+  )
+  for (const [category, count] of skippedCategories) {
     console.log(`[shopee] categoria não mapeada "${category}": ${count} produtos ignorados (ver CATEGORY_TO_VERTICAL em scripts/lib/shopee.mjs)`)
   }
 
-  const rows = []
-  for (const [vertical, bySubcategory] of byVertical) {
-    const cap = VERTICAL_CAPS[vertical] ?? DEFAULT_MAX_PER_VERTICAL
-    // Cada subcategoria é ranqueada internamente por avaliação+curtidas (sinal
-    // de qualidade disponível no feed, já que não temos histórico de vendas
-    // próprio ainda), mas a seleção final entre subcategorias é round-robin —
-    // garante espaço pras pequenas em vez de deixar as maiores dominarem tudo.
-    const queues = [...bySubcategory.entries()].map(([subcategory, items]) => ({
-      subcategory,
-      items: items
-        .map((row) => ({ row, score: (Number(row.item_rating) || 0) * 1000 + (Number(row.like) || 0) }))
-        .sort((a, b) => b.score - a.score),
-      cursor: 0,
-    }))
-
-    const selected = []
-    let progressed = true
-    while (selected.length < cap && progressed) {
-      progressed = false
-      for (const queue of queues) {
-        if (selected.length >= cap) break
-        if (queue.cursor < queue.items.length) {
-          selected.push(queue.items[queue.cursor].row)
-          queue.cursor++
-          progressed = true
-        }
-      }
-    }
-
-    const totalCandidates = queues.reduce((sum, q) => sum + q.items.length, 0)
-    console.log(
-      `[shopee] vertical "${vertical}": ${selected.length}/${totalCandidates} produtos (limite ${cap}, ${queues.length} subcategorias)`
-    )
-    for (const row of selected) {
-      rows.push(mapRow(row, vertical))
-    }
-  }
-
-  return rows
+  return selected.map((c) => mapRow(c.row, c.vertical))
 }
