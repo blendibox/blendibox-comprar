@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { getQuiz } from '../data/quizzes'
 import { QuizVerdadeiroFalso } from '../components/QuizVerdadeiroFalso'
+import { QuizPersonalidade } from '../components/QuizPersonalidade'
 import { ShareBar } from '../components/ShareBar'
 import { SITE_URL } from '../config/site'
 
@@ -29,16 +30,31 @@ export function QuizDetailPage() {
 
       <ShareBar url={url} title={quiz.title} />
 
-      <QuizVerdadeiroFalso
-        eyebrow={quiz.eyebrow}
-        title={quiz.title}
-        subtitle={quiz.subtitle}
-        qualityBadge={quiz.qualityBadge}
-        icon={quiz.icon}
-        footnote={quiz.footnote}
-        questions={quiz.questions}
-        url={url}
-      />
+      {quiz.kind === 'personalidade' && quiz.personality ? (
+        <QuizPersonalidade
+          eyebrow={quiz.eyebrow}
+          title={quiz.title}
+          subtitle={quiz.subtitle}
+          qualityBadge={quiz.qualityBadge}
+          icon={quiz.icon}
+          footnote={quiz.footnote}
+          personality={quiz.personality}
+          url={url}
+        />
+      ) : (
+        <QuizVerdadeiroFalso
+          eyebrow={quiz.eyebrow}
+          title={quiz.title}
+          subtitle={quiz.subtitle}
+          qualityBadge={quiz.qualityBadge}
+          icon={quiz.icon}
+          trueLabel={quiz.trueLabel}
+          falseLabel={quiz.falseLabel}
+          footnote={quiz.footnote}
+          questions={quiz.questions}
+          url={url}
+        />
+      )}
 
       <ShareBar url={url} title={quiz.title} />
     </article>

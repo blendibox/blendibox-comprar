@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Bell, BookOpen, Check, Clock, Gift, GraduationCap, Heart, PartyPopper, Scale, ShieldCheck, Vote, X } from './Icon'
+import { Bell, BookOpen, Check, Clock, Gift, GraduationCap, Heart, PartyPopper, Scale, ShieldCheck, ShoppingBag, Tag, Vote, X } from './Icon'
 import { ShareBar } from './ShareBar'
 import type { QuizIcon, QuizQuestion } from '../types/quiz'
 
-const HEADER_ICONS: Record<QuizIcon, typeof Vote> = { Vote, Gift, Bell, Heart }
+const HEADER_ICONS: Record<QuizIcon, typeof Vote> = { Vote, Gift, Bell, Heart, Tag, ShoppingBag }
 
 interface QuizVerdadeiroFalsoProps {
   eyebrow: string
@@ -11,6 +11,10 @@ interface QuizVerdadeiroFalsoProps {
   subtitle: string
   qualityBadge: string
   icon: QuizIcon
+  // Rótulos dos dois botões — padrão "Verdadeiro"/"Falso" (o de Black Friday
+  // usa "Verdade"/"Mito").
+  trueLabel?: string
+  falseLabel?: string
   footnote?: string
   questions: QuizQuestion[]
   // URL canônica da página onde o quiz está (a do próprio quiz em
@@ -29,7 +33,18 @@ interface QuizVerdadeiroFalsoProps {
 //
 // Estado guarda a resposta de CADA pergunta (não só a atual) — é o que
 // permite montar a tela de revisão no final sem precisar refazer o quiz.
-export function QuizVerdadeiroFalso({ eyebrow, title, subtitle, qualityBadge, icon, footnote, questions, url }: QuizVerdadeiroFalsoProps) {
+export function QuizVerdadeiroFalso({
+  eyebrow,
+  title,
+  subtitle,
+  qualityBadge,
+  icon,
+  trueLabel = 'Verdadeiro',
+  falseLabel = 'Falso',
+  footnote,
+  questions,
+  url,
+}: QuizVerdadeiroFalsoProps) {
   const [current, setCurrent] = useState(0)
   const [selections, setSelections] = useState<(boolean | null)[]>(() => new Array(questions.length).fill(null))
   const [finished, setFinished] = useState(false)
@@ -134,7 +149,7 @@ export function QuizVerdadeiroFalso({ eyebrow, title, subtitle, qualityBadge, ic
               onClick={() => choose(true)}
               disabled={isAnswered}
             >
-              <Check size={18} aria-hidden="true" /> Verdadeiro
+              <Check size={18} aria-hidden="true" /> {trueLabel}
             </button>
             <button
               type="button"
@@ -142,7 +157,7 @@ export function QuizVerdadeiroFalso({ eyebrow, title, subtitle, qualityBadge, ic
               onClick={() => choose(false)}
               disabled={isAnswered}
             >
-              <X size={18} aria-hidden="true" /> Falso
+              <X size={18} aria-hidden="true" /> {falseLabel}
             </button>
           </div>
 
@@ -150,7 +165,7 @@ export function QuizVerdadeiroFalso({ eyebrow, title, subtitle, qualityBadge, ic
             <div className={`quiz-el__feedback${isCorrect ? ' is-correct' : ' is-wrong'}`}>
               <div className="quiz-el__feedback-head">
                 {isCorrect ? <Check size={18} aria-hidden="true" /> : <X size={18} aria-hidden="true" />}
-                <strong>{isCorrect ? 'Acertou!' : q.correctAnswer ? 'Verdadeiro.' : 'Falso.'}</strong>
+                <strong>{isCorrect ? 'Acertou!' : `${q.correctAnswer ? trueLabel : falseLabel}.`}</strong>
                 <span className="quiz-el__feedback-tag">{isCorrect ? 'RESPOSTA CORRETA' : 'RESPOSTA INCORRETA'}</span>
               </div>
               <p className="quiz-el__feedback-text">{q.explanation}</p>

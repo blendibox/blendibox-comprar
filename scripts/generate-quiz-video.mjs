@@ -215,7 +215,13 @@ async function loadQuiz(slug) {
   await writeFile(tmpFile, result.outputFiles[0].text)
   try {
     const mod = await import(`${pathToFileURL(tmpFile).href}?t=${Date.now()}`)
-    const quiz = slug ? mod.getQuiz(slug) : mod.quizzes[0]
+    // Os slides são do formato "pode / não pode" com base legal em toda
+    // pergunta (o eleitoral). Quiz de perfil, ou com rótulos próprios (ex:
+    // "Verdade/Mito" da Black Friday), precisa de um modelo de vídeo à parte —
+    // por isso o padrão pula esses e só um slug explícito força.
+    const quiz = slug
+      ? mod.getQuiz(slug)
+      : mod.quizzes.find((q) => q.kind !== 'personalidade' && !q.trueLabel && q.questions.every((x) => x.legalBasis))
     if (!quiz) throw new Error(`Quiz "${slug}" não encontrado em src/data/quizzes.`)
     return quiz
   } finally {

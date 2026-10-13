@@ -1,10 +1,10 @@
 import { Link } from '../components/Link'
-import { Bell, CalendarDays, Gift, Heart, Vote } from '../components/Icon'
+import { Bell, CalendarDays, Gift, Heart, ShoppingBag, Tag, Vote } from '../components/Icon'
 import { quizzes } from '../data/quizzes'
 import { formatSimpleDateBr } from '../lib/date'
 import type { QuizIcon } from '../types/quiz'
 
-const CARD_ICONS: Record<QuizIcon, typeof Vote> = { Vote, Gift, Bell, Heart }
+const CARD_ICONS: Record<QuizIcon, typeof Vote> = { Vote, Gift, Bell, Heart, Tag, ShoppingBag }
 
 export function QuizzesPage() {
   return (
