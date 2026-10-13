@@ -146,11 +146,28 @@ function score(row, keeping) {
   return Math.log10(1 + (Number(row.like) || 0)) * Math.log10(priceOf(row)) + (keeping ? KEEP_BONUS : 0)
 }
 
+// ID de afiliado da Shopee (não é segredo: aparece em todo link de afiliado).
+// O link que vem no feed ("product_short link") é só um redirecionador —
+// shope.ee/an_redir?origin_link=<produto> — SEM identificar a conta: seguindo o
+// link, a URL final não traz o utm_source=an_<id> que o guia da Shopee descreve,
+// então o clique não é atribuído a ninguém (provável causa da conversão zero de
+// antes de 13/10/2026). O guia manda acrescentar &affiliate_id=<id> e, se quiser,
+// &sub_id= (até 5 campos separados por hífen, que aparecem nos relatórios).
+const AFFILIATE_ID = process.env.SHOPEE_AFFILIATE_ID || '18150950000'
+
+function affiliateLink(row, vertical) {
+  const base =
+    row['product_short link'] ||
+    (row.product_link ? `https://shope.ee/an_redir?origin_link=${encodeURIComponent(row.product_link)}` : '')
+  if (!base) return ''
+  if (/[?&]affiliate_id=/.test(base)) return base
+  // sub_id: site + vertical, pra enxergar no painel que tipo de produto converte.
+  return `${base}&affiliate_id=${AFFILIATE_ID}&sub_id=blendibox-0-site-${vertical}-0`
+}
+
 function mapRow(row, vertical) {
   const price = row.sale_price || row.price || ''
-  // A própria Shopee já entrega o link de afiliado pronto nessa coluna —
-  // não construímos link nenhum aqui, só usamos o que o feed dá.
-  const deepLink = row['product_short link'] || row.product_link
+  const deepLink = affiliateLink(row, vertical)
 
   return {
     aw_deep_link: deepLink,
