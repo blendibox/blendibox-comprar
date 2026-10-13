@@ -498,7 +498,11 @@ export const SEASONAL_EVENTS = [
     palette: 'black',
     icon: 'flame',
     soft: true,
-    window: (y) => ({ start: dayNumber(y, 11, 1), end: dayNumber(y, 11, blackFridayDayOfMonth(y) - 5) }),
+    // Começa no dia seguinte ao fim do Dia das Crianças (12/10), em vez de 1/11:
+    // sem isso o site ficava ~3 semanas sem nenhuma campanha. O texto do banner
+    // ("acompanhe o preço de hoje pra saber quem baixa de verdade") é justamente
+    // o convite pra começar a monitorar cedo.
+    window: (y) => ({ start: dayNumber(y, 10, 13), end: dayNumber(y, 11, blackFridayDayOfMonth(y) - 5) }),
     banner: {
       badge: 'Esquenta Black Friday',
       badgeShort: 'Esquenta Black',
