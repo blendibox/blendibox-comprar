@@ -20,6 +20,7 @@ import {
   pickRealImage,
   getRealImageCandidates,
   getVerifiableImageCandidates,
+  getOriginImageCandidates,
   verifyImageUrl,
   mapWithConcurrency,
 } from './lib/images.mjs'
@@ -390,6 +391,17 @@ async function main() {
   const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
   rawRows.push(...(await fetchAmazonRows()))
+  // Shopee foi desativada em 2026-09-17: o catálogo (top-N por nota, de um feed
+  // sem curtidas) virava sorteio e trocava todo dia — o teto de 10 mil
+  // redirects (updateShopeeRedirects, abaixo) ficava saturado e a maioria dos
+  // produtos que saíam virava 404. Reativada com curadoria nova (ver
+  // scripts/lib/shopee.mjs): só lojas oficiais, caros e muito curtidos, ~500
+  // itens, com histerese pra lista não oscilar. Sem SHOPEE_FEED_URL, ou com o
+  // feed errado, devolve [] e o build segue.
+  // PRECISA vir antes do dedup logo abaixo: o loop principal lê dedupedRows, e
+  // linha empurrada em rawRows depois dele nunca chega ao catálogo (foi o que
+  // aconteceu em 12/10: 374 itens curados, 0 publicados).
+  rawRows.push(...(await fetchShopeeRows()))
   // Alguns merchants têm mais de um fid combinado na URL (ex: Eudora 67677 +
   // 116994, LG, Nike) e os catálogos quase sempre se completam — mas quando o
   // MESMO SKU (merchant_product_id) aparece nas duas feeds com dado diferente
@@ -419,14 +431,6 @@ async function main() {
   if (skippedDuplicateProductId > 0) {
     console.log(`[dedup] ${skippedDuplicateProductId} linhas ignoradas por merchant_product_id repetido entre feeds combinadas do mesmo merchant`)
   }
-  // Shopee foi desativada em 2026-09-17: o catálogo (top-N por nota, de um feed
-  // sem curtidas) virava sorteio e trocava todo dia — o teto de 10 mil
-  // redirects (updateShopeeRedirects, abaixo) ficava saturado e a maioria dos
-  // produtos que saíam virava 404. Reativada com curadoria nova (ver
-  // scripts/lib/shopee.mjs): só lojas oficiais, caros e muito curtidos, ~500
-  // itens, com histerese pra lista não oscilar. Sem SHOPEE_FEED_URL, ou com o
-  // feed errado, devolve [] e o build segue.
-  rawRows.push(...(await fetchShopeeRows()))
 
   // Monta cada produto com slug/vertical/merchant resolvidos, e um índice por
   // "vertical/categoria" pra depois calcular os produtos similares.
@@ -501,12 +505,16 @@ async function main() {
     }
     // verifyImages: testa também a URL original embutida na proxy da Awin (a
     // proxy às vezes quebra e o arquivo no lojista continua lá — Dufrio, Jo Malone)
-    const candidates = merchant.verifyImages ? getVerifiableImageCandidates(mapped) : getRealImageCandidates(mapped)
+    const candidates = merchant.originImages
+      ? getOriginImageCandidates(mapped)
+      : merchant.verifyImages
+        ? getVerifiableImageCandidates(mapped)
+        : getRealImageCandidates(mapped)
     if (!candidates.length) {
       skippedNoImage++
       continue
     }
-    if (merchant.verifyImages) {
+    if (merchant.verifyImages && !merchant.originImages) {
       pendingVerification.push({ mapped, merchant, candidates })
       continue
     }

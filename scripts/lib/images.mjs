@@ -62,6 +62,21 @@ export function getRealImageCandidates(product) {
 // ÚLTIMO (só é tentada se nenhum campo do feed funcionou). Usada só na
 // verificação ao vivo dos merchants com verifyImages (fetch-feeds.mjs) — NÃO
 // no JSON-LD do prerender, que usa getRealImageCandidates.
+// Merchant cujo site devolve 403 pra qualquer requisição automática (curl, o CI
+// do GitHub, o proxy images2.productserve.com da Awin — que por isso entrega o
+// "No image available"), mas serve a imagem normalmente pro navegador do
+// cliente, inclusive a partir do nosso domínio (Jo Malone, testado em
+// 13/10/2026). Verificar ao vivo nunca passa, então usa só a URL ORIGINAL, sem
+// proxy e sem checagem (flag "originImages" em merchants.config.json).
+export function getOriginImageCandidates(product) {
+  const origins = []
+  for (const url of getRealImageCandidates(product)) {
+    const origin = productServeOriginUrl(url) || (url.includes('images2.productserve.com') ? null : url)
+    if (origin && isRealImageUrl(origin) && !origins.includes(origin)) origins.push(origin)
+  }
+  return origins
+}
+
 export function getVerifiableImageCandidates(product) {
   const candidates = getRealImageCandidates(product)
   for (const url of [...candidates]) {
