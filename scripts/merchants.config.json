@@ -14,7 +14,7 @@
     "boticario-revenda": { "slug": "boticario-revenda", "displayName": "O Boticário (Revenda)", "vertical": "beleza", "active": true, "priority": true },
     "qdb-revenda": { "slug": "qdb-revenda", "displayName": "Quem Disse, Berenice?", "vertical": "beleza", "active": true, "priority": true },
     "amazon": { "slug": "amazon", "displayName": "Amazon BR", "vertical": "livros", "active": true, "priority": true },
-    "shopee": { "slug": "shopee", "displayName": "Shopee Oficial BR", "vertical": "geral", "active": true, "titleBlacklistEnabled": true },
+    "shopee": { "slug": "shopee", "displayName": "Shopee BR", "vertical": "geral", "active": true, "titleBlacklistEnabled": true },
 
     "17652": { "slug": "nike", "displayName": "Nike BR", "vertical": "esporte", "active": true, "priority": true },
     "116455": { "slug": "mariafilo", "displayName": "Maria Filó BR", "vertical": "moda", "active": true },
@@ -28,6 +28,7 @@
     "17659": { "slug": "oboticario", "displayName": "oBoticario BR", "vertical": "beleza", "active": true },
     "100451": { "slug": "montecarlo-joias", "displayName": "Monte Carlo Jóias BR", "vertical": "joias", "active": false, "verifyImages": true },
     "106747": { "slug": "aliancas-imperiais", "displayName": "Alianças Imperiais BR", "vertical": "joias", "active": true },
+    "28161": { "slug": "technos", "displayName": "Technos BR", "vertical": "joias", "active": true },
     "17772": { "slug": "brastemp", "displayName": "Brastemp BR", "vertical": "casa", "active": true },
     "17639": { "slug": "consul", "displayName": "Consul BR", "vertical": "casa", "active": true },
     "17858": { "slug": "electrolux", "displayName": "Electrolux BR", "vertical": "casa", "active": true },
