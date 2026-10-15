@@ -3,6 +3,7 @@ import { Link } from './Link'
 import { Bell, Check, ChevronDown, ShieldCheck, TrendingDown } from './Icon'
 import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { sendPinterestEvent } from '../lib/pinterest'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 import { formatPrice } from './ProductCard'
 
@@ -42,6 +43,7 @@ export function PriceTargetForm({ product }: { product: FavoriteItem }) {
           subscribeNewsletter: false,
         }),
       })
+      if (res.ok) sendPinterestEvent('lead', { contentName: 'aviso_preco_alvo' })
       setStatus(res.ok ? 'done' : 'error')
     } catch {
       setStatus('error')

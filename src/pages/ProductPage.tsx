@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
+import { usePinterestEvent } from '../hooks/usePinterestEvent'
 import { Link } from '../components/Link'
 import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from '../components/Icon'
 import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
@@ -58,6 +59,19 @@ export function ProductPage() {
   // daquela loja — manda pra página dela em vez do recuperável genérico. Só
   // cai no genérico se a loja também não existir mais.
   const [merchantCheck, setMerchantCheck] = useState<'idle' | 'checking' | 'exists' | 'not-exists'>('idle')
+
+  // Visita à página do produto pra API de Conversões da Pinterest. O id é o
+  // mesmo `g:id` do feed do Google Merchant (loja-idDoProduto), que é o catálogo
+  // que a Pinterest lê — assim o evento casa com o item do catálogo. Só dispara
+  // com o produto de ESTA rota carregado (path igual) pra não mandar o preço
+  // do produto anterior numa navegação client-side.
+  const productReady = state === 'ready' && product !== null && product.merchantSlug === merchant && product.slug === slug
+  usePinterestEvent('page_visit', productReady ? path : null, {
+    contentName: product?.productName,
+    contentIds: product ? [`${product.merchantSlug}-${product.merchantProductId || product.slug}`] : undefined,
+    value: product?.searchPrice,
+    currency: product?.currency,
+  })
 
   useEffect(() => {
     clearInitialData(path)

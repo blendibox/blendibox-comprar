@@ -10,8 +10,10 @@ import { CouponWheelButton } from './components/CouponWheel'
 import { ScrollToTop } from './components/ScrollToTop'
 import { ComparatorProvider } from './context/ComparatorContext'
 import { FavoritesProvider } from './context/FavoritesContext'
+import { usePinterestOutboundClicks } from './hooks/usePinterestEvent'
 
 export function Layout() {
+  usePinterestOutboundClicks()
   // Nas telas de lista de presentes o FAB da roleta de cupons compete
   // visualmente com o tema (presente) — esconde nessas rotas.
   const { pathname } = useLocation()

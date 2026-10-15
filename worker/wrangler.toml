@@ -24,6 +24,9 @@ ALLOWED_ORIGIN = "https://comprar.blendibox.com.br"
 SITE_URL = "https://comprar.blendibox.com.br"
 RESEND_SEGMENT_ID = "0236b828-d608-4a80-8216-f2d8d224969b"
 DIGEST_FROM_EMAIL = "Compare Ofertas <ofertas@blendibox.com.br>"
+# Conta de anúncios da Pinterest (id público, aparece na URL do Ads Manager).
+# O token da API de Conversões é secret: `wrangler secret put PINTEREST_ACCESS_TOKEN`
+PINTEREST_AD_ACCOUNT_ID = "549764795654"
 
 # RESEND_API_KEY e RESEND_AUDIENCE_ID são secrets — configure com:
 #   wrangler secret put RESEND_API_KEY

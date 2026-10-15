@@ -11,6 +11,7 @@ import { FaqBlock } from '../components/FaqBlock'
 import { accentuateLabel } from '../lib/priceInsights'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { usePinterestEvent } from '../hooks/usePinterestEvent'
 
 const PAGE_SIZE = 60
 
@@ -18,6 +19,7 @@ export function CategoryPage() {
   const { vertical = '', categorySlug = '' } = useParams()
   const categoryLabel = categoryHubLabel(categorySlug)
   const path = `/${vertical}/categoria/${categorySlug}/`
+  usePinterestEvent('view_category', path, { contentName: categoryLabel, contentCategory: `${vertical}/${categorySlug}` })
   const [initial] = useState<ListInitialData | null>(() => peekInitialData<ListInitialData>(path))
   const insights = initial?.insights ?? null
   const { products, state } = useIndex()

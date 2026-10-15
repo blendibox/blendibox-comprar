@@ -5,6 +5,7 @@ import { Gift, Lock } from '../components/Icon'
 import { EmailField } from '../components/EmailField'
 import { addMyList, createRegistry, saveOwnerToken, type RegistryEventType } from '../lib/registry'
 import { RegistrySteps } from '../components/RegistrySteps'
+import { sendPinterestEvent } from '../lib/pinterest'
 
 const EVENT_OPTIONS: { value: RegistryEventType; label: string }[] = [
   { value: 'casamento', label: 'Casamento' },
@@ -52,6 +53,7 @@ export function CreateRegistryPage() {
       })
       saveOwnerToken(id, editToken)
       addMyList({ id, editToken, title: title.trim() })
+      sendPinterestEvent('lead', { contentName: 'lista_de_presentes' })
       navigate(`/lista/${id}/editar?token=${editToken}&novo=1`)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao criar a lista')

@@ -9,6 +9,7 @@ import { QuizPodeNaoPode } from '../components/QuizPodeNaoPode'
 import { QuizVerdadeiroFalso } from '../components/QuizVerdadeiroFalso'
 import { formatSimpleDateBr } from '../lib/date'
 import { SITE_URL } from '../config/site'
+import { usePinterestEvent } from '../hooks/usePinterestEvent'
 import type { BlogContentBlock } from '../types/blog'
 
 // Suporte a link dentro do texto: [rótulo](/caminho) vira link interno da
@@ -131,6 +132,7 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
 export function BlogPostPage() {
   const { slug } = useParams<{ slug: string }>()
   const post = slug ? getBlogPost(slug) : undefined
+  usePinterestEvent('page_visit', post ? `/blog/${post.slug}/` : null, { contentName: post?.title, contentCategory: 'blog' })
 
   if (!post) {
     return (

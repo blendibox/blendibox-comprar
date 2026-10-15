@@ -13,6 +13,7 @@ import { CouponCard } from '../components/CouponCard'
 import { MerchantLogo } from '../components/MerchantLogo'
 import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { usePinterestEvent } from '../hooks/usePinterestEvent'
 
 const PAGE_SIZE = 60
 
@@ -37,6 +38,13 @@ export function HubPage() {
     if (!ready) return []
     return products.filter((p) => (isVertical ? p.vertical === slug : p.merchantSlug === slug))
   }, [ready, products, slug, isVertical])
+
+  // Hub de vertical ou de loja. Só conta quando o hub existe de verdade (tem
+  // produto) — /:slug também recebe URL inventada, que cai no "não encontrado".
+  usePinterestEvent('view_category', filtered.length > 0 ? path : null, {
+    contentName: categoryHubLabel(slug),
+    contentCategory: slug,
+  })
 
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const [sort, setSort] = useState<SortOption>('relevancia')

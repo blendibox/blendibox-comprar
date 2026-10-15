@@ -3,6 +3,7 @@ import { Link } from './Link'
 import { Check, Heart, Mail, ShieldCheck } from './Icon'
 import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { sendPinterestEvent } from '../lib/pinterest'
 import { useFavorites, type FavoriteItem } from '../context/FavoritesContext'
 
 const DISMISSED_KEY = 'compare-ofertas:pricedrop-dismissed'
@@ -91,6 +92,7 @@ export function PriceDropWatchForm({ items, product }: { items?: WatchItem[]; pr
       })
       if (res.ok) {
         setStatus('done')
+        sendPinterestEvent('lead', { contentName: 'aviso_queda_preco' })
         try {
           localStorage.setItem(DONE_KEY, '1')
         } catch {

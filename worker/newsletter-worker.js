@@ -22,6 +22,9 @@
 //   POST /          — cadastro na newsletter geral (Resend Audience)
 //   POST /watch     — "avise-me quando baixar de preço" (grava em PRICE_WATCH,
 //                      opcionalmente também cadastra na newsletter geral)
+//   POST /pin-event — repassa eventos do site à API de Conversões da Pinterest
+//                      (ver handlePinterestEvent; precisa do secret
+//                      PINTEREST_ACCESS_TOKEN e da var PINTEREST_AD_ACCOUNT_ID)
 //
 // `scheduled` (Cron Triggers, ver [triggers] em wrangler.toml) tem duas
 // rotinas, diferenciadas por `event.cron`:
@@ -181,6 +184,112 @@ async function handleWatch(request, env, headers) {
   return jsonResponse({ ok: true }, 200, headers)
 }
 
+// ---------------------------------------------------------------------------
+// Pinterest API de Conversões (server-side) — POST /pin-event.
+//
+// O site NÃO carrega a tag do Pinterest no navegador (a tag 2612469861288 da
+// conta mora na loja virtual, via GTM). Em vez disso o navegador avisa este
+// Worker de cada evento (page_visit, view_category, signup, lead, custom) e
+// ele completa com IP e user-agent REAIS da visita (o navegador não vê o
+// próprio IP) e repassa à API v5 da Pinterest com o token, que é secret e
+// nunca chega ao navegador nem ao repositório (público).
+//
+// Variáveis: PINTEREST_AD_ACCOUNT_ID (não-secreta, wrangler.toml) e o secret
+// PINTEREST_ACCESS_TOKEN (`wrangler secret put PINTEREST_ACCESS_TOKEN`). Sem
+// qualquer um dos dois a rota vira no-op (204) — dá pra fazer o deploy antes
+// de gerar o token.
+//
+// A rota é pública, então só aceita o que o site realmente manda: lista fixa
+// de eventos, URL do nosso domínio, tamanho máximo, e descarta robôs. E-mail
+// nunca passa por aqui (nem hash) — o pareamento é por IP + user-agent + o
+// `epik` (id do clique vindo de um Pin).
+// ---------------------------------------------------------------------------
+const PIN_EVENTS = new Set(['page_visit', 'view_category', 'signup', 'lead', 'custom'])
+const PIN_BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|facebookexternalhit|python|curl|wget/i
+const PIN_MAX_BODY = 2048
+
+function pinText(value, max) {
+  return typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null
+}
+
+function buildPinterestEvent(body, request, env) {
+  if (!body || typeof body !== 'object' || !PIN_EVENTS.has(body.eventName)) return null
+  if (typeof body.eventId !== 'string' || !/^[\w-]{8,64}$/.test(body.eventId)) return null
+
+  let pageUrl
+  try {
+    pageUrl = new URL(body.url)
+  } catch {
+    return null
+  }
+  if (pageUrl.origin !== new URL(env.SITE_URL).origin) return null
+
+  const ua = request.headers.get('User-Agent') || ''
+  const ip = request.headers.get('CF-Connecting-IP') || ''
+  // A Pinterest exige IP + user-agent quando não há e-mail; e robô não é visita.
+  if (!ua || !ip || PIN_BOT_UA.test(ua)) return null
+
+  const userData = { client_ip_address: ip, client_user_agent: ua }
+  if (typeof body.epik === 'string' && /^[\w.-]{6,200}$/.test(body.epik)) userData.click_id = body.epik
+
+  const customData = {}
+  const contentName = pinText(body.contentName, 150)
+  const contentCategory = pinText(body.contentCategory, 100)
+  if (contentName) customData.content_name = contentName
+  if (contentCategory) customData.content_category = contentCategory
+  if (Array.isArray(body.contentIds)) {
+    const ids = body.contentIds.map((id) => pinText(id, 80)).filter(Boolean).slice(0, 10)
+    if (ids.length) customData.content_ids = ids
+  }
+  if (typeof body.value === 'number' && Number.isFinite(body.value) && body.value > 0) {
+    customData.value = body.value.toFixed(2)
+    customData.currency = /^[A-Z]{3}$/.test(body.currency) ? body.currency : 'BRL'
+  }
+
+  return {
+    event_name: body.eventName,
+    action_source: 'web',
+    event_time: Math.floor(Date.now() / 1000),
+    event_id: body.eventId,
+    // Sem query string: a URL de edição da lista de presentes carrega token.
+    event_source_url: `${pageUrl.origin}${pageUrl.pathname}`,
+    user_data: userData,
+    custom_data: customData,
+  }
+}
+
+async function forwardToPinterest(event, env) {
+  try {
+    const res = await fetch(`https://api.pinterest.com/v5/ad_accounts/${encodeURIComponent(env.PINTEREST_AD_ACCOUNT_ID)}/events`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.PINTEREST_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [event] }),
+    })
+    if (!res.ok) console.error('pin-event: Pinterest respondeu', res.status, (await res.text()).slice(0, 300))
+  } catch (err) {
+    console.error('pin-event: falha de rede', String(err).slice(0, 200))
+  }
+}
+
+async function handlePinterestEvent(request, env, ctx, headers) {
+  const noContent = new Response(null, { status: 204, headers })
+  if (!env.PINTEREST_ACCESS_TOKEN || !env.PINTEREST_AD_ACCOUNT_ID) return noContent
+
+  let body
+  try {
+    // text/plain no cliente evita o preflight do CORS (sendBeacon/keepalive).
+    const raw = await request.text()
+    if (raw.length > PIN_MAX_BODY) return jsonResponse({ error: 'Corpo grande demais' }, 413, headers)
+    body = JSON.parse(raw)
+  } catch {
+    return jsonResponse({ error: 'JSON inválido' }, 400, headers)
+  }
+
+  const event = buildPinterestEvent(body, request, env)
+  if (event) ctx.waitUntil(forwardToPinterest(event, env))
+  return noContent
+}
+
 export default {
   async fetch(request, env, ctx) {
     const headers = corsHeaders(env, request)
@@ -205,6 +314,7 @@ export default {
       return jsonResponse({ error: 'Método não permitido' }, 405, headers)
     }
     if (url.pathname === '/watch') return handleWatch(request, env, headers)
+    if (url.pathname === '/pin-event') return handlePinterestEvent(request, env, ctx, headers)
     return handleNewsletterSignup(request, env, headers)
   },
 

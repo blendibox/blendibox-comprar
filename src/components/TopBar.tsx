@@ -3,6 +3,7 @@ import { Link } from './Link'
 import { Check, Gift, Mail, ShieldCheck } from './Icon'
 import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { sendPinterestEvent } from '../lib/pinterest'
 
 const DISMISSED_KEY = 'compare-ofertas:topbar-dismissed'
 
@@ -64,6 +65,7 @@ export function TopBar() {
       })
       if (res.ok) {
         setStatus('done')
+        sendPinterestEvent('signup', { contentName: 'newsletter_topo' })
         try {
           localStorage.setItem(NEWSLETTER_SUBSCRIBED_KEY, '1')
         } catch {

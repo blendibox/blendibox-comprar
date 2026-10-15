@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from './Link'
 import { EmailField } from './EmailField'
 import { NEWSLETTER_CONFIGURED, NEWSLETTER_SUBSCRIBED_KEY, NEWSLETTER_WORKER_URL } from '../config/newsletter'
+import { sendPinterestEvent } from '../lib/pinterest'
 
 type Status = 'idle' | 'sending' | 'done' | 'error'
 
@@ -29,6 +30,7 @@ export function NewsletterSignup() {
       })
       if (res.ok) {
         setStatus('done')
+        sendPinterestEvent('signup', { contentName: 'newsletter_rodape' })
         try {
           localStorage.setItem(NEWSLETTER_SUBSCRIBED_KEY, '1')
         } catch {
