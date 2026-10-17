@@ -298,9 +298,26 @@ async function updateShopeeRedirects(publishedProducts) {
   )
 }
 
-function buildCategorySlug(product) {
+// Alguns feeds não trazem categoria nenhuma (a Technos manda tudo sem
+// categoria, e cairia inteira em "geral"). `categoryByTitle` no
+// merchants.config.json — [{ "pattern": "regex", "slug": "relogios" }] —
+// classifica pelo título, e SÓ quando o feed não informou categoria: nunca
+// sobrescreve uma categoria que veio da loja.
+const categoryRuleCache = new WeakMap()
+function categoryFromTitle(product, merchant) {
+  const rules = merchant?.categoryByTitle
+  if (!rules?.length) return null
+  let compiled = categoryRuleCache.get(merchant)
+  if (!compiled) {
+    compiled = rules.map((rule) => ({ re: new RegExp(rule.pattern, 'i'), slug: rule.slug }))
+    categoryRuleCache.set(merchant, compiled)
+  }
+  return compiled.find((rule) => rule.re.test(product.productName || ''))?.slug ?? null
+}
+
+function buildCategorySlug(product, merchant) {
   const raw = product.merchantCategory || product.categoryName
-  if (!raw) return 'geral'
+  if (!raw) return categoryFromTitle(product, merchant) || 'geral'
   const segments = raw.split('>').map((s) => s.trim()).filter(Boolean)
   const deepest = segments[segments.length - 1] || raw
   return slugify(deepest) || 'geral'
@@ -448,7 +465,7 @@ async function main() {
     // mesmo os preços sendo reais) — forceCurrency no merchants.config.json
     // corrige isso na fonte, antes do valor se espalhar pro site inteiro.
     if (merchant.forceCurrency) mapped.currency = merchant.forceCurrency
-    const categorySlug = buildCategorySlug(mapped)
+    const categorySlug = buildCategorySlug(mapped, merchant)
     const slugBase = slugify(mapped.productName) || 'produto'
     // Usa o merchant_product_id (SKU da loja) como sufixo quando existe — é o
     // mesmo padrão que o site antigo usava nas URLs já indexadas no Google,
