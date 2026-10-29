@@ -15,6 +15,7 @@ import { slugify } from './lib/slugify.mjs'
 import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
+import { fetchBlendiboxRows } from './lib/blendibox.mjs'
 import {
   upsizeProductServeImage,
   pickRealImage,
@@ -419,6 +420,10 @@ async function main() {
   // linha empurrada em rawRows depois dele nunca chega ao catálogo (foi o que
   // aconteceu em 12/10: 374 itens curados, 0 publicados).
   rawRows.push(...(await fetchShopeeRows()))
+  // Loja própria (Blendibox): cada variação de cor disponível vira um produto,
+  // lido ao vivo das páginas da loja (ver scripts/lib/blendibox.mjs). Também
+  // PRECISA vir antes do dedup. Loja fora do ar devolve [] e o build segue.
+  rawRows.push(...(await fetchBlendiboxRows()))
   // Alguns merchants têm mais de um fid combinado na URL (ex: Eudora 67677 +
   // 116994, LG, Nike) e os catálogos quase sempre se completam — mas quando o
   // MESMO SKU (merchant_product_id) aparece nas duas feeds com dado diferente
@@ -493,6 +498,7 @@ async function main() {
       displayName: merchant.displayName,
       vertical: merchant.vertical,
       priority: Boolean(merchant.priority),
+      alwaysStaticPage: Boolean(merchant.alwaysStaticPage),
       merchantId: merchant.merchantId ?? null,
     })
 
@@ -654,7 +660,11 @@ async function main() {
     }))
 
     const merchantMeta = merchantsUsed.get(product.merchantSlug)
-    product.eligibleForStaticPage = Boolean(merchantMeta?.priority) || product.similar.length >= MIN_SIMILAR_FOR_STATIC_PAGE
+    // alwaysStaticPage: loja própria (Blendibox) — toda variação tem página,
+    // sem depender de ter 3 similares na categoria (e sem o destaque na home
+    // que o "priority" também traria).
+    product.eligibleForStaticPage =
+      Boolean(merchantMeta?.priority) || Boolean(merchantMeta?.alwaysStaticPage) || product.similar.length >= MIN_SIMILAR_FOR_STATIC_PAGE
   }
 
   // Cross-referencia o mesmo produto entre canais (ex: Eudora via Awin x
