@@ -10,6 +10,7 @@ import { readFile, writeFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { isRealImageUrl } from './lib/images.mjs'
+import { googleProductCategory } from './lib/google-product-category.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -194,6 +195,11 @@ function buildItemXml(product, promotionBucket) {
   // merchant_category/category_name quando ausente (comportamento anterior).
   const productType = product.productType || product.merchantCategory || product.categoryName
   if (productType) fields.push(`<g:product_type>${cdata(productType)}</g:product_type>`)
+
+  // google_product_category: ID da taxonomia oficial do Google (ver
+  // scripts/lib/google-product-category.mjs). Sem ele a Pinterest dá o aviso
+  // 157 em cada item e o Merchant Center tem que adivinhar a categoria.
+  fields.push(`<g:google_product_category>${googleProductCategory(product)}</g:google_product_category>`)
 
   // Nem todo merchant preenche colour/size na Awin (gênero/faixa etária a
   // Awin não tem coluna nenhuma) — pra produtos que o Google classifica como
