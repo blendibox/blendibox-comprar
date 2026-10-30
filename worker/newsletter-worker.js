@@ -202,17 +202,51 @@ async function handleWatch(request, env, headers) {
 // A rota é pública, então só aceita o que o site realmente manda: lista fixa
 // de eventos, URL do nosso domínio, tamanho máximo, e descarta robôs. E-mail
 // nunca passa por aqui (nem hash) — o pareamento é por IP + user-agent + o
-// `epik` (id do clique vindo de um Pin).
+// `epik` (id do clique vindo de um Pin) + o External ID: um código aleatório e
+// anônimo do navegador (src/lib/pinterest.ts) que o Worker transforma em
+// SHA-256 antes de repassar, então o valor bruto nunca chega à Pinterest.
 // ---------------------------------------------------------------------------
 const PIN_EVENTS = new Set(['page_visit', 'view_category', 'signup', 'lead', 'custom'])
 const PIN_BOT_UA = /bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|facebookexternalhit|python|curl|wget/i
 const PIN_MAX_BODY = 2048
+const PIN_MAX_CONTENTS = 5
 
 function pinText(value, max) {
   return typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : null
 }
 
-function buildPinterestEvent(body, request, env) {
+// custom_data.contents: na API da Pinterest id, item_price (texto) e quantity
+// (inteiro) são OBRIGATÓRIOS em cada item; nome, categoria e marca são opcionais.
+// Item sem os três obrigatórios válidos é descartado inteiro — um item mal formado
+// poderia derrubar o evento todo.
+function pinContents(list) {
+  if (!Array.isArray(list)) return []
+  const out = []
+  for (const item of list.slice(0, PIN_MAX_CONTENTS)) {
+    if (!item || typeof item !== 'object') continue
+    const id = pinText(item.id, 80)
+    const price = item.itemPrice
+    const quantity = item.quantity
+    if (!id || typeof price !== 'number' || !Number.isFinite(price) || price <= 0) continue
+    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 99) continue
+    const entry = { id, item_price: price.toFixed(2), quantity }
+    const name = pinText(item.itemName, 150)
+    const category = pinText(item.itemCategory, 100)
+    const brand = pinText(item.itemBrand, 100)
+    if (name) entry.item_name = name
+    if (category) entry.item_category = category
+    if (brand) entry.item_brand = brand
+    out.push(entry)
+  }
+  return out
+}
+
+async function sha256Hex(text) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text))
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('')
+}
+
+async function buildPinterestEvent(body, request, env) {
   if (!body || typeof body !== 'object' || !PIN_EVENTS.has(body.eventName)) return null
   if (typeof body.eventId !== 'string' || !/^[\w-]{8,64}$/.test(body.eventId)) return null
 
@@ -231,12 +265,20 @@ function buildPinterestEvent(body, request, env) {
 
   const userData = { client_ip_address: ip, client_user_agent: ua }
   if (typeof body.epik === 'string' && /^[\w.-]{6,200}$/.test(body.epik)) userData.click_id = body.epik
+  // External ID: só o hash SHA-256 (minúsculo) segue pra Pinterest.
+  if (typeof body.externalId === 'string' && /^[\w-]{8,64}$/.test(body.externalId)) {
+    userData.external_id = [await sha256Hex(body.externalId.toLowerCase())]
+  }
 
   const customData = {}
   const contentName = pinText(body.contentName, 150)
   const contentCategory = pinText(body.contentCategory, 100)
+  const contentBrand = pinText(body.contentBrand, 100)
   if (contentName) customData.content_name = contentName
   if (contentCategory) customData.content_category = contentCategory
+  if (contentBrand) customData.content_brand = contentBrand
+  const contents = pinContents(body.contents)
+  if (contents.length) customData.contents = contents
   if (Array.isArray(body.contentIds)) {
     const ids = body.contentIds.map((id) => pinText(id, 80)).filter(Boolean).slice(0, 10)
     if (ids.length) customData.content_ids = ids
@@ -258,13 +300,25 @@ function buildPinterestEvent(body, request, env) {
   }
 }
 
+function postToPinterest(event, env) {
+  return fetch(`https://api.pinterest.com/v5/ad_accounts/${encodeURIComponent(env.PINTEREST_AD_ACCOUNT_ID)}/events`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.PINTEREST_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data: [event] }),
+  })
+}
+
 async function forwardToPinterest(event, env) {
   try {
-    const res = await fetch(`https://api.pinterest.com/v5/ad_accounts/${encodeURIComponent(env.PINTEREST_AD_ACCOUNT_ID)}/events`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${env.PINTEREST_ACCESS_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data: [event] }),
-    })
+    let res = await postToPinterest(event, env)
+    // Rede de segurança: se a Pinterest recusar (400) um evento com os dados de
+    // produto (`contents`/`content_brand`), reenvia UMA vez sem eles — perder o
+    // detalhe do produto é melhor do que perder a visita inteira.
+    if (res.status === 400 && (event.custom_data?.contents || event.custom_data?.content_brand)) {
+      console.error('pin-event: 400 com dados de produto, reenviando sem eles:', (await res.text()).slice(0, 300))
+      const { contents, content_brand: brand, ...customData } = event.custom_data
+      res = await postToPinterest({ ...event, custom_data: customData }, env)
+    }
     if (!res.ok) console.error('pin-event: Pinterest respondeu', res.status, (await res.text()).slice(0, 300))
   } catch (err) {
     console.error('pin-event: falha de rede', String(err).slice(0, 200))
@@ -285,7 +339,7 @@ async function handlePinterestEvent(request, env, ctx, headers) {
     return jsonResponse({ error: 'JSON inválido' }, 400, headers)
   }
 
-  const event = buildPinterestEvent(body, request, env)
+  const event = await buildPinterestEvent(body, request, env)
   if (event) ctx.waitUntil(forwardToPinterest(event, env))
   return noContent
 }

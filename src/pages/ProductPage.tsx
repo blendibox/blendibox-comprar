@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
 import { usePinterestEvent } from '../hooks/usePinterestEvent'
+import { pinterestProductParams } from '../lib/pinterest'
 import { Link } from '../components/Link'
 import { BadgeCheck, Check, Heart, MessageCircle, Plus, Ticket } from '../components/Icon'
 import { fetchCoupons, fetchMerchants, fetchProduct } from '../lib/api'
@@ -66,12 +67,7 @@ export function ProductPage() {
   // com o produto de ESTA rota carregado (path igual) pra não mandar o preço
   // do produto anterior numa navegação client-side.
   const productReady = state === 'ready' && product !== null && product.merchantSlug === merchant && product.slug === slug
-  usePinterestEvent('page_visit', productReady ? path : null, {
-    contentName: product?.productName,
-    contentIds: product ? [`${product.merchantSlug}-${product.merchantProductId || product.slug}`] : undefined,
-    value: product?.searchPrice,
-    currency: product?.currency,
-  })
+  usePinterestEvent('page_visit', productReady ? path : null, product ? pinterestProductParams(product) : undefined)
 
   useEffect(() => {
     clearInitialData(path)

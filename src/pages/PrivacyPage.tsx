@@ -74,13 +74,17 @@ export function PrivacyPage() {
         <h2>Medição de anúncios (Pinterest)</h2>
         <p>
           Para medir e melhorar nossos anúncios no Pinterest, enviamos a ele, a partir do nosso
-          servidor, eventos como: visita a uma página de produto, categoria ou artigo, cadastro na
-          newsletter, pedido de aviso de queda de preço, criação de lista de presentes e clique
-          para uma loja parceira. Cada evento leva o endereço da página (sem parâmetros), o IP e o
-          navegador usados na visita e, se você chegou por um Pin, o identificador desse clique —
-          nunca seu e-mail nem outros dados do cadastro. O Pinterest trata esses dados conforme a
-          política de privacidade dele. Se o seu navegador envia o sinal “Não rastrear” ou o Global
-          Privacy Control, não enviamos esses eventos.
+          servidor, eventos como: visita a uma página de produto (com nome, marca, categoria e
+          preço do produto), categoria ou artigo, cadastro na newsletter, pedido de aviso de queda
+          de preço, criação de lista de presentes e clique para uma loja parceira. Cada evento leva o endereço da página (sem parâmetros), o IP e o
+          navegador usados na visita, um código aleatório e anônimo gerado no seu navegador e, se
+          você chegou por um Pin, o identificador desse clique — nunca seu e-mail nem outros dados
+          do cadastro. Esse código serve só para reconhecer que vários eventos vêm do mesmo
+          navegador: ele não identifica você, fica guardado no armazenamento local do seu navegador
+          por cerca de 13 meses (limpar os dados do site apaga) e só a versão embaralhada dele (um
+          hash) é enviada ao Pinterest. O Pinterest trata esses dados conforme a política de
+          privacidade dele. Se o seu navegador envia o sinal “Não rastrear” ou o Global Privacy
+          Control, não enviamos esses eventos nem criamos esse código.
         </p>
       </section>
 
