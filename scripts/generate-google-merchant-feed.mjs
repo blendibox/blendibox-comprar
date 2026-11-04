@@ -9,7 +9,7 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { isRealImageUrl } from './lib/images.mjs'
+import { isRealImageUrl, productServeOriginUrl } from './lib/images.mjs'
 import { googleProductCategory } from './lib/google-product-category.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -109,13 +109,35 @@ function extractJewelryColor(product) {
   return match?.label ?? null
 }
 
+// A proxy images2.productserve.com assina a URL inteira (parâmetro k=). Quando a
+// origem do lojista tem mais de um parâmetro na query (ex. Natura "?sh=1500&sw=1500",
+// Zeedog "?width=500&height=500&skuId=..."), o "&" vai CODIFICADO (%26) dentro de url=.
+// O Pinterest reescreve esse %26 ao buscar a imagem, a assinatura deixa de bater e a
+// proxy responde 403 "Invalid URL" — achado real em 2026-11-04: Natura (2.530 itens,
+// Erro 1201 / HTTP 403 em 100%) e Zeedog (742) falhavam; Brastemp/Consul, com um único
+// parâmetro (%3F sem %26), passavam. Reproduzido: decodificar o %26 devolve exatamente
+// esse 403. Nesses itens a URL ORIGINAL do lojista (que a própria proxy embute em url=)
+// vai no lugar — só neles, e só aqui no feed (o site continua com a proxy).
+function feedImageUrl(url) {
+  if (!url || !/%26/i.test(url)) return url
+  const origin = productServeOriginUrl(url)
+  if (!origin || !isRealImageUrl(origin)) return url
+  // new URL().href devolve a URL codificada (a origem da L'Occitane vem com espaços e
+  // acentos no caminho: "PDP Content/Produtos/Néroli & Orquídea/...") — feed precisa de URL válida.
+  try {
+    return new URL(origin).href
+  } catch {
+    return url
+  }
+}
+
 function buildItemXml(product, promotionBucket) {
   const price = formatPrice(product.searchPrice, product.currency)
   // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
   // images2.productserve.com (ver scripts/lib/images.mjs) e já garante que
   // awImageUrl não é placeholder (pickRealImage) — mas large_image é uma
   // coluna separada, então valida ela aqui antes de preferi-la.
-  const mainImage = isRealImageUrl(product.largeImage) ? product.largeImage : product.awImageUrl
+  const mainImage = feedImageUrl(isRealImageUrl(product.largeImage) ? product.largeImage : product.awImageUrl)
   if (!price || !product.productName || !mainImage) return null
 
   const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
@@ -167,7 +189,9 @@ function buildItemXml(product, promotionBucket) {
     product.alternateImageTwo,
     product.alternateImageThree,
     product.alternateImageFour,
-  ].filter((img, i, arr) => isRealImageUrl(img) && img !== mainImage && arr.indexOf(img) === i)
+  ]
+    .map(feedImageUrl)
+    .filter((img, i, arr) => isRealImageUrl(img) && img !== mainImage && arr.indexOf(img) === i)
   for (const img of additionalImages) {
     fields.push(`<g:additional_image_link>${escapeXml(img)}</g:additional_image_link>`)
   }
