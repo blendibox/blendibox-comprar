@@ -55,7 +55,23 @@ export function productServeOriginUrl(url) {
 // por string (não só o primeiro) — usado quando é preciso testar mais de um
 // ao vivo (ver verifyImageUrl) em vez de confiar no primeiro.
 export function getRealImageCandidates(product) {
-  return IMAGE_FALLBACK_FIELDS.map((field) => product[field]).filter(isRealImageUrl)
+  const candidates = []
+  for (const url of IMAGE_FALLBACK_FIELDS.map((field) => product[field]).filter(isRealImageUrl)) {
+    // A proxy images2.productserve.com NÃO consegue servir uma origem em GIF: responde
+    // 200 e redireciona pra noimage.gif (achado real em 2026-10-30: oBoticário
+    // "Estojo Mini Batons Six Mini Lips" — 6 dos 7 produtos do catálogo com origem
+    // .gif, 4 do oBoticário e 2 da Eudora, saíam com o placeholder no site, no feed e
+    // no Telegram). Nesses casos a URL ORIGINAL do lojista, que serve a foto
+    // normalmente, entra no lugar da proxy.
+    const replacement = isProxyWithGifOrigin(url) ? productServeOriginUrl(url) : url
+    if (replacement && !candidates.includes(replacement)) candidates.push(replacement)
+  }
+  return candidates
+}
+
+function isProxyWithGifOrigin(url) {
+  const origin = productServeOriginUrl(url)
+  return Boolean(origin) && /\.gif(\?|$)/i.test(origin)
 }
 
 // Os candidatos de cima + a URL original embutida em cada URL da proxy, por

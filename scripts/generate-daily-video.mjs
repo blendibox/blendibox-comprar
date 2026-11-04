@@ -12,6 +12,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { focusDropsOnSeason, getSeasonalContext } from './lib/seasonal.mjs'
+import { loadProductPhoto } from './lib/product-photo.mjs'
 
 const execFileAsync = promisify(execFile)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -246,12 +247,6 @@ function discountBadgeSvg(dropPercent) {
   </svg>`
 }
 
-async function fetchImageBuffer(url) {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return Buffer.from(await res.arrayBuffer())
-}
-
 async function renderProductSlide(item, rank, outPath) {
   const frameSvg = productFrameSvg({
     rank,
@@ -264,15 +259,19 @@ async function renderProductSlide(item, rank, outPath) {
   })
   const framePng = await sharp(Buffer.from(frameSvg)).png().toBuffer()
 
+  // loadProductPhoto confere que a foto é de verdade: a proxy da Awin entrega o
+  // placeholder "No image available" com HTTP 200 quando não consegue servir a
+  // imagem (e tenta a URL original do lojista antes de desistir). Sem foto válida
+  // o card sai sem foto, em vez de mostrar o placeholder no vídeo.
   let photoBuffer = null
-  try {
-    const raw = await fetchImageBuffer(item.awImageUrl)
-    photoBuffer = await sharp(raw)
+  const photo = await loadProductPhoto(item, { maxSide: 1000 })
+  if (photo) {
+    photoBuffer = await sharp(photo.buffer)
       .resize(700, 700, { fit: 'contain', background: '#ffffff' })
       .png()
       .toBuffer()
-  } catch (err) {
-    console.warn(`  [aviso] falhou baixar imagem de "${item.productName}": ${err.message} — segue sem foto`)
+  } else {
+    console.warn(`  [aviso] "${item.productName}" sem foto válida — segue sem foto`)
   }
 
   const badgeBuffer = await sharp(Buffer.from(discountBadgeSvg(item.priceDropPercent))).png().toBuffer()

@@ -18,6 +18,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { focusDropsOnSeason, getSeasonalContext } from './lib/seasonal.mjs'
+import { loadProductPhoto } from './lib/product-photo.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
@@ -82,10 +83,22 @@ function truncate(text, max) {
   return s.length > max ? `${s.slice(0, max - 1)}…` : s
 }
 
-async function fetchImageBuffer(url) {
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
-  return Buffer.from(await res.arrayBuffer())
+// Quantas ofertas da fila vale tentar até achar uma com foto de verdade (a
+// maioria passa de primeira; ver scripts/lib/product-photo.mjs).
+const MAX_PHOTO_TRIES = 10
+
+// Primeira oferta da fila que TEM foto válida. Devolve { index, photo } ou null.
+// Existe porque a proxy de imagem da Awin responde 200 mesmo sem conseguir servir
+// a foto e entrega o placeholder "No image available" — e o Telegram, que antes
+// recebia só a URL no sendPhoto, publicava isso (oferta do oBoticário de 2026-10-29).
+async function firstWithPhoto(ranked) {
+  const tries = Math.min(ranked.length, MAX_PHOTO_TRIES)
+  for (let i = 0; i < tries; i++) {
+    const photo = await loadProductPhoto(ranked[i])
+    if (photo) return { index: i, photo }
+    console.warn(`  [aviso] "${ranked[i].productName}" sem foto válida (placeholder da proxy ou imagem que não abre) — tentando a próxima oferta`)
+  }
+  return null
 }
 
 // Mesmas cores do vídeo diário (scripts/generate-daily-video.mjs) — verde
@@ -103,7 +116,8 @@ const RANK_W = 90
 // (sendMessage) saía só com texto e link, nenhuma imagem (o motivo do
 // usuário ter reportado "ofertas do dia sem imagem"). Compõe as fotos reais
 // de cada produto numa única imagem, mesma técnica SVG+sharp do vídeo.
-async function buildDigestImage(items) {
+// `photos`: um Buffer (JPEG, já validado por loadProductPhoto) por item, na mesma ordem.
+async function buildDigestImage(items, photos) {
   const height = HEADER_H + ROW_H * items.length + FOOTER_H
 
   const rowsSvg = items
@@ -142,16 +156,11 @@ async function buildDigestImage(items) {
   for (let i = 0; i < items.length; i++) {
     const y = HEADER_H + ROW_H * i
     const thumbTop = y + (ROW_H - THUMB) / 2
-    try {
-      const raw = await fetchImageBuffer(items[i].awImageUrl)
-      const thumb = await sharp(raw)
-        .resize(THUMB - 16, THUMB - 16, { fit: 'contain', background: '#ffffff' })
-        .png()
-        .toBuffer()
-      composites.push({ input: thumb, left: PAD + RANK_W + 8, top: thumbTop + 8 })
-    } catch (err) {
-      console.warn(`  [aviso] falhou baixar imagem de "${items[i].productName}": ${err.message} — segue sem foto nessa linha`)
-    }
+    const thumb = await sharp(photos[i])
+      .resize(THUMB - 16, THUMB - 16, { fit: 'contain', background: '#ffffff' })
+      .png()
+      .toBuffer()
+    composites.push({ input: thumb, left: PAD + RANK_W + 8, top: thumbTop + 8 })
   }
 
   return sharp(framePng).composite(composites).png().toBuffer()
@@ -160,13 +169,13 @@ async function buildDigestImage(items) {
 // sendPhoto com um Buffer local precisa de multipart/form-data (a versão
 // JSON de telegramCall só aceita URL). FormData/Blob globais do Node 18+
 // cobrem isso sem dependência extra.
-async function sendPhotoBuffer({ buffer, caption, replyMarkup }) {
+async function sendPhotoBuffer({ buffer, caption, replyMarkup, contentType = 'image/png', filename = 'ofertas-do-dia.png' }) {
   const form = new FormData()
   form.append('chat_id', CHAT_ID)
   form.append('caption', caption)
   form.append('parse_mode', 'HTML')
   if (replyMarkup) form.append('reply_markup', JSON.stringify(replyMarkup))
-  form.append('photo', new Blob([buffer], { type: 'image/png' }), 'ofertas-do-dia.png')
+  form.append('photo', new Blob([buffer], { type: contentType }), filename)
 
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: form })
   const data = await res.json()
@@ -189,7 +198,9 @@ function productLink(item) {
   return `${SITE_URL}/${item.merchantSlug}/${item.slug}/`
 }
 
-async function postSingle(item, season) {
+// `photo`: { buffer } JPEG já baixado e validado (loadProductPhoto) — o Telegram
+// recebe o ARQUIVO, não a URL, então nunca publica um placeholder da proxy.
+async function postSingle(item, season, photo) {
   const emoji = VERTICAL_EMOJI[item.vertical] || '🛍️'
   // "Menor preço já registrado" só entra quando é verdade de fato
   // (isAllTimeLow, calculado contra TODO o histórico rastreado em
@@ -208,15 +219,16 @@ async function postSingle(item, season) {
     `${priceLine}\n\n` +
     `🔎 Monitorado pelo Compare Ofertas`
 
-  await telegramCall('sendPhoto', {
-    photo: item.awImageUrl,
+  await sendPhotoBuffer({
+    buffer: photo.buffer,
     caption,
-    parse_mode: 'HTML',
-    reply_markup: { inline_keyboard: [[{ text: 'Ver oferta', url: productLink(item) }]] },
+    replyMarkup: { inline_keyboard: [[{ text: 'Ver oferta', url: productLink(item) }]] },
+    contentType: 'image/jpeg',
+    filename: 'oferta.jpg',
   })
 }
 
-async function postDigest(items, season) {
+async function postDigest(items, photos, season) {
   // Nome/preço/desconto de cada item já aparecem na imagem (buildDigestImage)
   // — a legenda fica curta de propósito (limite de 1024 caracteres em foto,
   // bem menor que o de mensagem de texto). O clique em cada oferta vem do
@@ -233,7 +245,7 @@ async function postDigest(items, season) {
       : [{ text: 'Ver todas as ofertas', url: `${SITE_URL}/` }]
   )
 
-  const image = await buildDigestImage(items)
+  const image = await buildDigestImage(items, photos)
   await sendPhotoBuffer({ buffer: image, caption, replyMarkup: { inline_keyboard: buttons } })
 }
 
@@ -266,27 +278,52 @@ async function main() {
     ranked.push(item)
   }
 
+  if (ranked.length === 0) {
+    console.log('Sem oferta pra publicar.')
+    return
+  }
+
+  // A oferta avulsa é a primeira da fila que TEM foto válida — normalmente a #1.
+  // Os dois horários (single e digest) calculam isso do mesmo jeito, então o resumo
+  // pula exatamente a oferta que o single publicou.
+  const single = await firstWithPhoto(ranked)
+
   if (MODE === 'single') {
-    const item = ranked[0]
-    if (!item) {
-      console.log('Sem oferta pra publicar.')
-      return
+    // Falhar alto (exit 1 → o GitHub avisa) só quando NENHUMA das primeiras ofertas
+    // tem foto: sinal de problema geral na proxy de imagem, não de um produto.
+    if (!single) {
+      throw new Error(`Nenhuma das ${Math.min(ranked.length, MAX_PHOTO_TRIES)} primeiras ofertas tem foto válida — nada foi publicado.`)
     }
+    const item = ranked[single.index]
+    if (single.index > 0) console.log(`(as ${single.index} oferta(s) acima ficaram sem foto válida; publicando a #${single.index + 1})`)
     console.log(`Publicando 1 oferta avulsa: "${item.productName}"...`)
-    await postSingle(item, season)
+    await postSingle(item, season, single.photo)
     console.log('\n✅ Oferta publicada no Telegram.')
     return
   }
 
-  // digest: pula a #1 (já publicada no post "single" mais cedo no mesmo dia)
-  // e resume as próximas DIGEST_SIZE num post só.
-  const items = ranked.slice(1, 1 + DIGEST_SIZE)
+  // digest: pula a oferta que o single já publicou mais cedo no mesmo dia e resume
+  // as próximas DIGEST_SIZE num post só — só entra oferta com foto válida (a linha
+  // do resumo sempre mostra a foto do produto).
+  const skipIndex = single ? single.index : 0
+  const items = []
+  const photos = []
+  for (let i = 0; i < ranked.length && items.length < DIGEST_SIZE; i++) {
+    if (i === skipIndex) continue
+    const photo = await loadProductPhoto(ranked[i])
+    if (!photo) {
+      console.warn(`  [aviso] "${ranked[i].productName}" sem foto válida — fora do resumo`)
+      continue
+    }
+    items.push(ranked[i])
+    photos.push(photo.buffer)
+  }
   if (items.length === 0) {
-    console.log('Sem ofertas suficientes pro resumo do dia (só a #1, já publicada antes).')
+    console.log('Sem ofertas suficientes pro resumo do dia (só a que já foi publicada antes).')
     return
   }
   console.log(`Publicando resumo com ${items.length} oferta(s)...`)
-  await postDigest(items, season)
+  await postDigest(items, photos, season)
   console.log('\n✅ Resumo publicado no Telegram.')
 }
 
