@@ -12,6 +12,10 @@ scripts/.entry-server.generated.mjs
 # não versionado (muda toda semana e é grande demais pra valer a pena no git).
 public/data/
 
+# Sinal de "cupons de hoje não vieram da API" (scripts/fetch-coupons.mjs) —
+# só serve pro passo de alerta do workflow, nunca vai pro git.
+.coupons-stale.json
+
 # Gerado por scripts/generate-icon-sprite.mjs (ver npm script "predev"/"build")
 # — determinístico a partir de scripts/lib/iconNames.mjs, não precisa ir pro git.
 public/icons-sprite.svg

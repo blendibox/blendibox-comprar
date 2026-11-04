@@ -10,6 +10,15 @@
 // na página 1). Com "filters.advertiserIds" filtrando pelos merchant IDs que
 // já usamos no feed de produtos, a resposta já vem só com os nossos lojistas
 // — não precisa varrer as ~31 mil promoções do marketplace inteiro.
+//
+// FALHA DA API NÃO DERRUBA O BUILD. Em 2026-11-03 o token venceu/foi invalidado
+// (HTTP 401) e este script, que saía com erro, derrubou o deploy INTEIRO — o
+// catálogo, os preços e a loja Blendibox do dia ficaram sem publicar por causa de
+// um detalhe (cupons). Agora, se a API falhar mesmo depois de tentar de novo, o
+// script republica os cupons que já estão no ar (menos os vencidos), não declara
+// "mudança" nenhuma pro IndexNow e deixa um arquivo-sinal (.coupons-stale.json) que
+// o workflow transforma num e-mail de alerta — o problema fica visível, mas o site
+// segue atualizando.
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -22,14 +31,20 @@ const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
 // Mesmo padrão de data/price-history.json (ver update-price-history.mjs).
 const SNAPSHOT_PATH = path.join(ROOT, 'data', 'coupon-snapshot.json')
 const CHANGES_TODAY_PATH = path.join(ROOT, 'data', 'coupon-changes-today.json')
+// Sinal pro workflow (não versionado): existe só quando os cupons de hoje NÃO
+// vieram da API. Ver o passo "Avisar por e-mail se os cupons ... desatualizados".
+const STALE_FLAG_PATH = path.join(ROOT, '.coupons-stale.json')
 
 const PUBLISHER_ID = process.env.AWIN_PUBLISHER_ID || '2104315'
 const TOKEN = process.env.AWIN_PROMOTIONS_TOKEN
+const SITE_URL = (process.env.SITE_URL || 'https://comprar.blendibox.com.br').replace(/\/$/, '')
 const PAGE_SIZE = 200
 // Limite documentado da Awin é 20 chamadas/minuto por usuário — 3,2s entre
 // chamadas fica com folga (18,75/min) sem chutar o limite por variação de
 // latência de rede.
 const REQUEST_INTERVAL_MS = 3200
+const MAX_ATTEMPTS = 3
+const RETRY_BACKOFF_MS = 5000
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -47,38 +62,42 @@ function isoToBrDateTime(iso) {
   return `${day}/${month}/${year} ${hour}:${minute}:${second}`
 }
 
-async function fetchPage(page, advertiserIds) {
-  const res = await fetch(`https://api.awin.com/publisher/${PUBLISHER_ID}/promotions`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      filters: { advertiserIds },
-      pagination: { page, pageSize: PAGE_SIZE },
-    }),
-  })
-  if (!res.ok) {
-    throw new Error(`Awin promotions API: HTTP ${res.status} na página ${page}`)
-  }
-  return res.json()
+// Erro de cliente (token inválido, sem permissão, requisição errada) NÃO melhora
+// tentando de novo; 429 (limite), 5xx e falha de rede sim.
+function isRetryable(err) {
+  return !err.status || err.status === 429 || err.status >= 500
 }
 
-async function main() {
-  if (!TOKEN) {
-    console.log('AWIN_PROMOTIONS_TOKEN não definida — build segue sem cupons.')
-    await mkdir(OUTPUT_DIR, { recursive: true })
-    await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), '[]')
-    await mkdir(path.dirname(CHANGES_TODAY_PATH), { recursive: true })
-    await writeFile(CHANGES_TODAY_PATH, '[]')
-    return
+async function fetchPage(page, advertiserIds) {
+  let lastError
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(`https://api.awin.com/publisher/${PUBLISHER_ID}/promotions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filters: { advertiserIds },
+          pagination: { page, pageSize: PAGE_SIZE },
+        }),
+      })
+      if (res.ok) return await res.json()
+      const err = new Error(`Awin promotions API: HTTP ${res.status} na página ${page}`)
+      err.status = res.status
+      throw err
+    } catch (err) {
+      lastError = err
+      if (!isRetryable(err) || attempt === MAX_ATTEMPTS) break
+      console.warn(`[cupons] ${err.message} — tentativa ${attempt}/${MAX_ATTEMPTS}, tentando de novo em ${(attempt * RETRY_BACKOFF_MS) / 1000}s`)
+      await sleep(attempt * RETRY_BACKOFF_MS)
+    }
   }
+  throw lastError
+}
 
-  const merchantsConfig = JSON.parse(await readFile(path.join(__dirname, 'merchants.config.json'), 'utf-8'))
-  const merchantsById = merchantsConfig.merchants
-  const advertiserIds = Object.keys(merchantsById).map(Number)
-
+async function fetchAllCoupons(merchantsById, advertiserIds) {
   const coupons = []
   let page = 1
   let totalPages = 1
@@ -114,6 +133,91 @@ async function main() {
     page++
     if (page <= totalPages) await sleep(REQUEST_INTERVAL_MS)
   } while (page <= totalPages)
+
+  return coupons
+}
+
+// "DD/MM/YYYY HH:mm:ss" (o formato gravado acima, já em UTC) → ms; null se vazio/ilegível.
+function brDateTimeToMs(value) {
+  const m = String(value ?? '').match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})$/)
+  if (!m) return null
+  const [, day, month, year, hour, minute, second] = m
+  return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second))
+}
+
+// Os cupons que o site publicou no último build bom (mesmo arquivo que o navegador
+// baixa). Sem os vencidos: cupom velho vira informação errada. null = indisponível.
+async function loadLastPublishedCoupons() {
+  try {
+    const res = await fetch(`${SITE_URL}/data/coupons.json`, { signal: AbortSignal.timeout(30000) })
+    if (!res.ok) return null
+    const data = await res.json()
+    if (!Array.isArray(data)) return null
+    const now = Date.now()
+    return data.filter((c) => {
+      const endsMs = brDateTimeToMs(c?.ends)
+      return endsMs == null || endsMs >= now
+    })
+  } catch {
+    return null
+  }
+}
+
+async function handleCouponsFailure(err) {
+  const tokenProblem = err.status === 401 || err.status === 403
+  console.error(`[cupons] não consegui os cupons da API da Awin: ${err.message}`)
+
+  const lastPublished = await loadLastPublishedCoupons()
+  await mkdir(OUTPUT_DIR, { recursive: true })
+  await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), JSON.stringify(lastPublished ?? []))
+  // Nada foi comparado com a API de hoje: não declara "mudança" (IndexNow) e NÃO
+  // regrava o snapshot (senão o próximo dia bom compararia contra um estado falso).
+  await mkdir(path.dirname(CHANGES_TODAY_PATH), { recursive: true })
+  await writeFile(CHANGES_TODAY_PATH, '[]')
+
+  await writeFile(
+    STALE_FLAG_PATH,
+    JSON.stringify({
+      reason: err.message,
+      status: err.status ?? null,
+      tokenProblem,
+      usedLastPublished: lastPublished != null,
+      coupons: lastPublished?.length ?? 0,
+      at: new Date().toISOString(),
+    })
+  )
+
+  const what = lastPublished
+    ? `republicando os ${lastPublished.length} cupons do último build bom (sem os vencidos)`
+    : 'sem os cupons do último build (o site anterior também não respondeu)'
+  const fix = tokenProblem
+    ? 'O token AWIN_PROMOTIONS_TOKEN foi recusado: gere um novo em ui.awin.com/awin-api e atualize o secret no GitHub.'
+    : 'Erro temporário ou de outro tipo na API da Awin.'
+  // ::error:: vira anotação vermelha no resumo do run, sem fazer o job falhar
+  console.log(`::error title=Cupons da Awin desatualizados::${err.message}. ${what}. ${fix}`)
+}
+
+async function main() {
+  if (!TOKEN) {
+    console.log('AWIN_PROMOTIONS_TOKEN não definida — build segue sem cupons.')
+    await mkdir(OUTPUT_DIR, { recursive: true })
+    await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), '[]')
+    await mkdir(path.dirname(CHANGES_TODAY_PATH), { recursive: true })
+    await writeFile(CHANGES_TODAY_PATH, '[]')
+    return
+  }
+
+  const merchantsConfig = JSON.parse(await readFile(path.join(__dirname, 'merchants.config.json'), 'utf-8'))
+  const merchantsById = merchantsConfig.merchants
+  const advertiserIds = Object.keys(merchantsById).map(Number)
+
+  let coupons
+  try {
+    coupons = await fetchAllCoupons(merchantsById, advertiserIds)
+  } catch (err) {
+    await handleCouponsFailure(err)
+    return
+  }
 
   await mkdir(OUTPUT_DIR, { recursive: true })
   await writeFile(path.join(OUTPUT_DIR, 'coupons.json'), JSON.stringify(coupons))

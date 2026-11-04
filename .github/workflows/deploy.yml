@@ -87,6 +87,19 @@ jobs:
             npm run build
           fi
 
+      # fetch-coupons.mjs não derruba mais o build quando a API da Awin falha
+      # (token invalidado em 2026-11-03 derrubou o deploy inteiro): republica os
+      # cupons do último build bom e deixa .coupons-stale.json. Sem este aviso
+      # o problema ficaria invisível (run verde). Só no cron/manual pra não
+      # mandar e-mail a cada push; a anotação ::error aparece em todo run.
+      - name: Avisar por e-mail se os cupons ficaram desatualizados
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && hashFiles('.coupons-stale.json') != ''
+        continue-on-error: true
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+        run: node scripts/notify-coupons-failure.mjs
+
       # Só no cron diário (ou disparo manual) — NUNCA em push. Sem essa
       # restrição, qualquer commit em main (várias vezes ao dia durante
       # desenvolvimento normal) geraria e publicaria um vídeo novo no
