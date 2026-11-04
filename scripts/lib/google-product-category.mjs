@@ -8,12 +8,17 @@
 //
 // Ordem de decisão (a primeira que bater vence):
 //   1. a categoria da própria loja, quando ela já manda o ID do Google (Gigantec,
-//      O Boticário, Zee.Now... — categorySlug 100% numérico e existente na taxonomia);
+//      O Boticário, Zee.Now... — categorySlug 100% numérico e existente na taxonomia),
+//      exceto raízes que a gente refina (STORE_ROOT_IDS_TO_REFINE);
 //   2. categorySlug conhecido (ex: peças de ar-condicionado da LG);
 //   3. peça de reposição de eletrodoméstico (não é o aparelho em si);
-//   4. palavras do título, por vertical (regras abaixo, da mais específica pra mais geral);
+//   4. palavras do título: primeiro as regras só daquela loja (MERCHANT_RULES), depois as
+//      gerais por vertical (da mais específica pra mais geral);
+//   4b. tipo do produto no feed da loja ("... > Calçados > ...") quando o título não diz;
 //   5. padrão da loja (ex: Technos = relógios, Lego = brinquedos de montar);
 //   6. padrão do vertical (categoria ampla, mas sempre válida).
+// Pinterest aviso 126 = categoria com só 1–2 níveis: prefira sempre o ID mais fundo que seja
+// verdadeiro. Quando o feed não permite distinguir (óptica: sol x grau), use o pai comum.
 // Nunca devolve vazio: o pior caso é a categoria ampla do vertical.
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
@@ -63,10 +68,13 @@ const RULES = [
   [/\b(palmilha|palmilhas|cadarco|cadarcos)\b/, 1933, WEAR],
   // meia antes de sapato: "Kit 9 Pares de Meias Soquete Sapatilha" é meia, não calçado
   [/\b(meia|meias|meiao|meioes)\b/, 209, WEAR],
-  [/\b(tenis|sandalia|sandalias|chinelo|chinelos|sapatilha|sapatilhas|bota|botas|botina|botinas|chuteira|chuteiras|sapato|sapatos|mocassim|mocassins|rasteira|rasteirinha|rasteirinhas|papete|slide|slides|tamanco|tamancos|scarpin|sneaker|sneakers|havaianas|crocs|galocha|alpargata|oxford)\b/, 187, WEAR],
+  [/\b(tenis|sandalia|sandalias|chinelo|chinelos|sapatilha|sapatilhas|bota|botas|botina|botinas|chuteira|chuteiras|sapato|sapatos|mocassim|mocassins|rasteira|rasteirinha|rasteirinhas|papete|slide|slides|tamanco|tamancos|scarpin|sneaker|sneakers|havaianas|crocs|galocha|alpargata|oxford|sapatenis|babuche|babuches|clog|clogs|peep toe)\b|^(mini )?melissa\b/, 187, WEAR],
   // modelos de tênis da Nike que vêm sem a palavra "tênis" no título ("Nike Dunk Low", "Air Max 90")
   [/\b(dunk|air max|air force|pegasus|vomero|p 6000|infinityrn|structure|downshifter|revolution|journey run|court vision|cortez|invincible|zoom fly|metcon|free run|waffle|vaporfly)\b/, 187, WEAR],
   [/\bcintos?\b/, 169, WEAR],
+  [/\bbolas? de futebol americano\b/, 1094, ['esporte']],
+  [/\bbolas? de (futebol|futsal|society|campo)\b/, 1112, ['esporte']],
+  [/\bbolas? de basquete\b/, 1083, ['esporte']],
   [/\boculos (de )?(natacao|mergulho|snorkel)\b/, 988, WEAR],
   [/\boculos\b/, 178, FASHION],
   [/\b(luva|luvas|mitene|mitenes)\b/, 170, WEAR],
@@ -93,7 +101,13 @@ const RULES = [
   // ---- Beleza ----
   [/\blentes? de contato\b/, 1380, ['beleza']],
   [/\b(kit presente|combo presente|presente|presentes|cesta de presente|coffret)\b/, 475, ['beleza']],
+  // Aromatizador/difusor de ambiente (linha "Casa" do O Boticário): fragrância da casa, não perfume pessoal
+  [/\b(aromatizador|aromatizadores|difusor de varetas|difusor|home spray)\b/, 3898, ['beleza']],
+  // Nécessaire como produto (não o brinde de um combo de perfume): o título começa por ela
+  [/^(mini |dupla )?necessaires?\b/, 108, ['beleza']],
   [/\b(perfume|perfumes|colonia|eau de|parfum|fragrancia|deo colonia|deo parfum|body splash|body spray|bruma perfumada)\b/, 479, ['beleza', 'joias', 'moda']],
+  // depois do perfume: "Combo Eau de Parfum + Creme de Barbear" continua sendo perfume
+  [/\bbarbear\b/, 2971, ['beleza']],
   [/\b(esmalte|esmaltes|unha|unhas|removedor de esmalte)\b/, 478, ['beleza']],
   [/\b(desodorante|antitranspirante|antiperspirante)\b/, 484, ['beleza']],
   [/\b(shampoo|xampu|condicionador|mascara capilar|leave in|finalizador|creme para pentear|ativador de cachos|tonico capilar|capilar|cabelo|cabelos|tintura|coloracao)\b/, 486, ['beleza']],
@@ -220,6 +234,26 @@ function isSparePart(rawTitle, text) {
   return PART_CODE_REPEATED.test(rawTitle) && !APPLIANCE_TITLE_START.test(text)
 }
 
+// Regras que só valem pra uma loja (o vocabulário do título dela é próprio e a mesma
+// palavra, em outra loja, quer dizer outra coisa: "capa protetora" é de celular na
+// Motorola, mas de sofá na Mobly). Rodam antes das regras gerais. Aviso 126 do Pinterest:
+// categoria com só 1–2 níveis; a Motorola caía no padrão da loja ("Eletrônicos", 1 nível).
+const MERCHANT_RULES = {
+  motorola: [
+    [/\bkit smartphone\b/, 267], // celular com capa de brinde: é o celular
+    [/\bbaba eletronica\b/, 541], // Infantil > Segurança de bebês > Monitores de bebês
+    [/\bpeliculas?\b/, 5468], // Protetores de tela
+    [/\b(capa protetora|premium case|capinha)\b/, 2353], // Estojos para telefones celulares
+    [/\bcarregador\b/, 505295], // Carregadores e adaptadores de energia
+    [/\bmoto pen\b/, 5308], // Canetas Stylus
+  ],
+}
+
+// IDs de raiz (1 nível) que a loja manda no categorySlug mas que a gente refina: o padrão do
+// vertical é descendente deles e mais específico. O Boticário manda 469 ("Saúde e beleza")
+// pra metade do catálogo; o padrão de "beleza" (473, Cuidados pessoais > Cosméticos) é melhor.
+const STORE_ROOT_IDS_TO_REFINE = new Set([469])
+
 // categorySlug conhecido de feeds que mandam o nome da categoria em vez do ID.
 const SLUG_CATEGORY = {
   'pecas-e-acessorios-de-ar-condicionado': 2367,
@@ -258,6 +292,10 @@ const MERCHANT_DEFAULT = {
   spicy: 638, // utensílios de cozinha
   yamamura: 594, // iluminação
   decorcolors: 696, // decoração
+  // Óptica: o título é só marca + código do modelo ("Ray-Ban RB4373L - Cinza Fosco"). A taxonomia
+  // separa óculos de sol (178) e de grau (524, em Saúde e beleza), e o feed não diz qual é qual;
+  // o pai comum "Acessórios para roupas" é verdadeiro pros dois e tem 3 níveis.
+  eotica: 167,
 }
 
 // Categoria ampla (sempre existente) pra quando nada acima bateu.
@@ -280,6 +318,8 @@ const PART_SCREEN_ID = 2082 // Eletrônicos > Acessórios para eletrônicos
 
 for (const id of [
   ...RULES.map((r) => r[1]),
+  ...Object.values(MERCHANT_RULES).flatMap((list) => list.map((r) => r[1])),
+  ...STORE_ROOT_IDS_TO_REFINE,
   ...Object.values(SLUG_CATEGORY),
   ...Object.values(MERCHANT_DEFAULT),
   ...Object.values(VERTICAL_DEFAULT),
@@ -302,7 +342,9 @@ function normalize(text) {
 // → { id, source }  (source: 'loja' | 'slug' | 'peca' | 'regra' | 'loja-padrao' | 'vertical')
 export function classifyGoogleProductCategory(product) {
   const slug = String(product.categorySlug || '')
-  if (/^\d+$/.test(slug) && VALID_IDS.has(Number(slug))) return { id: Number(slug), source: 'loja' }
+  if (/^\d+$/.test(slug) && VALID_IDS.has(Number(slug)) && !STORE_ROOT_IDS_TO_REFINE.has(Number(slug))) {
+    return { id: Number(slug), source: 'loja' }
+  }
   if (SLUG_CATEGORY[slug]) return { id: SLUG_CATEGORY[slug], source: 'slug' }
 
   const vertical = product.vertical
@@ -313,9 +355,19 @@ export function classifyGoogleProductCategory(product) {
     return { id: PART_OF_SCREEN.test(text) ? PART_SCREEN_ID : PART_ACCESSORY_ID, source: 'peca' }
   }
 
+  for (const [pattern, id] of MERCHANT_RULES[product.merchantSlug] || []) {
+    if (pattern.test(text)) return { id, source: 'regra-loja' }
+  }
+
   for (const [pattern, id, only] of RULES) {
     if (only && !only.includes(vertical)) continue
     if (pattern.test(text)) return { id, source: 'regra' }
+  }
+
+  // Sem palavra-chave no título (a Nike nomeia o tênis só pelo modelo: "Luka 4", "Tatum 5"),
+  // mas o tipo do produto no feed da loja diz que é calçado ("Masculino > Calçados > Tênis").
+  if (WEAR.includes(vertical) && /\bcalcados\b/.test(normalize(product.productType || product.merchantCategory))) {
+    return { id: 187, source: 'tipo' }
   }
 
   if (MERCHANT_DEFAULT[product.merchantSlug]) return { id: MERCHANT_DEFAULT[product.merchantSlug], source: 'loja-padrao' }

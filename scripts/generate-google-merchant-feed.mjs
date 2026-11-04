@@ -131,6 +131,36 @@ function feedImageUrl(url) {
   }
 }
 
+// Aviso 196 do Pinterest: product_type "só pode conter cinco elementos separados por >".
+// O Boticário/Natura mandam 6 níveis ("Saúde e beleza > ... > Maquiagem para o rosto > Bases e
+// corretivos"). Corta no quinto: o prefixo de um caminho continua sendo um caminho válido
+// (cortar do começo deixaria um caminho que não parte da raiz).
+const MAX_PRODUCT_TYPE_LEVELS = 5
+function capProductType(value) {
+  const parts = String(value).split('>').map((s) => s.trim()).filter(Boolean)
+  return parts.length > MAX_PRODUCT_TYPE_LEVELS ? parts.slice(0, MAX_PRODUCT_TYPE_LEVELS).join(' > ') : value
+}
+
+function gtinCheckDigitOk(digits) {
+  const body = digits.slice(0, -1).split('').reverse()
+  const sum = body.reduce((acc, d, i) => acc + Number(d) * (i % 2 === 0 ? 3 : 1), 0)
+  return (10 - (sum % 10)) % 10 === Number(digits.slice(-1))
+}
+
+// Aviso 179 do Pinterest: GTIN precisa ter 8, 12, 13 ou 14 dígitos, sem traço. Vários lojistas
+// (Nike, Centauro...) mandam o UPC-A com 11 dígitos — o zero da esquerda se perdeu quando a
+// planilha tratou o código como número. Devolve o GTIN com o zero de volta SE o dígito
+// verificador fecha (prova de que era isso mesmo); se não dá pra consertar, devolve null e o
+// item cai no caminho mpn + identifier_exists=no (o mesmo dos itens sem GTIN, que passam).
+// Não mexe em GTIN de tamanho válido, mesmo com verificador errado: isso não é o que o aviso reclama.
+function normalizeGtin(raw) {
+  const s = String(raw ?? '').trim()
+  if (!/^\d+$/.test(s)) return null
+  if ([8, 12, 13, 14].includes(s.length)) return s
+  if ((s.length === 7 || s.length === 11) && gtinCheckDigitOk(`0${s}`)) return `0${s}`
+  return null
+}
+
 function buildItemXml(product, promotionBucket) {
   const price = formatPrice(product.searchPrice, product.currency)
   // fetch-feeds.mjs já upsiza toda imagem servida pela proxy
@@ -143,7 +173,8 @@ function buildItemXml(product, promotionBucket) {
   const id = `${product.merchantSlug}-${product.merchantProductId || product.slug}`
   const link = `${SITE_URL}/${product.merchantSlug}/${product.slug}/`
   const available = isInStock(product) ? 'in stock' : 'out of stock'
-  const hasGtin = Boolean(product.productGtin)
+  const gtin = normalizeGtin(product.productGtin)
+  const hasGtin = Boolean(gtin)
   // Cor real: coluna própria da Awin (colour) quando o merchant preenche;
   // extractJewelryColor como fallback só pra joias (a Awin não tem coluna de
   // cor específica pra esse vertical, mas o nome quase sempre menciona o
@@ -208,7 +239,7 @@ function buildItemXml(product, promotionBucket) {
   )
 
   if (hasGtin) {
-    fields.push(`<g:gtin>${escapeXml(product.productGtin)}</g:gtin>`)
+    fields.push(`<g:gtin>${escapeXml(gtin)}</g:gtin>`)
   } else {
     if (product.merchantProductId) fields.push(`<g:mpn>${escapeXml(product.merchantProductId)}</g:mpn>`)
     fields.push(`<g:identifier_exists>no</g:identifier_exists>`)
@@ -218,7 +249,7 @@ function buildItemXml(product, promotionBucket) {
   // preenche — mais específica que a categoria bruta do feed; cai pra
   // merchant_category/category_name quando ausente (comportamento anterior).
   const productType = product.productType || product.merchantCategory || product.categoryName
-  if (productType) fields.push(`<g:product_type>${cdata(productType)}</g:product_type>`)
+  if (productType) fields.push(`<g:product_type>${cdata(capProductType(productType))}</g:product_type>`)
 
   // google_product_category: ID da taxonomia oficial do Google (ver
   // scripts/lib/google-product-category.mjs). Sem ele a Pinterest dá o aviso
