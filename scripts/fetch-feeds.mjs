@@ -16,6 +16,7 @@ import { fetchGrupoBoticarioRows } from './lib/grupoboticario.mjs'
 import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
 import { fetchBlendiboxRows } from './lib/blendibox.mjs'
+import { loadPriceDrop } from './lib/price-drop.mjs'
 import {
   upsizeProductServeImage,
   pickRealImage,
@@ -463,6 +464,11 @@ async function main() {
   let skippedBrokenLiveImage = 0
   let skippedBlacklistedTitle = 0
   let skippedExcludedTitle = 0
+  // Preço-isca (ver MAX_PLAUSIBLE_PRICE em src/lib/priceDrop.ts): a loja troca o preço
+  // por um valor absurdo (R$ 899.999.999,10) em vez de marcar o produto sem estoque.
+  // Esse produto está indisponível — não publica, e volta sozinho quando o preço real voltar.
+  let skippedAbsurdPrice = 0
+  const { isPlausiblePrice } = await loadPriceDrop()
 
   function finalizeProduct(mapped, merchant, realImage) {
     mapped.awImageUrl = realImage
@@ -517,6 +523,11 @@ async function main() {
 
   for (const row of dedupedRows) {
     const mapped = mapRow(row)
+    const listedPrice = mapped.searchPrice ?? mapped.displayPrice
+    if (listedPrice != null && !isPlausiblePrice(listedPrice)) {
+      skippedAbsurdPrice++
+      continue
+    }
     const merchant = resolveMerchant(merchantsConfig, mapped.merchantId, mapped.merchantName)
     if (merchant.titleBlacklistEnabled && hasBlacklistedWord(mapped.productName)) {
       skippedBlacklistedTitle++
@@ -589,6 +600,9 @@ async function main() {
   }
   if (skippedExcludedTitle > 0) {
     console.log(`[excludeTitles] ${skippedExcludedTitle} produtos ignorados por título de lixo do feed`)
+  }
+  if (skippedAbsurdPrice > 0) {
+    console.log(`[preço-isca] ${skippedAbsurdPrice} produtos ignorados por preço absurdo (provável marcador de "sem estoque": a loja põe um valor-isca em vez de tirar o produto do ar)`)
   }
   if (skippedBlacklistedTitle > 0) {
     console.log(`[blacklist] ${skippedBlacklistedTitle} produtos ignorados por palavra bloqueada no título`)

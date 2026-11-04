@@ -83,7 +83,7 @@ async function walkProductFiles(dir) {
 }
 
 async function main() {
-  const { assessPriceDrop } = await loadPriceDrop()
+  const { assessPriceDrop, isPlausiblePrice } = await loadPriceDrop()
   let history = {}
   try {
     history = JSON.parse(await readFile(HISTORY_PATH, 'utf-8'))
@@ -133,6 +133,11 @@ async function main() {
   let priceDrops = 0
   let verifiedDrops = 0
   let skipped = 0
+  // Preços-isca (ver MAX_PLAUSIBLE_PRICE em src/lib/priceDrop.ts): lojas que, em vez
+  // de marcar "sem estoque", põem um valor absurdo (R$ 899.999.999,10). Não entram no
+  // histórico nem viram queda.
+  let absurdPricesPurged = 0
+  let absurdCurrentSkipped = 0
   const droppedProducts = []
   const droppedTodayProducts = []
   // Reconstrói o histórico do zero só com os produtos processados agora — assim
@@ -142,6 +147,10 @@ async function main() {
   for (const file of productFiles) {
     const product = JSON.parse(await readFile(file, 'utf-8'))
     if (product.searchPrice == null) continue
+    if (!isPlausiblePrice(product.searchPrice)) {
+      absurdCurrentSkipped++
+      continue
+    }
 
     const key = `${product.merchantSlug}/${product.slug}`
     const indexEntry = indexByKey.get(key)
@@ -158,7 +167,11 @@ async function main() {
     // por uma rodada anterior do mesmo dia — o preço de hoje é sempre o
     // searchPrice atual, nunca um registro empilhado (evita a barra vertical no
     // gráfico e a legenda enganada).
-    const series = compactSeries(dedupeByDate(history[key] ?? []))
+    // Os pontos-isca já gravados saem aqui (o histórico se limpa sozinho a cada rodada).
+    const stateBefore = history[key] ?? []
+    const plausibleBefore = stateBefore.filter((pt) => isPlausiblePrice(pt.price))
+    absurdPricesPurged += stateBefore.length - plausibleBefore.length
+    const series = compactSeries(dedupeByDate(plausibleBefore))
     while (series.length && series[series.length - 1].date === today) series.pop()
     // Último preço REGISTRADO num dia ANTERIOR a hoje = referência pra queda.
     const prev = series[series.length - 1]
@@ -261,6 +274,12 @@ async function main() {
       `${Object.keys(nextHistory).length} chaves no total (antes: ${Object.keys(history).length}), ` +
       `${priceDrops} com queda vs. o preço habitual (${verifiedDrops} verificadas; ${droppedTodayProducts.length} verificadas que caíram hoje).`
   )
+  if (absurdPricesPurged > 0 || absurdCurrentSkipped > 0) {
+    console.log(
+      `[preço-isca] ${absurdPricesPurged} ponto(s) absurdo(s) removido(s) do histórico e ${absurdCurrentSkipped} produto(s) com preço atual absurdo ignorado(s) ` +
+        '(lojas que trocam o preço por um valor-isca em vez de marcar sem estoque).'
+    )
+  }
 }
 
 main().catch((err) => {

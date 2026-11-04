@@ -36,6 +36,26 @@ export const SPIKE_FACTOR = 1.3
 // Sem nenhuma subida de preço nesses últimos dias ("sobe e desce")
 export const NO_UPWARD_MOVE_DAYS = 30
 
+// Teto de preço plausível (R$). Algumas lojas (caso real: Gigantec) trocam o preço
+// de um produto sem estoque por um valor-isca absurdo — 899.999.999,10;
+// 8.999.999,10; 90.000.000.000 — em vez de marcá-lo "indisponível": o anúncio não
+// perde ranking no Google e, quando o produto volta, o preço real reaparece. Isso
+// NÃO é preço. Sem o filtro, esses dias viravam o "preço habitual" e o preço real
+// de volta aparecia como "queda de 100%". O maior preço legítimo do catálogo hoje
+// é ~R$ 242 mil, então 1 milhão separa com folga o real do isca.
+export const MAX_PLAUSIBLE_PRICE = 1_000_000
+
+export function isPlausiblePrice(price: number | null | undefined): price is number {
+  return typeof price === 'number' && Number.isFinite(price) && price > 0 && price <= MAX_PLAUSIBLE_PRICE
+}
+
+// Tira do histórico os pontos de preço-isca. O período vira "sem preço" e o preço
+// anterior continua valendo por cima dele — queda real depois do isca continua
+// sendo medida contra o preço de antes, e isca nunca entra como referência.
+export function plausiblePoints(series: PricePoint[]): PricePoint[] {
+  return series.filter((point) => isPlausiblePrice(point.price))
+}
+
 // Histórico mínimo do selo "verificada": 45 dias enquanto o monitoramento é
 // jovem; 90 dias (3 meses) a partir de 15/11/2026, a semana antes da Black
 // Friday. Quando o histórico tiver 6+ meses, subir pra 180.
@@ -77,13 +97,16 @@ const EMPTY: DropAssessment = {
 // `series` = pontos de mudança de preço em ordem de data (o preço vale até o
 // próximo ponto); `currentPrice` = preço de hoje; `todayIso` = AAAA-MM-DD.
 export function assessPriceDrop(
-  series: PricePoint[],
+  rawSeries: PricePoint[],
   currentPrice: number,
   todayIso: string,
   // Sobrescreve o histórico mínimo do selo "verificada" (ex.: afrouxar pra 30
   // dias sem mexer no código: variável VERIFIED_MIN_HISTORY_DAYS no build)
   minHistoryDays: number = verifiedMinHistoryDays(todayIso)
 ): DropAssessment {
+  // Preço-isca (atual ou do histórico) nunca é queda nem referência — ver MAX_PLAUSIBLE_PRICE.
+  if (!isPlausiblePrice(currentPrice)) return EMPTY
+  const series = plausiblePoints(rawSeries)
   if (series.length === 0) return EMPTY
   const today = dayNumber(todayIso)
   const first = dayNumber(series[0].date)
@@ -176,7 +199,9 @@ export function summarizePriceHistory(
   currentPrice: number,
   todayIso: string
 ): PriceHistorySummary | null {
-  const points = series.filter((p) => p.date <= todayIso)
+  // Sem os preços-isca: senão o "maior preço monitorado" da página sairia R$ 899.999.999,10.
+  if (!isPlausiblePrice(currentPrice)) return null
+  const points = plausiblePoints(series).filter((p) => p.date <= todayIso)
   if (points.length === 0) return null
   const all = [...points]
   if (all[all.length - 1].price !== currentPrice) all.push({ date: todayIso, price: currentPrice })
