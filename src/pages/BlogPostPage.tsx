@@ -19,13 +19,28 @@ import type { BlogContentBlock } from '../types/blog'
 // quanto sites de terceiros sem precisar de um tipo de bloco à parte.
 const INLINE_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
 
+// Fontes editoriais citadas no texto (Pantone etc.): NÃO são links de afiliado
+// nem pagos, então não levam rel="sponsored" (o padrão pra qualquer outro link
+// externo aqui, que na prática é sempre afiliado).
+const EDITORIAL_HOSTS = new Set(['pantone.com.br', 'www.pantone.com.br', 'pantone.com', 'www.pantone.com', 'colorcombinations.org', 'colorindicator.com'])
+
+function isEditorialLink(href: string): boolean {
+  try {
+    return EDITORIAL_HOSTS.has(new URL(href).hostname)
+  } catch {
+    return false
+  }
+}
+
 function renderInline(text: string): ReactNode {
   const parts: ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
   let key = 0
+  let hasLink = false
   INLINE_LINK.lastIndex = 0
   while ((match = INLINE_LINK.exec(text))) {
+    hasLink = true
     if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index))
     const [, label, href] = match
     parts.push(
@@ -33,7 +48,7 @@ function renderInline(text: string): ReactNode {
         // sponsored (não só noopener/noreferrer): todo link externo em
         // artigo do blog aqui é link de afiliado — é o rel correto pra isso,
         // recomendado pelo próprio Google.
-        <a key={key++} href={href} target="_blank" rel="sponsored noopener noreferrer">
+        <a key={key++} href={href} target="_blank" rel={isEditorialLink(href) ? 'noopener noreferrer' : 'sponsored noopener noreferrer'}>
           {label}
         </a>
       ) : (
@@ -45,7 +60,9 @@ function renderInline(text: string): ReactNode {
     lastIndex = match.index + match[0].length
   }
   if (lastIndex < text.length) parts.push(text.slice(lastIndex))
-  return parts.length > 1 ? parts : text
+  // `hasLink` (e não parts.length): uma célula/linha que é SÓ um link também tem
+  // 1 parte e antes devolvia o texto cru com os colchetes.
+  return hasLink ? parts : text
 }
 
 function Block({ block, url }: { block: BlogContentBlock; url: string }) {
@@ -89,7 +106,7 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
               {block.rows.map((row, i) => (
                 <tr key={i}>
                   {row.map((cell, j) => (
-                    <td key={j}>{cell}</td>
+                    <td key={j}>{renderInline(cell)}</td>
                   ))}
                 </tr>
               ))}
@@ -107,6 +124,20 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
         >
           <img src={block.imgSrc} alt={block.alt} loading="lazy" />
         </a>
+      )
+    case 'product-showcase':
+      return (
+        <div className="blog-post__showcase">
+          {block.items.map((item) => (
+            <Link key={item.href} to={item.href} className="blog-post__showcase-card">
+              {/* width/height fixos + aspect-ratio no CSS: a foto reserva o espaço antes de carregar (sem CLS) */}
+              <img src={item.imgSrc} alt={item.alt} width={640} height={640} loading="lazy" decoding="async" />
+              <span className="blog-post__showcase-name">{item.name}</span>
+              <span className="blog-post__showcase-color">{item.color}</span>
+              <span className="blog-post__showcase-cta">Ver esta cor →</span>
+            </Link>
+          ))}
+        </div>
       )
     case 'quiz':
       return <QuizPodeNaoPode title={block.title} questions={block.questions} />

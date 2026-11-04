@@ -5267,7 +5267,9 @@ body.has-fixed-bottombar .coupon-wheel-fab {
 .blog-post__table-wrap td {
   padding: 10px 14px;
   text-align: left;
-  white-space: nowrap;
+  /* quebra de linha em vez de rolar de lado: a coluna de links/resumo não fica escondida no celular */
+  white-space: normal;
+  vertical-align: top;
   border-bottom: 1px solid #eee;
 }
 
@@ -5303,6 +5305,70 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+/* Cartões de produto do artigo (bloco 'product-showcase'): foto quadrada que
+   reserva o espaço antes de carregar (aspect-ratio — sem CLS), nome, cor e CTA.
+   Cartão único fica com largura limitada; vários dividem a linha. */
+.blog-post__showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 260px));
+  gap: 14px;
+  margin: 4px 0 22px;
+}
+
+.blog-post__showcase-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 12px;
+  border: 1px solid #e7e9ee;
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.blog-post__showcase-card:hover,
+.blog-post__showcase-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(20, 30, 60, 0.12);
+}
+
+.blog-post__showcase-card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--color-band);
+}
+
+.blog-post__showcase-name,
+.blog-post__showcase-color,
+.blog-post__showcase-cta {
+  padding: 0 12px;
+}
+
+.blog-post__showcase-name {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+.blog-post__showcase-color {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-navy);
+}
+
+.blog-post__showcase-cta {
+  margin-top: 4px;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--color-teal-a11y);
 }
 
 /* Quiz "pode ou não pode" embutido em artigo (ver QuizPodeNaoPode.tsx) */

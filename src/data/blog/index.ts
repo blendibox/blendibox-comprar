@@ -24,10 +24,12 @@ import { allugatorAssinaturaDeEletronicos } from './allugator-assinatura-de-elet
 import { brazilcoreModaCopaDoMundo2026 } from './brazilcore-moda-copa-do-mundo-2026'
 import { oQueVestirParaVotarEleicoes2026 } from './o-que-vestir-para-votar-eleicoes-2026'
 import { aMeninaDosGravetosLivroSobreLutoEInventario } from './a-menina-dos-gravetos-livro-sobre-luto-e-inventario'
+import { coresTendenciaVerao2027ECorDoAno } from './cores-tendencia-verao-2027-e-cor-do-ano'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
 export const blogPosts: BlogPost[] = [
+  coresTendenciaVerao2027ECorDoAno,
   listaDePresentesOnlineGratis,
   comoDizerOQueQueroDePresente,
   listaDeCasamentoOnline,

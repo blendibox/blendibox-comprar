@@ -25,6 +25,19 @@ export type BlogContentBlock =
   // Referencia por slug o mesmo quiz da seção /quizzes (src/data/quizzes) —
   // nunca duplica os dados das perguntas dentro do artigo.
   | { type: 'quiz-premium'; quizSlug: string }
+  // Cartões de produto com foto, pra ilustrar uma menção no texto (ex: a bolsa
+  // na cor citada). O link é INTERNO (página do produto no próprio site), então
+  // sem rel="sponsored". Sem preço de propósito: o texto do artigo é estático e
+  // o preço muda — quem quer o valor atual abre a página do produto.
+  | { type: 'product-showcase'; items: BlogProductShowcaseItem[] }
+
+export type BlogProductShowcaseItem = {
+  href: string
+  imgSrc: string
+  alt: string
+  name: string
+  color: string
+}
 
 export type BlogFaqItem = { q: string; a: string }
 
