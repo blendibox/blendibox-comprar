@@ -15,12 +15,14 @@ const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
 const MAX_PRODUCTS = 16
 const UTM = 'utm_source=compareofertas&utm_medium=rodape&utm_campaign=produtos-blendibox'
 
-// A Yampi serve variantes de tamanho pelo sufixo do nome do arquivo — a
-// "-large" tem ~290KB, a "-small" ~4,5KB, mesma imagem. Pro carrossel do
-// rodapé (thumbnails pequenos) o tamanho pequeno é suficiente e reduz bastante
-// o tempo de download.
-function useSmallImage(url) {
-  return url.replace(/-large\.(jpe?g|png|webp)$/i, '-small.$1')
+// A Yampi serve variantes de tamanho pelo sufixo do nome do arquivo (medido em
+// 2026-11-05, mesma imagem): "-small" 70px (~3–7KB), "-thumb" 290px (~23–84KB),
+// "-medium" 650px (~100–280KB), "-large" 1000px (~190–390KB). O cartão mostra a
+// foto com ~110px de largura CSS, ou seja ~220px reais em tela retina: a "-small"
+// (70px) ficava esticada e borrada; a "-thumb" (290px) cobre até 2,6x e custa uma
+// fração da "-medium"/"-large".
+function useThumbImage(url) {
+  return url.replace(/-large\.(jpe?g|png|webp)$/i, '-thumb.$1')
 }
 
 async function main() {
@@ -31,7 +33,7 @@ async function main() {
     title: product.name,
     link: `${product.url}?${UTM}`,
     brand: 'Blendibox',
-    image: useSmallImage(product.variants[0].images[0]),
+    image: useThumbImage(product.variants[0].images[0]),
   }))
 
   await mkdir(OUTPUT_DIR, { recursive: true })
