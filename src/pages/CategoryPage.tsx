@@ -9,8 +9,9 @@ import { ProductCard } from '../components/ProductCard'
 import { CategoryInsightsBlock } from '../components/CategoryInsightsBlock'
 import { FaqBlock } from '../components/FaqBlock'
 import { accentuateLabel } from '../lib/priceInsights'
-import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { parseSortOption, sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { useListingScroll, useUrlParam } from '../hooks/useListingState'
 import { usePinterestEvent } from '../hooks/usePinterestEvent'
 
 const PAGE_SIZE = 60
@@ -23,10 +24,18 @@ export function CategoryPage() {
   const [initial] = useState<ListInitialData | null>(() => peekInitialData<ListInitialData>(path))
   const insights = initial?.insights ?? null
   const { products, state } = useIndex()
+  // Busca e filtros na URL (?busca=&ordem=&queda=1) — ver useListingState. Categoria
+  // pré-renderizada (initial != null): o valor da URL entra só depois de montar.
+  const deferUrl = initial !== null
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  const [sort, setSort] = useState<SortOption>('relevancia')
-  const [search, setSearch] = useState('')
-  const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
+  const [sort, setSort] = useUrlParam<SortOption>('ordem', 'relevancia', { deferInitial: deferUrl, parse: parseSortOption })
+  const [search, setSearch] = useUrlParam<string>('busca', '', { aliases: ['search', 'q'], debounceMs: 250, deferInitial: deferUrl })
+  const [dropsParam, setDropsParam] = useUrlParam<'0' | '1'>('queda', '0', {
+    deferInitial: deferUrl,
+    parse: (raw) => (raw === '1' ? '1' : null),
+  })
+  const onlyPriceDrops = dropsParam === '1'
+  const setOnlyPriceDrops = (checked: boolean) => setDropsParam(checked ? '1' : '0')
 
   const filtered = useMemo(
     () => products.filter((p) => p.vertical === vertical && p.categorySlug === categorySlug),
@@ -48,6 +57,7 @@ export function CategoryPage() {
   const items = ready ? searched : initial?.items ?? []
   const totalCount = ready ? filtered.length : initial?.totalCount ?? 0
   const visible = items.slice(0, visibleCount)
+  useListingScroll(ready, visibleCount, setVisibleCount)
 
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)

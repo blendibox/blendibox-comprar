@@ -11,8 +11,9 @@ import type { CouponEntry, HubInitialData, MerchantMeta } from '../types/product
 import { ProductCard } from '../components/ProductCard'
 import { CouponCard } from '../components/CouponCard'
 import { MerchantLogo } from '../components/MerchantLogo'
-import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { parseSortOption, sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { useListingScroll, useUrlParam } from '../hooks/useListingState'
 import { usePinterestEvent } from '../hooks/usePinterestEvent'
 
 const PAGE_SIZE = 60
@@ -46,10 +47,19 @@ export function HubPage() {
     contentCategory: slug,
   })
 
+  // Busca e filtros na URL (?busca=&ordem=&queda=1) — ver useListingState. Hub pré-renderizado
+  // (initial != null): o valor da URL entra só depois de montar, pra hidratar igual ao HTML.
+  const deferUrl = initial !== null
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
-  const [sort, setSort] = useState<SortOption>('relevancia')
-  const [search, setSearch] = useState('')
-  const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
+  const [sort, setSort] = useUrlParam<SortOption>('ordem', 'relevancia', { deferInitial: deferUrl, parse: parseSortOption })
+  const [search, setSearch] = useUrlParam<string>('busca', '', { aliases: ['search', 'q'], debounceMs: 250, deferInitial: deferUrl })
+  const [dropsParam, setDropsParam] = useUrlParam<'0' | '1'>('queda', '0', {
+    deferInitial: deferUrl,
+    parse: (raw) => (raw === '1' ? '1' : null),
+  })
+  const onlyPriceDrops = dropsParam === '1'
+  const setOnlyPriceDrops = (checked: boolean) => setDropsParam(checked ? '1' : '0')
+  useListingScroll(ready, visibleCount, setVisibleCount)
   // Categorias começam recolhidas — assim, em telas menores, o campo de
   // filtro já aparece na primeira dobra (sem a lista longa de chips empurrando).
   const [catsOpen, setCatsOpen] = useState(false)

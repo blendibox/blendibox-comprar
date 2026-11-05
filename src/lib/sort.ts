@@ -8,6 +8,11 @@ export const SORT_LABELS: Record<SortOption, string> = {
   'maior-preco': 'Maior preço',
 }
 
+// Valida o ?ordem= da URL (valor desconhecido → null → ordem padrão).
+export function parseSortOption(raw: string): SortOption | null {
+  return Object.prototype.hasOwnProperty.call(SORT_LABELS, raw) ? (raw as SortOption) : null
+}
+
 export function sortProducts<T extends Pick<ProductIndexEntry, 'searchPrice'>>(
   items: T[],
   sort: SortOption

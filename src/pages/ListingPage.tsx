@@ -5,8 +5,9 @@ import { clearInitialData, peekInitialData } from '../lib/initialData'
 import type { FeedMeta, HomeHighlights, HomeInitialData, MerchantMeta, ProductIndexEntry } from '../types/product'
 import { ProductCard } from '../components/ProductCard'
 import { Carousel } from '../components/Carousel'
-import { sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
+import { parseSortOption, sortProducts, SORT_LABELS, type SortOption } from '../lib/sort'
 import { matchesSearch } from '../lib/search'
+import { useListingScroll, useUrlParam } from '../hooks/useListingState'
 import { timeAgo } from '../lib/timeAgo'
 import { getSeasonalEvent, seasonalVerticals } from '../lib/seasonalEvents'
 import { useSeasonalTheme } from '../lib/useSeasonalTheme'
@@ -37,10 +38,20 @@ export function ListingPage() {
   const [products, setProducts] = useState<ProductIndexEntry[]>([])
   const [indexState, setIndexState] = useState<IndexState>('idle')
 
-  const [search, setSearch] = useState('')
-  const [vertical, setVertical] = useState('todos')
-  const [sort, setSort] = useState<SortOption>('relevancia')
-  const [onlyPriceDrops, setOnlyPriceDrops] = useState(false)
+  // Busca e filtros ficam na URL (?busca=&departamento=&ordem=&queda=1): link compartilhável
+  // e o "voltar" da página de produto devolve a listagem como estava (ver useListingState).
+  // Com a home pré-renderizada (initial != null) o valor da URL só entra depois de montar,
+  // pra primeira renderização continuar igual à do HTML estático.
+  const deferUrl = initial !== null
+  const [search, setSearch] = useUrlParam<string>('busca', '', { aliases: ['search', 'q'], debounceMs: 250, deferInitial: deferUrl })
+  const [vertical, setVertical] = useUrlParam<string>('departamento', 'todos', { deferInitial: deferUrl })
+  const [sort, setSort] = useUrlParam<SortOption>('ordem', 'relevancia', { deferInitial: deferUrl, parse: parseSortOption })
+  const [dropsParam, setDropsParam] = useUrlParam<'0' | '1'>('queda', '0', {
+    deferInitial: deferUrl,
+    parse: (raw) => (raw === '1' ? '1' : null),
+  })
+  const onlyPriceDrops = dropsParam === '1'
+  const setOnlyPriceDrops = (checked: boolean) => setDropsParam(checked ? '1' : '0')
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   // Só definido após montar (client-only) pra o "atualizado há X" não divergir
   // do HTML pré-renderizado (evita erro de hidratação #418). Enquanto null,
@@ -107,6 +118,7 @@ export function ListingPage() {
   }, [search, vertical, sort, onlyPriceDrops])
 
   const indexReady = indexState === 'ready'
+  useListingScroll(indexReady && hasActiveFilter, visibleCount, setVisibleCount)
   const visible = filtered.slice(0, visibleCount)
 
   const highlightsReady = highlights !== null
