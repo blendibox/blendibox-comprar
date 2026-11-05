@@ -1,4 +1,4 @@
-import { renderToStaticMarkup } from 'react-dom/server'
+import { renderToString } from 'react-dom/server'
 import { StaticRouter } from 'react-router'
 import { AppRoutes } from './router'
 import { setInitialData } from './lib/initialData'
@@ -29,7 +29,13 @@ export { buildCategoryInsights, buildProductFaq, faqJsonLd, isSitemapCategory } 
 
 export function renderRoute(routePath: string, initialData?: unknown) {
   if (initialData !== undefined) setInitialData(routePath, initialData)
-  const html = renderToStaticMarkup(
+  // renderToString (e NÃO renderToStaticMarkup): o HTML vai ser hidratado no navegador, e só o
+  // renderToString escreve os "<!-- -->" que separam textos vizinhos do mesmo elemento
+  // ("{total} produtos" são dois nós de texto no React). Sem eles o navegador lê um nó só
+  // ("11.117 produtos"), o React espera dois ("11.117" + " produtos") e a hidratação falha
+  // (#425/#418/#423) — a página inteira é refeita no cliente. Era o que acontecia nas lojas e
+  // categorias; a home escapava só porque não tem texto vizinho dentro do mesmo elemento.
+  const html = renderToString(
     <StaticRouter location={routePath}>
       <AppRoutes />
     </StaticRouter>
