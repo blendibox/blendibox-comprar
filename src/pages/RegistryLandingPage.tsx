@@ -88,14 +88,19 @@ const BRAND_LABELS: Record<string, string> = {
   eudora: 'Eudora',
 }
 
+// Cada marca da faixa leva pro hub da loja (/{slug}/). Antes era só texto num "chip": nas
+// gravações de sessão, quem veio de um produto Guess abria "+N lojas", clicava em "Guess" e
+// nada acontecia (dead click, depois rage click) — o chip parece clicável e não era.
+type Brand = { slug: string; label: string }
+
 export function RegistryLandingPage() {
   const myLists = getMyLists()
   const [totalProducts, setTotalProducts] = useState<number | null>(null)
   const [merchantsCount, setMerchantsCount] = useState<number | null>(null)
-  const [brands, setBrands] = useState<string[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   // Lojas que não estão na lista curada (BRAND_LABELS) — só carregadas de
   // verdade quando o usuário clica em "+N lojas" pra ver todas.
-  const [otherBrands, setOtherBrands] = useState<string[]>([])
+  const [otherBrands, setOtherBrands] = useState<Brand[]>([])
   const [showAllBrands, setShowAllBrands] = useState(false)
   const [preview, setPreview] = useState<ProductIndexEntry[]>([])
 
@@ -106,12 +111,12 @@ export function RegistryLandingPage() {
         setMerchantsCount(list.length)
         const curatedSlugs = new Set(Object.keys(BRAND_LABELS))
         const active = new Set(list.map((m) => m.slug))
-        setBrands(Object.keys(BRAND_LABELS).filter((s) => active.has(s)).map((s) => BRAND_LABELS[s]))
+        setBrands(Object.keys(BRAND_LABELS).filter((s) => active.has(s)).map((s) => ({ slug: s, label: BRAND_LABELS[s] })))
         setOtherBrands(
           list
             .filter((m) => !curatedSlugs.has(m.slug))
-            .map((m) => m.displayName.replace(/ BR$/, ''))
-            .sort((a, b) => a.localeCompare(b, 'pt-BR')),
+            .map((m) => ({ slug: m.slug, label: m.displayName.replace(/ BR$/, '') }))
+            .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR')),
         )
       })
       .catch(() => {})
@@ -229,15 +234,15 @@ export function RegistryLandingPage() {
           <span className="registry-landing__brands-label">As marcas que você conhece, num lugar só</span>
           <div className="registry-landing__brands-row">
             {brands.map((b) => (
-              <span key={b} className="registry-landing__brand">
-                {b}
-              </span>
+              <Link key={b.slug} to={`/${b.slug}/`} className="registry-landing__brand">
+                {b.label}
+              </Link>
             ))}
             {showAllBrands &&
               otherBrands.map((b) => (
-                <span key={b} className="registry-landing__brand">
-                  {b}
-                </span>
+                <Link key={b.slug} to={`/${b.slug}/`} className="registry-landing__brand">
+                  {b.label}
+                </Link>
               ))}
             {otherBrands.length > 0 && (
               <button

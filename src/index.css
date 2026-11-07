@@ -4025,6 +4025,16 @@ body.has-fixed-bottombar .coupon-wheel-fab {
   font-weight: 700;
   font-size: 14px;
   color: #444;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+/* Marca = link pro hub da loja: precisa parecer (e ser) clicável. */
+a.registry-landing__brand:hover,
+a.registry-landing__brand:focus-visible {
+  border-color: #0a7d3f;
+  color: #0a7d3f;
+  background: #f3faf6;
 }
 .registry-landing__brand--more {
   background: #f4f5f8;
