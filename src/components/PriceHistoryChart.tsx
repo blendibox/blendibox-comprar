@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import type { PricePoint } from '../types/product'
 import { formatPrice } from './ProductCard'
 import { formatSimpleDateBr } from '../lib/date'
@@ -27,6 +27,12 @@ const isoOf = (ms: number) => new Date(ms).toISOString().slice(0, 10)
 function formatShortDate(iso: string) {
   const [, month, day] = iso.split('-')
   return `${day}/${month}`
+}
+
+// Dia anterior de uma data "YYYY-MM-DD", em UTC puro (sem fuso do navegador).
+function previousDay(iso: string) {
+  const [year, month, day] = iso.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day - 1)).toISOString().slice(0, 10)
 }
 
 export function PriceHistoryChart({
@@ -59,6 +65,23 @@ export function PriceHistoryChart({
   useEffect(() => {
     setNow(Date.now())
   }, [])
+
+  // Balão com o preço e o período do ponto tocado/apontado no gráfico. Guarda só o
+  // INSTANTE (ms) sob o ponteiro; o resto (preço, datas, posição) sai da própria série.
+  // Nas gravações de sessão (Clarity) havia gente clicando várias vezes no gráfico pra
+  // ler o preço de um trecho — ele não respondia a nada.
+  const [hoverT, setHoverT] = useState<number | null>(null)
+  const plotRef = useRef<HTMLDivElement>(null)
+  const isHovering = hoverT != null
+  // No toque não existe "sair de cima": o balão fica até a pessoa tocar fora do gráfico.
+  useEffect(() => {
+    if (!isHovering) return
+    const dismiss = (e: PointerEvent) => {
+      if (plotRef.current && !plotRef.current.contains(e.target as Node)) setHoverT(null)
+    }
+    document.addEventListener('pointerdown', dismiss)
+    return () => document.removeEventListener('pointerdown', dismiss)
+  }, [isHovering])
 
   if (points.length < 2 || now == null) return null
 
@@ -101,10 +124,14 @@ export function PriceHistoryChart({
   // que pode ter ficado defasado.
   const visible: PricePoint[] = []
   let carry = sorted[0].price
+  // Desde quando o preço de abertura (carry) vale de verdade: a âncora inicial usa a data
+  // da janela (pro eixo), mas o balão deve dizer a data real em que esse preço apareceu.
+  let carryDate = sorted[0].date
   for (const p of sorted) {
     const ms = dateMs(p.date)
     if (ms <= t0) {
       carry = p.price
+      carryDate = p.date
       continue
     }
     if (ms > t1) break
@@ -123,8 +150,10 @@ export function PriceHistoryChart({
   const max = Math.max(...prices)
   const range = max - min || 1
 
-  const xAt = (iso: string) => PADDING + ((dateMs(iso) - t0) / span) * (WIDTH - PADDING * 2)
-  const yAt = (price: number) => HEIGHT - PADDING - ((price - min) / range) * (HEIGHT - PADDING * 2)
+  const plotWidth = WIDTH - PADDING * 2
+  const xOfMs = (ms: number) => PADDING + ((ms - t0) / span) * plotWidth
+  const xAt = (iso: string) => xOfMs(dateMs(iso))
+  const yAt =(price: number) => HEIGHT - PADDING - ((price - min) / range) * (HEIGHT - PADDING * 2)
 
   // Coordenadas em degrau: horizontal (preço anterior até a nova data), depois
   // vertical (pulo pro novo preço).
@@ -157,6 +186,52 @@ export function PriceHistoryChart({
     isoOf(t0 + (span * i) / (MAX_X_LABELS - 1))
   )
 
+  // Balão: acha o degrau sob o ponteiro (último ponto com data <= instante) e junta os
+  // pontos vizinhos de MESMO preço num período só (ex.: a última mudança gravada + a
+  // âncora de hoje, que têm o mesmo valor, viram "desde 18/10").
+  let tip: { price: string; period: string; current: boolean; leftPct: number; topPct: number } | null = null
+  if (hoverT != null) {
+    const t = Math.min(Math.max(hoverT, t0), t1)
+    let idx = 0
+    for (let i = 0; i < visible.length; i++) {
+      if (dateMs(visible[i].date) <= t) idx = i
+      else break
+    }
+    const price = visible[idx].price
+    let from = idx
+    while (from > 0 && visible[from - 1].price === price) from--
+    let to = idx
+    while (to < visible.length - 1 && visible[to + 1].price === price) to++
+
+    const startIso = from === 0 ? carryDate : visible[from].date
+    const isCurrent = to === visible.length - 1
+    const thisYear = new Date(now).getFullYear()
+    const fmt = (iso: string) => (Number(iso.slice(0, 4)) === thisYear ? formatShortDate(iso) : formatSimpleDateBr(iso))
+    let period: string
+    if (isCurrent) {
+      period = `desde ${fmt(startIso)}`
+    } else {
+      // A mudança foi GRAVADA na data do próximo ponto: o preço antigo foi visto até o dia anterior.
+      const endIso = previousDay(visible[to + 1].date)
+      period = startIso === endIso ? `em ${fmt(startIso)}` : `de ${fmt(startIso)} a ${fmt(endIso)}`
+    }
+    tip = {
+      price: formatPrice(price, currency),
+      period,
+      current: isCurrent,
+      leftPct: (xOfMs(t) / WIDTH) * 100,
+      topPct: (yAt(price) / HEIGHT) * 100,
+    }
+  }
+
+  const moveHover = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    if (rect.width <= 0) return
+    const svgX = ((e.clientX - rect.left) / rect.width) * WIDTH
+    const u = Math.min(Math.max((svgX - PADDING) / plotWidth, 0), 1)
+    setHoverT(t0 + u * span)
+  }
+
   return (
     <div className="price-history">
       <div className="price-history__header">
@@ -168,7 +243,10 @@ export function PriceHistoryChart({
                 key={p.key}
                 type="button"
                 className={`price-history__period${period === p.key ? ' price-history__period--active' : ''}`}
-                onClick={() => setPeriod(p.key)}
+                onClick={() => {
+                  setPeriod(p.key)
+                  setHoverT(null)
+                }}
               >
                 {p.label}
               </button>
@@ -181,10 +259,39 @@ export function PriceHistoryChart({
           <span>{formatPrice(max, currency)}</span>
           <span>{formatPrice(min, currency)}</span>
         </div>
-        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="price-history__svg" preserveAspectRatio="none">
-          <polygon points={areaPoints} fill={lineColor} opacity="0.1" />
-          <polyline points={coords.join(' ')} fill="none" stroke={lineColor} strokeWidth="2" />
-        </svg>
+        <div
+          ref={plotRef}
+          className="price-history__plot"
+          onPointerDown={moveHover}
+          onPointerMove={moveHover}
+          onPointerLeave={(e) => {
+            if (e.pointerType === 'mouse') setHoverT(null)
+          }}
+        >
+          <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} className="price-history__svg" preserveAspectRatio="none">
+            <polygon points={areaPoints} fill={lineColor} opacity="0.1" />
+            <polyline points={coords.join(' ')} fill="none" stroke={lineColor} strokeWidth="2" />
+          </svg>
+          {tip && (
+            <>
+              <span className="price-history__guide" style={{ left: `${tip.leftPct}%` }} aria-hidden="true" />
+              <span
+                className="price-history__dot"
+                style={{ left: `${tip.leftPct}%`, top: `${tip.topPct}%`, background: lineColor }}
+                aria-hidden="true"
+              />
+              <div
+                className={`price-history__tip${tip.leftPct < 28 ? ' price-history__tip--left' : tip.leftPct > 72 ? ' price-history__tip--right' : ''}`}
+                style={tip.leftPct >= 28 && tip.leftPct <= 72 ? { left: `${tip.leftPct}%` } : undefined}
+                aria-hidden="true"
+              >
+                <strong>{tip.price}</strong>
+                <span>{tip.period}</span>
+                {tip.current && <em>preço atual</em>}
+              </div>
+            </>
+          )}
+        </div>
       </div>
       <div className="price-history__xaxis">
         {labels.map((iso, i) => (
