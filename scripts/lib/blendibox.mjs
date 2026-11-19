@@ -13,6 +13,28 @@
 // POR VARIAÇÃO: sku, cor, preço, imagens da cor, `stock_status` e `blocked_sale`.
 // Produto despublicado responde 302 pra home. A lista de produtos vem do
 // products_sitemap.xml da própria loja.
+//
+// Último estado bom (data/blendibox-store.json, versionado como os outros
+// snapshots do workflow): em 2026-11-14 a loja (atrás da CDN GoCache da Yampi)
+// passou a devolver ao runner do GitHub um sitemap sem produtos — responde normal
+// do Brasil. Sem esse fallback o build gravava "zero produtos", o merchant
+// Blendibox sumia do catálogo (hub /blendibox/ virava 404, feeds do Google e do
+// Pinterest perdiam os itens) e o rodapé ficava vazio por dias sem ninguém notar.
+// Agora, se a loja não responde, o build reaproveita o último estado lido com
+// sucesso (até 14 dias) e avisa em voz alta no log do Actions.
+import { readFile, writeFile, mkdir } from 'node:fs/promises'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const ROOT = path.resolve(__dirname, '..', '..')
+const SNAPSHOT_PATH = path.join(ROOT, 'data', 'blendibox-store.json')
+const DAY_MS = 24 * 60 * 60 * 1000
+const SNAPSHOT_MAX_AGE_DAYS = 14
+// Só reescreve o snapshot se o conteúdo mudou ou se o último tem mais que isso:
+// evita um commit diário de ~100KB sem mudança nenhuma.
+const SNAPSHOT_REFRESH_DAYS = 3
+
 const STORE_URL = 'https://loja.blendibox.com.br'
 const SITEMAP_URL = `${STORE_URL}/products_sitemap.xml`
 const USER_AGENT = 'Mozilla/5.0 (compatible; CompareOfertasBot/1.0; +https://comprar.blendibox.com.br)'
@@ -29,6 +51,24 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+// Aviso que não passa batido: além do log, vira anotação amarela no resumo da
+// execução do GitHub Actions.
+function warn(message) {
+  console.warn(message)
+  if (process.env.GITHUB_ACTIONS) console.log(`::warning title=Blendibox::${message.replace(/\r?\n/g, ' ')}`)
+}
+
+// Texto curto pro log: status + servidor/CDN + redirecionamento + um pedaço do
+// corpo (WAF/CDN costuma explicar o bloqueio ali).
+function describeResponse(page) {
+  return (
+    `HTTP ${page.status}` +
+    `${page.server ? ` (server: ${page.server})` : ''}` +
+    `${page.location ? ` → ${page.location}` : ''}` +
+    `${page.snippet ? ` — "${page.snippet}"` : ''}`
+  )
+}
+
 // GET com redirect manual: 302 pra home é o sinal de "produto despublicado" (não
 // é erro, nem se tenta de novo); só erro de rede/5xx é repetido.
 async function fetchPage(url) {
@@ -40,9 +80,14 @@ async function fetchPage(url) {
         headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xml' },
         signal: AbortSignal.timeout(20000),
       })
-      if (res.status >= 300 && res.status < 400) return { status: res.status, body: '' }
+      const server = res.headers.get('server') || ''
+      if (res.status >= 300 && res.status < 400) {
+        return { status: res.status, body: '', server, location: res.headers.get('location') || '' }
+      }
       if (res.status >= 500) throw new Error(`HTTP ${res.status}`)
-      return { status: res.status, body: res.status === 200 ? await res.text() : '' }
+      if (res.status === 200) return { status: 200, body: await res.text(), server }
+      const snippet = (await res.text().catch(() => '')).replace(/\s+/g, ' ').trim().slice(0, 160)
+      return { status: res.status, body: '', server, snippet }
     } catch (err) {
       lastError = err
       if (attempt < FETCH_ATTEMPTS) await sleep(attempt * 1500)
@@ -164,7 +209,14 @@ function parseVariant(sku, productName) {
 
 async function readProduct(url) {
   const page = await fetchPage(url)
-  if (page.status !== 200) return { url, dead: true, status: page.status }
+  if (page.status !== 200) {
+    // 3xx (302 pra home) e 404/410 = despublicado de verdade. Qualquer outro status
+    // (403/429 de WAF/CDN, por exemplo) NÃO prova que o produto saiu do ar: vira
+    // falha, pra não ser confundido com despublicação.
+    const unpublished = (page.status >= 300 && page.status < 400) || page.status === 404 || page.status === 410
+    if (unpublished) return { url, dead: true, status: page.status }
+    throw new Error(describeResponse(page))
+  }
 
   const ld = readProductJsonLd(page.body)
   const skus = readSkus(page.body)
@@ -183,22 +235,62 @@ async function readProduct(url) {
   }
 }
 
+// Último estado bom gravado por uma leitura COMPLETA e limpa da loja (ou null).
+async function readSnapshot() {
+  try {
+    const snap = JSON.parse(await readFile(SNAPSHOT_PATH, 'utf-8'))
+    return Array.isArray(snap.products) && Number.isFinite(Date.parse(snap.savedAt)) ? snap : null
+  } catch {
+    return null
+  }
+}
+
+function snapshotAgeDays(snapshot) {
+  return (Date.now() - Date.parse(snapshot.savedAt)) / DAY_MS
+}
+
+async function writeSnapshotIfNeeded(products, previous) {
+  if (!products.length) return // loja realmente sem produto à venda: não vira "estado bom"
+  const unchanged = previous && JSON.stringify(previous.products) === JSON.stringify(products)
+  if (unchanged && snapshotAgeDays(previous) < SNAPSHOT_REFRESH_DAYS) return
+  await mkdir(path.dirname(SNAPSHOT_PATH), { recursive: true })
+  await writeFile(SNAPSHOT_PATH, JSON.stringify({ savedAt: new Date().toISOString(), products }))
+}
+
 // → { products: [{ url, name, description, category, variants: [disponíveis] }], stats }
-// Nunca lança: loja fora do ar ou página quebrada vira aviso + lista menor/vazia
-// — o build do Compare Ofertas não pode parar por causa de um catálogo tão pequeno.
+// Nunca lança: loja fora do ar ou página quebrada vira aviso + o último estado bom
+// (ou lista vazia se não houver um recente) — o build do Compare Ofertas não pode
+// parar por causa de um catálogo tão pequeno.
 export async function fetchBlendiboxStore() {
-  const stats = { pages: 0, dead: 0, malformed: 0, failed: 0, variants: 0, skipped: {} }
+  const stats = { pages: 0, dead: 0, malformed: 0, failed: 0, fromSnapshot: 0, variants: 0, skipped: {} }
+  const snapshot = await readSnapshot()
+  const usable = snapshot && snapshotAgeDays(snapshot) <= SNAPSHOT_MAX_AGE_DAYS ? snapshot : null
+
   let urls = []
+  let sitemapProblem = null
   try {
     const sitemap = await fetchPage(SITEMAP_URL)
-    urls = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim()).filter((u) => u.startsWith(STORE_URL))
+    if (sitemap.status !== 200) {
+      sitemapProblem = describeResponse(sitemap)
+    } else {
+      urls = [...sitemap.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1].trim()).filter((u) => u.startsWith(STORE_URL))
+      if (!urls.length) sitemapProblem = `HTTP 200 (server: ${sitemap.server || '?'}), mas sem nenhuma URL de produto da loja`
+    }
   } catch (err) {
-    console.warn(`[blendibox] sitemap da loja indisponível (${err.message}) — sem produtos da Blendibox nesta rodada.`)
-    return { products: [], stats }
+    sitemapProblem = err.message
   }
-  if (!urls.length) {
-    console.warn('[blendibox] sitemap sem produtos — sem produtos da Blendibox nesta rodada.')
-    return { products: [], stats }
+  if (sitemapProblem) {
+    if (!usable) {
+      warn(`[blendibox] sitemap da loja indisponível (${sitemapProblem}) e sem estado bom recente guardado — sem produtos da Blendibox nesta rodada.`)
+      return { products: [], stats }
+    }
+    warn(
+      `[blendibox] sitemap da loja indisponível (${sitemapProblem}) — usando o último estado bom ` +
+        `(${usable.savedAt.slice(0, 10)}, ${Math.floor(snapshotAgeDays(usable))} dia(s) atrás): ${usable.products.length} produtos.`
+    )
+    stats.fromSnapshot = usable.products.length
+    stats.variants = usable.products.reduce((n, p) => n + p.variants.length, 0)
+    return { products: usable.products, stats }
   }
 
   const products = []
@@ -209,7 +301,15 @@ export async function fetchBlendiboxStore() {
       product = await readProduct(url)
     } catch (err) {
       stats.failed++
-      console.warn(`[blendibox] falha ao ler ${url}: ${err.message}`)
+      const kept = usable?.products.find((p) => p.url === url)
+      if (kept) {
+        stats.fromSnapshot++
+        stats.variants += kept.variants.length
+        products.push(kept)
+        warn(`[blendibox] falha ao ler ${url}: ${err.message} — usando o último estado bom desse produto.`)
+      } else {
+        warn(`[blendibox] falha ao ler ${url}: ${err.message}`)
+      }
       continue
     }
     if (product.dead) {
@@ -234,8 +334,11 @@ export async function fetchBlendiboxStore() {
   console.log(
     `[blendibox] ${stats.pages} páginas: ${products.length} produtos com variação disponível (${stats.variants} variações), ` +
       `${stats.dead} despublicados (redirecionam pra home), ${stats.malformed} sem dados, ${stats.failed} com falha` +
+      `${stats.fromSnapshot ? ` (${stats.fromSnapshot} reaproveitados do último estado bom)` : ''}` +
       `${Object.keys(stats.skipped).length ? `; variações descartadas: ${JSON.stringify(stats.skipped)}` : ''}.`
   )
+  // Só uma leitura 100% limpa vira o novo "último estado bom".
+  if (!stats.failed && !stats.malformed) await writeSnapshotIfNeeded(products, snapshot)
   return { products, stats }
 }
 
