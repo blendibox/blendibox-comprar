@@ -2,8 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { AppRoutes } from './router'
+import { installProxyImageFallback } from './lib/images'
 import '@fontsource-variable/inter/wght.css'
 import './index.css'
+
+// Se a proxy de imagens da Awin falhar, cai pra imagem original do lojista.
+installProxyImageFallback()
 
 const rootEl = document.getElementById('root')!
 const app = (
