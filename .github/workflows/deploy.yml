@@ -51,7 +51,8 @@ jobs:
       # esse cache, todo run começa do zero e precisa rebuscar tudo. A chave
       # de salvar é sempre única (run_id), então todo run deixa um cache novo;
       # restore-keys pega o mais recente disponível na restauração. Só tem
-      # efeito prático quando skip_fetch=true (abaixo) — nos outros casos o
+      # efeito prático quando skip_fetch=true (abaixo) ou quando o feed da Awin
+      # não pôde ser usado (fallback automático, abaixo) — nos outros casos o
       # fetch de qualquer forma sobrescreve o que foi restaurado.
       - name: Cache do catálogo (public/data)
         uses: actions/cache@v4
@@ -61,6 +62,7 @@ jobs:
           restore-keys: catalogo-
 
       - name: Baixar feed e gerar JSON + build
+        id: build
         env:
           AWIN_API_KEY: ${{ secrets.AWIN_API_KEY }}
           AWIN_PROMOTIONS_TOKEN: ${{ secrets.AWIN_PROMOTIONS_TOKEN }}
@@ -84,8 +86,36 @@ jobs:
             echo "skip_fetch ativado e catálogo em cache encontrado — pulando fetch, só rebuild."
             npm run build:no-fetch
           else
-            npm run build
+            rm -f .feed-unavailable.json .feed-fallback.json
+            # Fallback automático: se o feed da Awin não pôde ser usado (fora do ar,
+            # 404/5xx, corpo corrompido ou incompleto — o fetch-feeds.mjs deixa
+            # .feed-unavailable.json e NÃO toca em public/data), reaproveita o último
+            # catálogo restaurado do cache acima e faz só o rebuild (build:no-fetch),
+            # em vez de abortar o deploy. Visto em 2026-11-23: feed em HTTP 404 e uma
+            # correção de imagens presa sem ir ao ar. Qualquer OUTRA falha do build
+            # continua derrubando o run. O catálogo reaproveitado tem idade máxima
+            # (check-feed-fallback.mjs) e o rodapé mostra a data real dele.
+            if npm run build; then
+              :
+            elif [ -f .feed-unavailable.json ] && [ -f public/data/index.json ]; then
+              node scripts/check-feed-fallback.mjs
+              npm run build:no-fetch
+              echo "feed_fallback=true" >> "$GITHUB_OUTPUT"
+            else
+              exit 1
+            fi
           fi
+
+      # Só quando o feed caiu e o site foi publicado com o catálogo anterior: o
+      # build termina verde, então sem este e-mail o problema ficaria numa
+      # anotação amarela. Só no cron/manual (mesmo critério dos cupons).
+      - name: Avisar por e-mail se o feed da Awin caiu
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.build.outputs.feed_fallback == 'true'
+        continue-on-error: true
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ vars.ALERT_EMAIL }}
+        run: node scripts/notify-feed-fallback.mjs
 
       # fetch-coupons.mjs não derruba mais o build quando a API da Awin falha
       # (token invalidado em 2026-11-03 derrubou o deploy inteiro): republica os
@@ -115,20 +145,24 @@ jobs:
       # trava a fila inteira (visto ao vivo — 50+ min parado em "Instalar
       # ffmpeg", nada depois rodou, nem o deploy do site) — continue-on-error
       # só reage depois que o passo termina, não enquanto está travado.
+      # Os quatro passos abaixo (ffmpeg, vídeo, YouTube, Telegram) são PULADOS
+      # quando o site foi publicado com o catálogo anterior (feed da Awin fora):
+      # as quedas de preço guardadas são as de ontem, e repostá-las como "ofertas de
+      # hoje" seria enganar quem segue o canal.
       - name: Instalar ffmpeg
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.build.outputs.feed_fallback != 'true'
         continue-on-error: true
         timeout-minutes: 5
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
 
       - name: Gerar vídeo diário
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.build.outputs.feed_fallback != 'true'
         continue-on-error: true
         run: npm run daily-video
 
       - name: Publicar vídeo no YouTube
         id: upload_youtube
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.build.outputs.feed_fallback != 'true'
         continue-on-error: true
         env:
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
@@ -160,7 +194,7 @@ jobs:
       # Mesmo vídeo, mesmo momento do YouTube — não espera os horários de
       # 12h15/19h30 do canal (esses são só pras ofertas avulsas/resumo).
       - name: Publicar vídeo no Telegram
-        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        if: (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && steps.build.outputs.feed_fallback != 'true'
         continue-on-error: true
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

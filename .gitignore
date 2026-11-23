@@ -16,6 +16,12 @@ public/data/
 # só serve pro passo de alerta do workflow, nunca vai pro git.
 .coupons-stale.json
 
+# Sinais de "feed da Awin indisponível, publicando com o último catálogo"
+# (scripts/fetch-feeds.mjs e scripts/check-feed-fallback.mjs) — só servem pro
+# workflow e pro e-mail de aviso, nunca vão pro git.
+.feed-unavailable.json
+.feed-fallback.json
+
 # Gerado por scripts/generate-icon-sprite.mjs (ver npm script "predev"/"build")
 # — determinístico a partir de scripts/lib/iconNames.mjs, não precisa ir pro git.
 public/icons-sprite.svg

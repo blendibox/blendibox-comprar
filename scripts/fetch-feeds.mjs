@@ -33,6 +33,32 @@ const ROOT = path.resolve(__dirname, '..')
 const OUTPUT_DIR = path.join(ROOT, 'public', 'data')
 const PRODUCTS_DIR = path.join(OUTPUT_DIR, 'products')
 
+// Sinal pro workflow (não versionado, ver .gitignore): existe quando o feed da
+// Awin NÃO pôde ser usado hoje — fora do ar, 4xx/5xx, corpo corrompido ou
+// incompleto (trava abaixo). O script continua saindo com erro, mas nenhuma
+// dessas falhas toca em public/data (tudo acontece antes do rm/escrita), então o
+// workflow pode reaproveitar o último catálogo restaurado do cache do Actions e
+// publicar mesmo assim (ver deploy.yml e scripts/check-feed-fallback.mjs). Visto
+// em 2026-11-23: feed respondendo HTTP 404, deploy abortado, e uma correção de
+// imagens quebradas presa sem ir ao ar.
+const FEED_UNAVAILABLE_FLAG = path.join(ROOT, '.feed-unavailable.json')
+// Tempo máximo do download inteiro (cabeçalho + corpo). O feed leva ~1 min; sem
+// limite, um servidor que aceita a conexão e não responde travaria o job
+// (visto em 2026-11-23: a Awin aceitava a conexão e ficava muda por mais de 100 s).
+// FEED_DOWNLOAD_TIMEOUT_MS só existe pra testar o caminho de falha sem esperar 8 min.
+const FEED_DOWNLOAD_TIMEOUT_MS = Number(process.env.FEED_DOWNLOAD_TIMEOUT_MS) || 8 * 60 * 1000
+
+async function markFeedUnavailable(err) {
+  try {
+    await writeFile(
+      FEED_UNAVAILABLE_FLAG,
+      JSON.stringify({ at: new Date().toISOString(), reason: String(err?.message || err).slice(0, 500) })
+    )
+  } catch {
+    // o sinal é só conveniência: sem ele o build falha como sempre falhou
+  }
+}
+
 const API_KEY = process.env.AWIN_API_KEY
 if (!API_KEY) {
   console.error(
@@ -329,7 +355,7 @@ async function downloadFeed(feed) {
   const url = feed.url.replaceAll('{{AWIN_API_KEY}}', API_KEY)
   console.log(`[${feed.id}] baixando feed...`)
 
-  const response = await fetch(url)
+  const response = await fetch(url, { signal: AbortSignal.timeout(FEED_DOWNLOAD_TIMEOUT_MS) })
   if (!response.ok) {
     throw new Error(`[${feed.id}] falha ao baixar feed: HTTP ${response.status}`)
   }
@@ -407,7 +433,14 @@ async function main() {
     throw new Error('Nenhum feed configurado em scripts/feeds.config.json')
   }
 
-  const rawRows = (await Promise.all(feedsConfig.feeds.map(downloadFeed))).flat()
+  let downloaded
+  try {
+    downloaded = await Promise.all(feedsConfig.feeds.map(downloadFeed))
+  } catch (err) {
+    await markFeedUnavailable(err)
+    throw err
+  }
+  const rawRows = downloaded.flat()
   rawRows.push(...(await fetchGrupoBoticarioRows()))
   rawRows.push(...(await fetchAmazonRows()))
   // Shopee foi desativada em 2026-09-17: o catálogo (top-N por nota, de um feed
@@ -754,7 +787,12 @@ async function main() {
   // Ponto sem volta: daqui pra frente o script apaga/regrava o catálogo e o
   // estado versionado (redirects da Shopee). Se o feed da Awin veio pela
   // metade, é aqui que tem que parar — antes de tocar em qualquer coisa.
-  await assertCatalogNotCollapsed(groupRepresentative.size)
+  try {
+    await assertCatalogNotCollapsed(groupRepresentative.size)
+  } catch (err) {
+    await markFeedUnavailable(err)
+    throw err
+  }
 
   // Limpa a saída anterior (evita arquivo órfão de produto removido do feed).
   await rm(PRODUCTS_DIR, { recursive: true, force: true })
