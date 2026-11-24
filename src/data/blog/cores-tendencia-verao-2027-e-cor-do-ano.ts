@@ -26,7 +26,9 @@ const LILAS_SUAVE = cor('maxi-bolsa-puffer-blendibox-lilas-suave-bbxmaxipuff-lsu
 const ROSA_POP = cor('maxi-bolsa-puffer-blendibox-rosa-pop-bbxmaxipuff-rpop', 'maxi-bolsa-puffer-rosa-pop', MAXI, 'Rosa Pop')
 const VERMELHO_CHERRY = cor('maxi-bolsa-puffer-blendibox-vermelho-cherry-bbxmaxipuff-vcherry', 'maxi-bolsa-puffer-vermelho-cherry', MAXI, 'Vermelho Cherry')
 const NEC_BEGE = cor('necessaire-puffer-blendibox-bege-bbxnecc-bege', 'necessaire-puffer-bege', NECESSAIRE, 'Bege')
-const CREME = cor('maxi-bolsa-puffer-blendibox-creme-bbxmaxipuff-creme', 'maxi-bolsa-puffer-creme', MAXI, 'Creme')
+// A loja renomeou a cor de "Creme" pra "Areia" (mesmo SKU BBXMAXIPUFF_creme), o que
+// mudou o slug da página. A foto em public/blog/cores-2027/ continua com o nome antigo.
+const AREIA = cor('maxi-bolsa-puffer-blendibox-areia-bbxmaxipuff-creme', 'maxi-bolsa-puffer-creme', MAXI, 'Areia')
 const VERDE_OLIVA = cor('maxi-bolsa-puffer-blendibox-verde-oliva-bbxmaxipuff-voliva', 'maxi-bolsa-puffer-verde-oliva', MAXI, 'Verde Oliva')
 const AZUL_MARINHO = cor('maxi-bolsa-puffer-blendibox-azul-marinho-bbxmaxipuff-azulmarinho', 'maxi-bolsa-puffer-azul-marinho', MAXI, 'Azul Marinho')
 const NEC_AZUL_COBALTO = cor('necessaire-puffer-blendibox-azul-cobalto-bbxnecc-acobalto', 'necessaire-puffer-azul-cobalto', NECESSAIRE, 'Azul Cobalto')
@@ -170,9 +172,9 @@ export const coresTendenciaVerao2027ECorDoAno: BlogPost = {
     { type: 'h3', text: 'Antique White (11-0105): o branco quente' },
     {
       type: 'p',
-      text: `Um branco suave e quente, com charme vintage. Na vitrine, quem mais se aproxima é a ${link(CREME, 'Maxi Bolsa Puffer em Creme')}.`,
+      text: `Um branco suave e quente, com charme vintage. Na vitrine, quem mais se aproxima é a ${link(AREIA, 'Maxi Bolsa Puffer em Areia')}.`,
     },
-    { type: 'product-showcase', items: [CREME] },
+    { type: 'product-showcase', items: [AREIA] },
 
     { type: 'h3', text: 'Tarragon (15-0326): o verde herbal' },
     {
@@ -207,7 +209,7 @@ export const coresTendenciaVerao2027ECorDoAno: BlogPost = {
         ['Rosy Future / Hibiscus', link(ROSA_POP, 'Rosa Pop')],
         ['Chili Pepper', link(VERMELHO_CHERRY, 'Vermelho Cherry')],
         ['Anise Flower', link(NEC_BEGE, 'Nécessaire Bege')],
-        ['Antique White', link(CREME, 'Creme')],
+        ['Antique White', link(AREIA, 'Areia')],
         ['Tarragon', link(VERDE_OLIVA, 'Verde Oliva')],
         ['Blue Indigo', link(AZUL_MARINHO, 'Azul Marinho')],
         ['Langoustino, Waterfall, Arrowwood, Dolphin', 'sem par na vitrine hoje'],
