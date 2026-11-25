@@ -185,6 +185,34 @@ export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
       type: 'p',
       text: 'Não confirmamos se a YesStyle é certificada no Remessa Conforme, e isso muda como e quando a cobrança acontece. Por isso não tratamos o preço em dólar da loja como o custo final: antes de comprar, confira a regra vigente no site da Receita Federal e o valor que o checkout mostra.',
     },
+    { type: 'h2', text: 'Para quem vale a pena importar' },
+    {
+      type: 'p',
+      text: 'Importar da YesStyle tem custo em tempo e em risco, e isso não serve pra todo mundo. Faz mais sentido pra quem:',
+    },
+    {
+      type: 'ul',
+      items: [
+        'já está acostumado a importar (álbuns, photocards, produtos direto da Ásia) e conhece o ritual de espera e de rastreio;',
+        'tem tempo: a tabela da loja estima de 21 a 25 dias úteis, mais o que o pacote pode ficar parado na alfândega;',
+        'aceita que o custo final pode ser maior que o preço em dólar, por causa do imposto de importação e do ICMS;',
+        'procura um produto que não encontra por aqui.',
+      ],
+    },
+    { type: 'p', text: 'Não faz sentido pra quem:' },
+    {
+      type: 'ul',
+      items: [
+        'tem prazo, como presente de aniversário, viagem ou Natal;',
+        'precisa de rastreio garantido: no envio Padrão, a loja diz que o código pode ou não existir;',
+        'não quer correr o risco de pacote retido ou de cobrança de imposto na entrega;',
+        'só quer experimentar um produto que também é vendido em loja brasileira.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Se o seu caso está no segundo grupo, vale olhar primeiro as marcas que já são vendidas oficialmente no Brasil, citadas na seção de marcas acima, e comparar preço e prazo antes de importar.',
+    },
     { type: 'h2', text: 'Pedidos para o Brasil estão pausados?' },
     {
       type: 'p',
