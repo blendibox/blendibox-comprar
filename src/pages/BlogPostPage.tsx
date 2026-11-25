@@ -22,7 +22,9 @@ const INLINE_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
 // Fontes editoriais citadas no texto (Pantone etc.): NÃO são links de afiliado
 // nem pagos, então não levam rel="sponsored" (o padrão pra qualquer outro link
 // externo aqui, que na prática é sempre afiliado).
-const EDITORIAL_HOSTS = new Set(['pantone.com.br', 'www.pantone.com.br', 'pantone.com', 'www.pantone.com', 'colorcombinations.org', 'colorindicator.com'])
+// yesstyle.com entra aqui só pelos links DIRETOS (ex.: aviso da central de ajuda);
+// o link de afiliado passa por awin1.com, que continua "sponsored".
+const EDITORIAL_HOSTS = new Set(['pantone.com.br', 'www.pantone.com.br', 'pantone.com', 'www.pantone.com', 'colorcombinations.org', 'colorindicator.com', 'yesstyle.com', 'www.yesstyle.com'])
 
 function isEditorialLink(href: string): boolean {
   try {
