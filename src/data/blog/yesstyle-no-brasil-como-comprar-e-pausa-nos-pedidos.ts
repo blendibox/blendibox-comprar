@@ -23,12 +23,14 @@ const ANNIVERSARY_PAGE = 'https://www.yesstyle.com/pt/20-years-of-yes-anniversar
 
 export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
   slug: 'yesstyle-no-brasil-como-comprar-e-pausa-nos-pedidos',
-  title: 'YesStyle no Brasil: é confiável, como funciona a importação e a pausa nos pedidos',
-  metaTitle: 'YesStyle no Brasil: Como Comprar, Impostos e Pausa nos Pedidos | Compare Ofertas',
+  title: 'Importar da YesStyle vale a pena? O que saber antes de comprar',
+  metaTitle: 'Importar da YesStyle Vale a Pena? O Que Saber Antes de Comprar | Compare Ofertas',
   metaDescription:
     'O que é a YesStyle, se é confiável, como funciona a importação e os impostos no Brasil — e o aviso oficial de pausa nos pedidos para o Brasil. Leia antes de comprar.',
   keyword: 'yesstyle brasil',
   secondaryKeywords: [
+    'importar da yesstyle vale a pena',
+    'yesstyle vale a pena',
     'yesstyle é confiável',
     'yesstyle entrega no brasil',
     'yesstyle imposto de importação',
