@@ -76,7 +76,15 @@ export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
     { type: 'h2', text: 'Como a YesStyle é vista no Brasil' },
     {
       type: 'p',
-      text: 'Não encontramos um consenso, e vale ser direto sobre os limites do que pesquisamos. Não localizamos uma página oficial da empresa no Reclame Aqui com nota verificada, então antes de comprar pesquise o nome da loja lá.',
+      text: 'Segundo a própria YesStyle, o problema atual com o Brasil é a retenção dos pacotes na alfândega, e não o fato de a loja ser duvidosa. Isso muda o tipo de risco, mas não o resultado para quem está esperando o pacote.',
+    },
+    {
+      type: 'p',
+      text: 'Essa dificuldade de importar também pesa na reputação por aqui. O prazo é longo, o imposto pode surpreender e o pacote pode ficar parado. Quem passa por isso tende a reclamar, e quem espera demais tende a não deixar avaliação positiva, o que reduz as notas boas que a loja teria em solo brasileiro. É uma hipótese nossa, não um dado: não temos números de avaliações brasileiras. Mas ela ajuda a ler notas e queixas com cuidado, porque elas podem refletir mais a experiência de importar do que a qualidade dos produtos.',
+    },
+    {
+      type: 'p',
+      text: 'Também vale ser direto sobre os limites do que pesquisamos: não encontramos um consenso, e não localizamos uma página oficial da empresa no Reclame Aqui com nota verificada. Antes de comprar, pesquise o nome da loja lá. O que encontramos:',
     },
     {
       type: 'ul',
