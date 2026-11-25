@@ -18,6 +18,9 @@ const PAUSE_NOTICE = 'https://www.yesstyle.com/pt/temporary-pause-of-all-orders-
 // link direto, sem afiliado.
 const SHIPPING_PAGE = 'https://www.yesstyle.com/pt/help/section.html/hsi.732'
 
+// Página comemorativa dos 20 anos da loja (lançada em julho de 2006). Link direto.
+const ANNIVERSARY_PAGE = 'https://www.yesstyle.com/pt/20-years-of-yes-anniversary'
+
 export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
   slug: 'yesstyle-no-brasil-como-comprar-e-pausa-nos-pedidos',
   title: 'YesStyle no Brasil: é confiável, como funciona a importação e a pausa nos pedidos',
@@ -50,7 +53,7 @@ export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
     { type: 'h2', text: 'O que é a YesStyle' },
     {
       type: 'p',
-      text: 'A YesStyle foi lançada em julho de 2006 como o braço de moda da YesAsia, varejista de produtos asiáticos que existe desde o fim dos anos 1990. A controladora, a YesAsia Holdings, tem sede em Hong Kong e abriu capital na bolsa de Hong Kong em 2021. Segundo a empresa, o centro de distribuição principal fica em Hong Kong, com escritórios também na Coreia e no Japão.',
+      text: `A YesStyle foi lançada em julho de 2006 como o braço de moda da YesAsia, varejista de produtos asiáticos que existe desde o fim dos anos 1990. Em 2026 a loja completa 20 anos e mantém uma [página comemorativa dos 20 anos](${ANNIVERSARY_PAGE}) no site. A controladora, a YesAsia Holdings, tem sede em Hong Kong e abriu capital na bolsa de Hong Kong em 2021. Segundo a empresa, o centro de distribuição principal fica em Hong Kong, com escritórios também na Coreia e no Japão.`,
     },
     {
       type: 'p',
