@@ -325,7 +325,7 @@ function couponFaq(displayName) {
     },
     {
       q: `E as promoções da ${displayName} sem código de cupom?`,
-      a: `Algumas ofertas da ${displayName} não precisam de código: é só clicar em "Ir para a loja" e o desconto já está aplicado na página de ofertas do site da ${displayName}. Nesses casos não há código pra copiar — basta aproveitar a promoção direto na loja.`,
+      a: `Algumas ofertas da ${displayName} não precisam de código: é só clicar em "Ver oferta" e o desconto já está aplicado na página de ofertas do site da ${displayName}. Nesses casos não há código pra copiar — basta aproveitar a promoção direto na loja.`,
     },
     {
       q: `Com que frequência os cupons da ${displayName} são atualizados?`,
@@ -486,7 +486,12 @@ async function main() {
     buildProductFaq,
     faqJsonLd: buildFaqJsonLd,
     isSitemapCategory,
+    buildCouponsPageData,
+    prepareCoupons,
   } = await buildEntryServer()
+
+  // Cupons de hoje (usados em /cupons/ e nas páginas por loja).
+  const couponsData = JSON.parse(await readFile(path.join(DATA_DIR, 'coupons.json'), 'utf-8').catch(() => '[]'))
 
   // Quedas de preço confirmadas (public/data/top-price-drops.json, gerado por
   // generate-home-highlights.mjs): alimentam as páginas de campanha e a seção
@@ -825,7 +830,13 @@ async function main() {
     },
     { routePath: '/termos', title: 'Termos de Uso | Compare Ofertas', description: 'Termos de uso do Compare Ofertas.' },
     { routePath: '/privacidade', title: 'Política de Privacidade | Compare Ofertas', description: 'Política de privacidade e proteção de dados do Compare Ofertas.' },
-    { routePath: '/cupons', title: 'Cupons | Compare Ofertas', description: 'Cupons e promoções ativas das lojas parceiras do Compare Ofertas.' },
+    {
+      routePath: '/cupons',
+      title: 'Cupons de desconto e ofertas das lojas parceiras | Compare Ofertas',
+      description: 'Cupons com código e ofertas sem código das lojas parceiras, atualizados todo dia. Busque por loja, produto ou código e filtre por categoria.',
+      // a visão inicial vai no HTML (sem isto o Google via só "Carregando cupons...")
+      initialData: buildCouponsPageData(couponsData),
+    },
     {
       routePath: '/lista-de-presentes',
       title: 'Lista de presentes | Compare Ofertas',
@@ -833,16 +844,16 @@ async function main() {
     },
     { routePath: '/comparar', title: 'Comparar ofertas | Compare Ofertas', description: 'Compare lado a lado até 3 ofertas selecionadas.' },
   ]
-  for (const { routePath, title, description, jsonLd } of staticPages) {
+  for (const { routePath, title, description, jsonLd, initialData } of staticPages) {
     const canonical = `${SITE_URL}${routePath}/`
     const url = await renderPage({
       template,
       renderRoute,
       routePath,
-      initialData: undefined,
+      initialData,
       head: { title, description, canonical, jsonLd },
     })
-    generatedUrls.push({ url, changefreq: 'monthly', priority: 0.3 })
+    generatedUrls.push({ url, changefreq: routePath === '/cupons' ? 'daily' : 'monthly', priority: routePath === '/cupons' ? 0.7 : 0.3 })
   }
 
   // --- Páginas de campanha (/black-friday/, /natal/): as maiores quedas de
@@ -894,7 +905,6 @@ async function main() {
   // --- Páginas de cupom por loja (/cupons/{merchantSlug}) — SEO pra buscas
   // "cupom {loja}" (alta intenção de compra). Uma por loja que tem cupom
   // ativo, com FAQ visível + JSON-LD (BreadcrumbList + FAQPage). ---
-  const couponsData = JSON.parse(await readFile(path.join(DATA_DIR, 'coupons.json'), 'utf-8').catch(() => '[]'))
   const couponsByMerchant = new Map()
   for (const c of couponsData) {
     if (!c.merchantSlug) continue
@@ -906,6 +916,8 @@ async function main() {
   for (const [merchantSlug, { displayName, coupons: merchantCoupons }] of couponsByMerchant) {
     const routePath = `/cupons/${merchantSlug}`
     const canonical = `${SITE_URL}${routePath}/`
+    // mesma contagem que a página mostra (sem duplicatas, 127V/220V num item)
+    const preparedCount = prepareCoupons(merchantCoupons).length
     const url = await renderPage({
       template,
       renderRoute,
@@ -913,7 +925,7 @@ async function main() {
       initialData: { merchantSlug, displayName, coupons: merchantCoupons },
       head: {
         title: `Cupom ${displayName} — códigos de desconto ativos | Compare Ofertas`,
-        description: `${merchantCoupons.length} ${merchantCoupons.length === 1 ? 'cupom/promoção ativo' : 'cupons e promoções ativos'} da ${displayName}, verificados diariamente. Copie o código e use direto na loja.`,
+        description: `${preparedCount} ${preparedCount === 1 ? 'cupom/promoção ativo' : 'cupons e promoções ativos'} da ${displayName}, verificados diariamente. Copie o código e use direto na loja.`,
         canonical,
         jsonLd: couponsMerchantJsonLd(displayName, canonical),
       },

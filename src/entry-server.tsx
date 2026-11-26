@@ -27,6 +27,9 @@ export {
 // as MESMAS funções pra gravar o JSON-LD, senão o HTML e o schema divergiriam.
 export { buildCategoryInsights, buildProductFaq, faqJsonLd, isSitemapCategory } from './lib/priceInsights'
 
+// Central de cupons: a MESMA ordenação/limpeza do cliente monta o HTML estático.
+export { buildCouponsPageData, prepareCoupons } from './lib/coupons'
+
 export function renderRoute(routePath: string, initialData?: unknown) {
   if (initialData !== undefined) setInitialData(routePath, initialData)
   // renderToString (e NÃO renderToStaticMarkup): o HTML vai ser hidratado no navegador, e só o

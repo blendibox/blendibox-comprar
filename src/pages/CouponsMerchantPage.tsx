@@ -3,9 +3,10 @@ import { useParams } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { fetchCoupons } from '../lib/api'
 import { clearInitialData, peekInitialData } from '../lib/initialData'
-import { parseBrDate } from '../lib/date'
+import { isStillValid, prepareCoupons } from '../lib/coupons'
 import type { CouponEntry } from '../types/product'
-import { CouponCard } from '../components/CouponCard'
+import { CouponTicket } from '../components/coupons/CouponTicket'
+import { OfferCard } from '../components/coupons/OfferCard'
 
 // Injetado por scripts/prerender.mjs pra a página já vir com os cupons no HTML
 // estático (SEO) sem esperar o fetch client-side.
@@ -29,7 +30,7 @@ function faqFor(displayName: string) {
     },
     {
       q: `E as promoções da ${displayName} sem código de cupom?`,
-      a: `Algumas ofertas da ${displayName} não precisam de código: é só clicar em "Ir para a loja" e o desconto já está aplicado na página de ofertas do site da ${displayName}. Nesses casos não há código pra copiar — basta aproveitar a promoção direto na loja.`,
+      a: `Algumas ofertas da ${displayName} não precisam de código: é só clicar em "Ver oferta" e o desconto já está aplicado na página de ofertas do site da ${displayName}. Nesses casos não há código pra copiar — basta aproveitar a promoção direto na loja.`,
     },
     {
       q: `Com que frequência os cupons da ${displayName} são atualizados?`,
@@ -52,21 +53,26 @@ export function CouponsMerchantPage() {
     clearInitialData(path)
   }, [path])
 
+  // Relógio só depois de montar (o HTML estático não pode depender dele).
+  const [now, setNow] = useState<Date | null>(null)
+
   useEffect(() => {
     fetchCoupons()
       .then((data) => {
-        const now = new Date()
-        const mine = data.filter((c) => {
-          if (c.merchantSlug !== loja) return false
-          const ends = parseBrDate(c.ends)
-          return !ends || ends >= now
-        })
+        const date = new Date()
+        const mine = data.filter((c) => c.merchantSlug === loja && isStillValid(c, date))
+        setNow(date)
         setCoupons(mine)
         if (mine[0]) setDisplayName(mine[0].advertiser)
         setState('ready')
       })
       .catch(() => setState('error'))
   }, [loja])
+
+  // Sem duplicatas e com 127V/220V num cartão só (mesma regra do prerender).
+  const items = useMemo(() => prepareCoupons(coupons), [coupons])
+  const codes = items.filter((c) => c.isVoucher)
+  const offers = items.filter((c) => !c.isVoucher)
 
   const faq = useMemo(() => faqFor(displayName), [displayName])
 
@@ -83,8 +89,8 @@ export function CouponsMerchantPage() {
       <header className="page__header">
         <h1 style={{ textTransform: 'capitalize' }}>Cupons {displayName}</h1>
         <p className="page__meta">
-          {coupons.length > 0
-            ? `${coupons.length} ${coupons.length === 1 ? 'cupom/promoção ativo' : 'cupons e promoções ativos'} da ${displayName}, verificados diariamente.`
+          {items.length > 0
+            ? `${items.length} ${items.length === 1 ? 'cupom/promoção ativo' : 'cupons e promoções ativos'} da ${displayName}, verificados diariamente.`
             : `Códigos de desconto e promoções da ${displayName}.`}
         </p>
       </header>
@@ -99,12 +105,30 @@ export function CouponsMerchantPage() {
         </p>
       )}
 
-      {coupons.length > 0 && (
-        <div className="coupon-grid">
-          {coupons.map((coupon) => (
-            <CouponCard key={coupon.id} coupon={coupon} />
-          ))}
-        </div>
+      {codes.length > 0 && (
+        <section className="coupons-section" aria-labelledby="loja-codes-title">
+          <div className="coupons-section__head">
+            <h2 id="loja-codes-title">{`Cupons com código (${codes.length})`}</h2>
+          </div>
+          <div className="ticket-grid">
+            {codes.map((coupon) => (
+              <CouponTicket key={coupon.id} coupon={coupon} now={now} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {offers.length > 0 && (
+        <section className="coupons-section" aria-labelledby="loja-offers-title">
+          <div className="coupons-section__head">
+            <h2 id="loja-offers-title">{`Ofertas com desconto automático (${offers.length})`}</h2>
+          </div>
+          <div className="offer-grid">
+            {offers.map((coupon) => (
+              <OfferCard key={coupon.id} coupon={coupon} now={now} showStore={false} />
+            ))}
+          </div>
+        </section>
       )}
 
       <section className="coupons-merchant__links">

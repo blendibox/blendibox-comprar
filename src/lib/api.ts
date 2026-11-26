@@ -36,6 +36,12 @@ export function fetchProduct(merchant: string, slug: string) {
   return getJson<Product>(`products/${merchant}/${slug}.json`)
 }
 
+// Palavras do catálogo por loja com cupom (pequeno; ver
+// scripts/generate-coupon-store-keywords.mjs). Só é pedido quando há busca.
+export function fetchCouponStoreKeywords() {
+  return getJson<Record<string, Record<string, number>>>('coupon-store-keywords.json')
+}
+
 export function fetchCoupons() {
   return getJson<CouponEntry[]>('coupons.json')
 }

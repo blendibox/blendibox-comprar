@@ -1,15 +1,40 @@
-// Datas de cupom vêm do feed da Awin no formato brasileiro "DD/MM/YYYY HH:mm:ss"
-// — Date() nativo do JS tentaria interpretar como MM/DD e erraria.
+// Datas de cupom no coupons.json: "DD/MM/YYYY HH:mm:ss" (ordem brasileira, que o
+// Date() do JS leria como MM/DD) em **UTC** — a API da Awin manda "+00:00" e o
+// fetch-coupons só reordena os números. Ler como hora local mostrava um dia a mais:
+// "01/12/2026 02:59:59" é 30/11 às 23:59 em Brasília (99% dos cupons terminam assim).
 export function parseBrDate(value: string | null | undefined): Date | null {
   const m = String(value ?? '').match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}):(\d{2}))?$/)
   if (!m) return null
-  const [, day, month, year, hour = '0', minute = '0', second = '0'] = m
-  return new Date(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second))
+  // sem hora: meio-dia UTC, que é o mesmo dia no Brasil
+  const [, day, month, year, hour = '12', minute = '0', second = '0'] = m
+  return new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)))
 }
+
+// Sempre no fuso de Brasília: o mesmo texto no build (que roda em UTC) e em
+// qualquer navegador (não quebra a hidratação).
+const BR_TIME_ZONE = 'America/Sao_Paulo'
 
 export function formatBrDate(value: string | null | undefined): string | null {
   const date = parseBrDate(value)
-  return date ? date.toLocaleDateString('pt-BR') : null
+  return date ? date.toLocaleDateString('pt-BR', { timeZone: BR_TIME_ZONE }) : null
+}
+
+// "30/11 às 23:59" (horário de Brasília)
+export function formatBrDateTime(value: string | null | undefined): string | null {
+  const date = parseBrDate(value)
+  if (!date) return null
+  const day = date.toLocaleDateString('pt-BR', { timeZone: BR_TIME_ZONE, day: '2-digit', month: '2-digit' })
+  const time = date.toLocaleTimeString('pt-BR', { timeZone: BR_TIME_ZONE, hour: '2-digit', minute: '2-digit' })
+  return `${day} às ${time}`
+}
+
+// Dias de calendário (em Brasília) entre `now` e o vencimento: 0 = vence hoje.
+// null se a data for inválida ou já tiver passado.
+export function daysUntilBrDate(value: string | null | undefined, now: Date): number | null {
+  const date = parseBrDate(value)
+  if (!date || date < now) return null
+  const calendarDay = new Intl.DateTimeFormat('en-CA', { timeZone: BR_TIME_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' })
+  return Math.round((Date.parse(calendarDay.format(date)) - Date.parse(calendarDay.format(now))) / 86400000)
 }
 
 // Formata uma data ISO (ex: lastUpdated do feed) num formato amigável em
