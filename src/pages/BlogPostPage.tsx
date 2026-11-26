@@ -5,6 +5,7 @@ import { CalendarDays, Gift } from '../components/Icon'
 import { getBlogPost, getRelatedPosts } from '../data/blog'
 import { getQuiz } from '../data/quizzes'
 import { ShareBar } from '../components/ShareBar'
+import { BlogOffersBlock } from '../components/BlogOffersBlock'
 import { QuizPodeNaoPode } from '../components/QuizPodeNaoPode'
 import { QuizVerdadeiroFalso } from '../components/QuizVerdadeiroFalso'
 import { formatSimpleDateBr } from '../lib/date'
@@ -37,6 +38,10 @@ const EDITORIAL_HOSTS = new Set([
   'www.reclameaqui.com.br',
   'www.trustpilot.com',
   'www.gov.br',
+  // fontes do guia do GTA VI
+  'support.rockstargames.com',
+  'www.playstation.com',
+  'tecnoblog.net',
 ])
 
 function isEditorialLink(href: string): boolean {
@@ -167,6 +172,10 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
           ))}
         </div>
       )
+    case 'offers': {
+      const path = new URL(url).pathname
+      return <BlogOffersBlock key={path + block.listId} path={path} listId={block.listId} searchHref={block.searchHref} searchLabel={block.searchLabel} />
+    }
     case 'quiz':
       return <QuizPodeNaoPode title={block.title} questions={block.questions} />
     case 'quiz-premium': {

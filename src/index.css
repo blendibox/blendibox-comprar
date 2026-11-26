@@ -3687,6 +3687,122 @@ a {
   }
 }
 
+/* Bloco de ofertas dentro de artigo do blog (BlogOffersBlock) */
+.blog-offers {
+  margin: 16px 0 24px;
+}
+
+.blog-offers__platform {
+  margin: 16px 0 8px;
+  color: var(--color-navy);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.blog-post__body .blog-offers ul {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.blog-post__body .blog-offers li {
+  margin: 0;
+}
+
+.blog-post__body a.blog-offers__item {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e5ea;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.blog-post__body a.blog-offers__item:hover {
+  border-color: var(--color-green);
+}
+
+.blog-offers__item img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.blog-offers__info,
+.blog-offers__price {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.blog-offers__info strong {
+  color: var(--color-navy);
+  font-size: 14px;
+}
+
+.blog-offers__kind {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.blog-offers__price {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.blog-offers__price strong {
+  color: var(--color-navy);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.blog-offers__price span {
+  color: var(--color-green);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.blog-offers__note {
+  margin: 10px 0 6px;
+  color: #5b6678;
+  font-size: 12px;
+}
+
+@media (max-width: 420px) {
+  .blog-post__body a.blog-offers__item {
+    grid-template-columns: 56px 1fr;
+  }
+
+  .blog-offers__item img {
+    width: 56px;
+    height: 56px;
+  }
+
+  .blog-offers__price {
+    grid-column: 2;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    text-align: left;
+  }
+}
+
 /* Newsletter (rodapé) */
 .newsletter h3 {
   color: #fff;

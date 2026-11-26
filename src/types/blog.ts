@@ -30,6 +30,10 @@ export type BlogContentBlock =
   // sem rel="sponsored". Sem preço de propósito: o texto do artigo é estático e
   // o preço muda — quem quer o valor atual abre a página do produto.
   | { type: 'product-showcase'; items: BlogProductShowcaseItem[] }
+  // Ofertas do catálogo de hoje (preço, loja, o que vem), montadas no build a
+  // partir das regras de src/lib/blogOffers.ts — preço nunca fica no texto.
+  // searchHref/searchLabel: link pra busca (também é o que sobra sem ofertas).
+  | { type: 'offers'; listId: string; searchHref: string; searchLabel: string }
 
 export type BlogProductShowcaseItem = {
   href: string

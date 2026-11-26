@@ -9,6 +9,7 @@ import type {
   SalesHighlight,
   SeasonalDropsFile,
 } from '../types/product'
+import type { BlogOffersData } from './blogOffers'
 
 function dataUrl(path: string) {
   return `${import.meta.env.BASE_URL}data/${path}`
@@ -34,6 +35,11 @@ export function fetchMeta() {
 
 export function fetchProduct(merchant: string, slug: string) {
   return getJson<Product>(`products/${merchant}/${slug}.json`)
+}
+
+// Listas de ofertas dos blocos "offers" do blog (ver generate-blog-offers.mjs).
+export function fetchBlogOffers() {
+  return getJson<BlogOffersData>('blog-offers.json')
 }
 
 // Palavras do catálogo por loja com cupom (pequeno; ver

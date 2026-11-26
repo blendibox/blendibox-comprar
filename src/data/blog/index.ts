@@ -26,10 +26,12 @@ import { oQueVestirParaVotarEleicoes2026 } from './o-que-vestir-para-votar-eleic
 import { aMeninaDosGravetosLivroSobreLutoEInventario } from './a-menina-dos-gravetos-livro-sobre-luto-e-inventario'
 import { coresTendenciaVerao2027ECorDoAno } from './cores-tendencia-verao-2027-e-cor-do-ano'
 import { yesstyleNoBrasilComoComprarEPausaNosPedidos } from './yesstyle-no-brasil-como-comprar-e-pausa-nos-pedidos'
+import { gtaViOndeComprarMaisBarato } from './gta-vi-onde-comprar-mais-barato'
 
 // Cada artigo mora no próprio arquivo (facilita adicionar/revisar um por vez).
 // Lista central agregada aqui, ordenada do mais recente pro mais antigo.
 export const blogPosts: BlogPost[] = [
+  gtaViOndeComprarMaisBarato,
   yesstyleNoBrasilComoComprarEPausaNosPedidos,
   coresTendenciaVerao2027ECorDoAno,
   listaDePresentesOnlineGratis,

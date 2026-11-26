@@ -961,14 +961,22 @@ async function main() {
   })
   generatedUrls.push({ url: blogListUrl, changefreq: 'weekly', priority: 0.5, lastmod: buildDate })
 
+  // Listas dos blocos "offers" (generate-blog-offers.mjs): vão no HTML do artigo.
+  const blogOffers = JSON.parse(await readFile(path.join(DATA_DIR, 'blog-offers.json'), 'utf-8').catch(() => 'null'))
+
   for (const post of blogPosts) {
     const routePath = `/blog/${post.slug}`
+    const listIds = post.blocks.filter((b) => b.type === 'offers').map((b) => b.listId)
+    const offersData =
+      blogOffers && listIds.length
+        ? { generatedAt: blogOffers.generatedAt, lists: Object.fromEntries(listIds.map((id) => [id, blogOffers.lists[id] ?? []])) }
+        : undefined
     const canonical = `${SITE_URL}${routePath}/`
     const url = await renderPage({
       template,
       renderRoute,
       routePath,
-      initialData: undefined,
+      initialData: offersData,
       head: {
         title: post.metaTitle,
         description: post.metaDescription,
