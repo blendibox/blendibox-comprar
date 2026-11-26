@@ -25,7 +25,7 @@ import { StorePicker } from '../components/coupons/StorePicker'
 import { StoreChecklist } from '../components/coupons/StoreChecklist'
 import { InfoTip } from '../components/coupons/InfoTip'
 import { MerchantLogo } from '../components/MerchantLogo'
-import { Search, TrendingDown, X } from '../components/Icon'
+import { ChevronDown, FilterX, Search, TrendingDown, X } from '../components/Icon'
 
 const PATH = '/cupons/'
 // altura do cabeçalho fixo (mesmo valor de --coupons-sticky-top no CSS)
@@ -53,6 +53,7 @@ export function CouponsPage() {
   const [without, setWithout] = useUrlParam<string>('sem', '', { deferInitial })
   const [keywords, setKeywords] = useState<StoreKeywords | null>(null)
   const [allRelated, setAllRelated] = useState(false)
+  const [openFilter, setOpenFilter] = useState<'type' | 'category' | null>(null)
   const [visible, setVisible] = useState(PAGE_SIZE)
   const topRef = useRef<HTMLDivElement>(null)
 
@@ -230,7 +231,7 @@ export function CouponsPage() {
         <h1>Cupons e ofertas</h1>
         <InfoTip label="Sobre os cupons desta página">
           {summary
-            ? `${summary.codes} cupons com código e ${summary.offers} ofertas de ${summary.stores.length} lojas, atualizados todo dia.`
+            ? `${summary.codes} cupons e ${summary.offers} ofertas de ${summary.stores.length} lojas, atualizados todo dia.`
             : 'Códigos de desconto e promoções das lojas parceiras, atualizados todo dia.'}
         </InfoTip>
       </header>
@@ -253,48 +254,111 @@ export function CouponsPage() {
             </button>
           )}
         </div>
-        <div className="coupons-types" role="group" aria-label="Tipo de desconto">
-          {(
-            [
-              ['', 'Todos', typeCounts?.all],
-              ['codigo', 'Com código', typeCounts?.codes],
-              ['oferta', 'Ofertas', typeCounts?.offers],
-            ] as const
-          ).map(([value, label, count]) => (
-            <button key={value || 'todos'} type="button" aria-pressed={type === value} onClick={() => setType(value)}>
-              {label}
-              {count != null && <span className="coupons-types__count">{count}</span>}
-            </button>
-          ))}
-        </div>
       </div>
 
       {summary && (
-        <div className="coupons-filters">
-          <div className="coupons-chips" role="group" aria-label="Categoria">
-            <button type="button" aria-pressed={!vertical} onClick={() => setVertical('')}>
-              Todas
+        <div className="coupons-filters" onKeyDown={(e) => e.key === 'Escape' && setOpenFilter(null)}>
+          {/* recolhidos por padrão; o botão diz o que filtra (ou o que está escolhido) */}
+          <div className="coupons-filters__row">
+            <button
+              type="button"
+              className={`coupons-filter-toggle${type ? ' coupons-filter-toggle--active' : ''}`}
+              aria-expanded={openFilter === 'type'}
+              aria-controls="coupons-filter-type"
+              onClick={() => setOpenFilter(openFilter === 'type' ? null : 'type')}
+            >
+              {type === 'codigo' ? 'Cupom' : type === 'oferta' ? 'Ofertas' : 'Cupons e ofertas'}
+              <ChevronDown size={14} aria-hidden="true" />
             </button>
-            {summary.verticals
-              .filter((v) => verticalCounts.get(v.id) || vertical === v.id)
-              .map((v) => (
-                <button key={v.id} type="button" aria-pressed={vertical === v.id} onClick={() => setVertical(vertical === v.id ? '' : v.id)}>
-                  {verticalLabel(v.id)} <span>{verticalCounts.get(v.id) ?? 0}</span>
+            <button
+              type="button"
+              className={`coupons-filter-toggle${vertical ? ' coupons-filter-toggle--active' : ''}`}
+              aria-expanded={openFilter === 'category'}
+              aria-controls="coupons-filter-category"
+              onClick={() => setOpenFilter(openFilter === 'category' ? null : 'category')}
+            >
+              {vertical ? verticalLabel(vertical) : 'Categorias'}
+              <ChevronDown size={14} aria-hidden="true" />
+            </button>
+            {!multiStore && (
+              <StorePicker
+                stores={summary.stores}
+                pool={pickerPool}
+                value={store}
+                currentTerm={term}
+                onSelect={(slug, nextTerm) => {
+                  setStore(slug)
+                  setWithout('')
+                  if (nextTerm !== term) setTerm(nextTerm)
+                }}
+              />
+            )}
+            {hasFilters && (
+              <button
+                type="button"
+                className="coupons-filters__clear"
+                onClick={clearFilters}
+                aria-label="Limpar filtros"
+                title="Limpar filtros"
+              >
+                <FilterX size={18} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+
+          {openFilter === 'type' && (
+            <div id="coupons-filter-type" className="coupons-types" role="group" aria-label="Cupons e ofertas">
+              {(
+                [
+                  ['', 'Todos', typeCounts?.all],
+                  ['codigo', 'Cupom', typeCounts?.codes],
+                  ['oferta', 'Ofertas', typeCounts?.offers],
+                ] as const
+              ).map(([value, label, count]) => (
+                <button
+                  key={value || 'todos'}
+                  type="button"
+                  aria-pressed={type === value}
+                  onClick={() => {
+                    setType(value)
+                    setOpenFilter(null)
+                  }}
+                >
+                  {label}
+                  {count != null && <span className="coupons-types__count">{count}</span>}
                 </button>
               ))}
-          </div>
-          {!multiStore && (
-          <StorePicker
-            stores={summary.stores}
-            pool={pickerPool}
-            value={store}
-            currentTerm={term}
-            onSelect={(slug, nextTerm) => {
-              setStore(slug)
-              setWithout('')
-              if (nextTerm !== term) setTerm(nextTerm)
-            }}
-          />
+            </div>
+          )}
+
+          {openFilter === 'category' && (
+            <div id="coupons-filter-category" className="coupons-chips" role="group" aria-label="Categorias">
+              <button
+                type="button"
+                aria-pressed={!vertical}
+                onClick={() => {
+                  setVertical('')
+                  setOpenFilter(null)
+                }}
+              >
+                Todas
+              </button>
+              {summary.verticals
+                .filter((v) => verticalCounts.get(v.id) || vertical === v.id)
+                .map((v) => (
+                  <button
+                    key={v.id}
+                    type="button"
+                    aria-pressed={vertical === v.id}
+                    onClick={() => {
+                      setVertical(vertical === v.id ? '' : v.id)
+                      setOpenFilter(null)
+                    }}
+                  >
+                    {verticalLabel(v.id)} <span>{verticalCounts.get(v.id) ?? 0}</span>
+                  </button>
+                ))}
+            </div>
           )}
         </div>
       )}
@@ -307,7 +371,7 @@ export function CouponsPage() {
           {overview.codes.length > 0 && (
             <section className="coupons-section" aria-labelledby="coupons-codes-title">
               <div className="coupons-section__head">
-                <h2 id="coupons-codes-title">Cupons com código</h2>
+                <h2 id="coupons-codes-title">Cupons</h2>
                 {overview.codeTotal > overview.codes.length && (
                   <button
                     type="button"
@@ -364,28 +428,11 @@ export function CouponsPage() {
 
       {!isOverview && results && (
         <>
-          <div className="coupons-results__head">
-            {/* com a lista de lojas na tela, o resumo vai pro "?" dela — aqui fica
-                só a versão lida pelo leitor de tela, que anuncia as mudanças */}
-            <p aria-live="polite" className={showChecklist ? 'sr-only' : undefined}>
-              {resultSummary}
-            </p>
-            {hasFilters && (
-              <button type="button" className="coupons-link-button" onClick={clearFilters}>
-                Limpar filtros
-              </button>
-            )}
+          {/* com a lista de lojas na tela, o resumo vai pro "?" dela — aqui fica
+              só a versão lida pelo leitor de tela, que anuncia as mudanças */}
+          <div className={showChecklist ? 'sr-only' : 'coupons-results__head'}>
+            <p aria-live="polite">{resultSummary}</p>
           </div>
-
-          {productSearch && (
-            <Link to={productSearch} className="coupons-cross">
-              <TrendingDown size={18} aria-hidden="true" />
-              <span>
-                <strong>{`Procurar “${query}” nos produtos`}</strong>
-                Compare preços e veja o histórico antes de usar o cupom.
-              </span>
-            </Link>
-          )}
 
           {showChecklist && (
             <StoreChecklist
@@ -409,13 +456,9 @@ export function CouponsPage() {
             </p>
           )}
 
-          {visibleResults.length === 0 && visibleRelated.length > 0 && (
-            <p className="coupons-note">{`Nenhum cupom cita “${query}”, mas há cupons de lojas que têm “${query}” no catálogo:`}</p>
-          )}
-
           {shownCodes.length > 0 && (
-            <section className="coupons-section" aria-label="Cupons com código">
-              <h2 className="coupons-results__title">Com código</h2>
+            <section className="coupons-section" aria-label="Cupons">
+              <h2 className="coupons-results__title">Cupons</h2>
               <div className="ticket-grid">
                 {shownCodes.map((coupon) => (
                   <CouponTicket key={coupon.id} coupon={coupon} now={now} />
@@ -465,6 +508,21 @@ export function CouponsPage() {
                 </button>
               )}
             </section>
+          )}
+
+          {/* no fim: o foco da página é cupom e oferta */}
+          {productSearch && (
+            <Link to={productSearch} className="coupons-cross">
+              <TrendingDown size={18} aria-hidden="true" />
+              <span>
+                <strong>{`Procurar “${query}” nos produtos`}</strong>
+                Compare preços e veja o histórico antes de usar o cupom.
+              </span>
+            </Link>
+          )}
+
+          {visibleResults.length === 0 && visibleRelated.length > 0 && (
+            <p className="coupons-note coupons-note--end">{`Nenhum cupom cita “${query}”, mas há cupons de lojas que têm “${query}” no catálogo.`}</p>
           )}
         </>
       )}

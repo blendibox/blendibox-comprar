@@ -21,6 +21,7 @@ export const ICON_NAMES = [
   'Clock',
   'Copy',
   'Crown',
+  'FilterX',
   'Flame',
   'GraduationCap',
   'Gift',

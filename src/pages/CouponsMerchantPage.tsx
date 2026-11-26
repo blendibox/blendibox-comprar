@@ -108,7 +108,7 @@ export function CouponsMerchantPage() {
       {codes.length > 0 && (
         <section className="coupons-section" aria-labelledby="loja-codes-title">
           <div className="coupons-section__head">
-            <h2 id="loja-codes-title">{`Cupons com código (${codes.length})`}</h2>
+            <h2 id="loja-codes-title">{`Cupons (${codes.length})`}</h2>
           </div>
           <div className="ticket-grid">
             {codes.map((coupon) => (

@@ -2802,23 +2802,88 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-/* No celular: seletor de loja e categorias na mesma linha (as categorias rolam
-   de lado). */
+/* Filtros recolhidos: uma linha de botões; o painel escolhido abre embaixo. */
 .coupons-filters {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
   margin: 0 0 18px;
 }
 
+.coupons-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Limpar filtros: botão só com ícone (funil com "x"), na linha dos filtros. */
+.coupons-filters__clear {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid #d9dde3;
+  border-radius: 50%;
+  background: #fff;
+  color: var(--color-teal-a11y);
+  cursor: pointer;
+}
+
+.coupons-filters__clear:hover {
+  border-color: var(--color-teal-a11y);
+  background: #f0fdfa;
+}
+
+.coupons-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid #d9dde3;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.coupons-filter-toggle svg {
+  flex: none;
+  transition: transform 0.15s ease;
+}
+
+.coupons-filter-toggle[aria-expanded='true'] {
+  border-color: var(--color-navy);
+}
+
+.coupons-filter-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.coupons-filter-toggle--active,
+.coupons-store__button.coupons-store__button--active {
+  border-color: var(--color-navy);
+  background: var(--color-navy);
+  color: #fff;
+}
+
 .coupons-chips {
   display: flex;
-  flex: 1;
-  min-width: 0;
+  flex-wrap: wrap;
   gap: 8px;
-  overflow-x: auto;
   padding: 2px 0;
-  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .coupons-filter-toggle svg {
+    transition: none;
+  }
 }
 
 .coupons-chips button {
@@ -2854,7 +2919,6 @@ a {
 }
 
 .coupons-store {
-  order: -1;
   flex: none;
 }
 
@@ -2865,10 +2929,10 @@ a {
   max-width: 150px;
   min-height: 36px;
   padding: 6px 10px;
-  border: 1.5px solid var(--color-navy);
+  border: 1px solid #d9dde3;
   border-radius: 999px;
   background: #fff;
-  color: var(--color-navy);
+  color: #334155;
   font: inherit;
   font-size: 13px;
   font-weight: 600;
@@ -2883,6 +2947,14 @@ a {
 
 .coupons-store__button svg {
   flex: none;
+}
+
+/* No celular o ícone de loja sai (o texto já diz) — assim os quatro botões da
+   linha de filtros cabem juntos. */
+@media (max-width: 479px) {
+  .coupons-store__button svg:first-child {
+    display: none;
+  }
 }
 
 /* Seletor de loja: folha de baixo no celular, janela central no computador.
@@ -3340,7 +3412,7 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-top: 24px;
   padding: 12px 14px;
   border: 1px solid #bbf7d0;
   border-radius: 12px;
@@ -3445,6 +3517,11 @@ a {
   color: #5b6678;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
+}
+
+.coupons-note--end {
+  margin-top: 24px;
+  text-align: center;
 }
 
 .coupons-note {
@@ -3581,13 +3658,8 @@ a {
 }
 
 @media (min-width: 820px) {
-  .coupons-toolbar {
-    flex-direction: row;
-    align-items: center;
-  }
-
   .coupons-types {
-    flex: none;
+    align-self: flex-start;
     grid-template-columns: repeat(3, auto);
   }
 
@@ -3596,26 +3668,11 @@ a {
   }
 
   .coupons-filters {
-    align-items: flex-start;
-    justify-content: space-between;
     margin-bottom: 22px;
-  }
-
-  .coupons-chips {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
-
-  .coupons-store {
-    order: 0;
   }
 
   .coupons-store__button {
     max-width: 260px;
-    min-width: 180px;
-    justify-content: space-between;
-    border-radius: 8px;
-    font-size: 14px;
   }
 
   .store-picker {

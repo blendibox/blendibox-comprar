@@ -68,7 +68,7 @@ export function StorePicker({
 
   return (
     <div className="coupons-store">
-      <button ref={buttonRef} type="button" className="coupons-store__button" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
+      <button ref={buttonRef} type="button" className={`coupons-store__button${selected ? ' coupons-store__button--active' : ''}`} aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(true)}>
         <Store size={15} aria-hidden="true" />
         <span>{selected ? selected.name : 'Lojas'}</span>
         <ChevronDown size={14} aria-hidden="true" />
@@ -110,7 +110,7 @@ export function StorePicker({
                     <span className="store-picker__info">
                       {searching && !s.nameMatches
                         ? `${s.matches} com “${query.trim()}”`
-                        : `${s.matches} ${s.matches === 1 ? 'item' : 'itens'}${s.withCode ? ` · ${s.withCode} com código` : ''}`}
+                        : `${s.matches} ${s.matches === 1 ? 'item' : 'itens'}${s.withCode ? ` · ${s.withCode} ${s.withCode === 1 ? 'cupom' : 'cupons'}` : ''}`}
                     </span>
                   </button>
                 </li>
