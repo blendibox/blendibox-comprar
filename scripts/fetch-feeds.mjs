@@ -17,6 +17,7 @@ import { fetchAmazonRows } from './lib/amazon.mjs'
 import { fetchShopeeRows } from './lib/shopee.mjs'
 import { fetchBlendiboxRows } from './lib/blendibox.mjs'
 import { loadPriceDrop } from './lib/price-drop.mjs'
+import { convertGoogleRows } from './lib/google-feed.mjs'
 import {
   upsizeProductServeImage,
   pickRealImage,
@@ -364,15 +365,27 @@ async function downloadFeed(feed) {
   console.log(`[${feed.id}] baixado (${(compressed.length / 1024 / 1024).toFixed(2)} MB comprimido), descompactando...`)
 
   const csvBuffer = gunzipSync(compressed)
+  // "format": "google" = feed no formato Google Novo da Awin (separado por ";"),
+  // convertido pras colunas do feed padrão em lib/google-feed.mjs.
+  const isGoogle = feed.format === 'google'
   const records = parse(csvBuffer, {
     columns: true,
     skip_empty_lines: true,
     relax_quotes: true,
     relax_column_count: true,
+    ...(isGoogle ? { delimiter: ';' } : {}),
   })
 
   console.log(`[${feed.id}] ${records.length} linhas encontradas`)
-  return records
+  const rows = isGoogle ? convertGoogleRows(records) : records
+  if (isGoogle) console.log(`[${feed.id}] ${rows.length} linhas utilizáveis (formato Google: sem estoque ou sem preço ficam de fora)`)
+  // Feed secundário que chega vazio/pela metade apagaria o histórico de preços
+  // da loja sem a trava geral perceber (ela só olha o total do catálogo) —
+  // tratado como feed indisponível.
+  if (feed.minRows && rows.length < feed.minRows) {
+    throw new Error(`[${feed.id}] só ${rows.length} linhas utilizáveis (mínimo ${feed.minRows}) — feed incompleto?`)
+  }
+  return rows
 }
 
 // Escreve muitos arquivos pequenos em paralelo, mas em lotes, pra não estourar
@@ -433,9 +446,13 @@ async function main() {
     throw new Error('Nenhum feed configurado em scripts/feeds.config.json')
   }
 
+  // "disabled": true deixa o feed cadastrado sem publicar (ex.: esperando o
+  // anunciante corrigir os preços).
+  const activeFeeds = feedsConfig.feeds.filter((feed) => !feed.disabled)
+
   let downloaded
   try {
-    downloaded = await Promise.all(feedsConfig.feeds.map(downloadFeed))
+    downloaded = await Promise.all(activeFeeds.map(downloadFeed))
   } catch (err) {
     await markFeedUnavailable(err)
     throw err
@@ -674,7 +691,10 @@ async function main() {
       .join(' ')
       .trim()
   }
-  const baseKeyByProduct = new Map(products.map((p) => [p, baseProductKey(p.productName)]))
+  // Quando a fonte informa o grupo de variações (feed no formato Google:
+  // endereço do produto na loja), ele vale mais que a heurística pelo nome — ali
+  // cor e tamanho vêm no título ("Sofá X - Azul / 2,70m").
+  const baseKeyByProduct = new Map(products.map((p) => [p, p.variantGroup || baseProductKey(p.productName)]))
 
   // Produtos similares: mesma categoria dentro do mesmo vertical, ordenados
   // por proximidade de preço (fallback pros primeiros da categoria se não
@@ -844,7 +864,7 @@ async function main() {
         // uma página de tamanho isolado continua existindo, mas só o
         // representante do grupo "aparece em busca" de verdade.
         totalProducts: index.length,
-        feeds: feedsConfig.feeds.map((f) => f.id),
+        feeds: activeFeeds.map((f) => f.id),
         merchants: [...merchantsUsed.values()].map((m) => m.slug),
       },
       null,

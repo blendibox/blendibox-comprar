@@ -87,6 +87,8 @@
 
     "29407": { "slug": "belezanaweb", "displayName": "Beleza na Web BR", "vertical": "beleza", "active": false },
 
-    "17658": { "slug": "natura", "displayName": "Natura BR", "vertical": "beleza", "active": true }
+    "17658": { "slug": "natura", "displayName": "Natura BR", "vertical": "beleza", "active": true },
+
+    "38988": { "slug": "cama-inbox", "displayName": "Cama inBox BR", "vertical": "casa", "active": true, "alwaysStaticPage": true }
   }
 }
