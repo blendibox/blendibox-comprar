@@ -2,265 +2,413 @@ import type { BlogPost } from '../../types/blog'
 
 // Link de afiliado (Awin, advertiser 131618 = YesStyle BR) pra home da loja.
 // clickref identifica este artigo no relatório da Awin, pra medir só o que ele
-// traz. Fica numa frase CONDICIONAL ("se a pausa já acabou"): enquanto a
+// traz. Fica numa frase CONDICIONAL ("quando a loja voltar"): enquanto a
 // YesStyle não enviar pro Brasil, o artigo não pode empurrar ninguém a comprar.
 const AFFILIATE_LINK = 'https://www.awin1.com/cread.php?awinmid=131618&awinaffid=2104315&clickref=blog-yesstyle'
 // Mesmo destino, clickref diferente: o relatório da Awin separa quem clicou no
 // link do topo (logo abaixo do título) de quem clicou no do fim do artigo.
 const AFFILIATE_LINK_TOPO = 'https://www.awin1.com/cread.php?awinmid=131618&awinaffid=2104315&clickref=blog-yesstyle-topo'
 
-// Aviso oficial da própria YesStyle (central de ajuda). Link direto, NÃO é de
-// afiliado — por isso o host está em EDITORIAL_HOSTS (BlogPostPage) e sai sem
-// rel="sponsored" (e sem contar como clique de loja no Pinterest).
+// Links diretos, sem afiliado. Os hosts estão em EDITORIAL_HOSTS (BlogPostPage),
+// então saem sem rel="sponsored" e não contam como clique de loja no Pinterest.
+// Aviso oficial de suspensão (central de ajuda da YesStyle).
 const PAUSE_NOTICE = 'https://www.yesstyle.com/pt/temporary-pause-of-all-orders-to-brazil/help/section.html/hsi.2855'
-
-// Página "Frete e Prazo de Entrega" da central de ajuda (tabela por país). Também
-// link direto, sem afiliado.
+// "Frete e Prazo de Entrega" da central de ajuda (tabela por país).
 const SHIPPING_PAGE = 'https://www.yesstyle.com/pt/help/section.html/hsi.732'
-
-// Página comemorativa dos 20 anos da loja (lançada em julho de 2006). Link direto.
+// Página comemorativa dos 20 anos da loja (lançada em 2006).
 const ANNIVERSARY_PAGE = 'https://www.yesstyle.com/pt/20-years-of-yes-anniversary'
+// Fontes citadas.
+const RECLAME_AQUI = 'https://www.reclameaqui.com.br/empresa/yes-style/'
+const TRUSTPILOT = 'https://www.trustpilot.com/review/www.yesstyle.com'
+const RECEITA_IMPOSTOS =
+  'https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/remessas-postal-e-expressa/preciso-pagar-impostos-nas-compras-internacionais/quais-sao-os-impostos-devidos'
+const RECEITA_CERTIFICADAS =
+  'https://www.gov.br/receitafederal/pt-br/assuntos/aduana-e-comercio-exterior/manuais/remessas-postal-e-expressa/empresas-certificadas-no-programa-remessa-conforme-prc'
+
+// SITUAÇÃO DA LOJA NO BRASIL: quando a YesStyle mudar o aviso, atualizar esta
+// data, o quadro de destaque do topo, a resposta "A YesStyle entrega no Brasil?"
+// e o updatedAt.
+const STATUS_CHECKED = '26 de novembro de 2026'
 
 export const yesstyleNoBrasilComoComprarEPausaNosPedidos: BlogPost = {
   slug: 'yesstyle-no-brasil-como-comprar-e-pausa-nos-pedidos',
-  title: 'Importar da YesStyle vale a pena? O que saber antes de comprar',
-  metaTitle: 'Importar da YesStyle Vale a Pena? O Que Saber Antes de Comprar | Compare Ofertas',
+  title: 'YesStyle é confiável? Vale a pena comprar e importar para o Brasil?',
+  metaTitle: 'YesStyle é confiável? Vale a pena comprar no Brasil em 2026?',
   metaDescription:
-    'O que é a YesStyle, se é confiável, como funciona a importação e os impostos no Brasil — e o aviso oficial de pausa nos pedidos para o Brasil. Leia antes de comprar.',
-  keyword: 'yesstyle brasil',
+    'A YesStyle é confiável? Veja a situação dos pedidos para o Brasil, impostos de importação, frete, reclamações e se vale a pena comprar.',
+  keyword: 'yesstyle é confiável',
   secondaryKeywords: [
-    'importar da yesstyle vale a pena',
-    'yesstyle vale a pena',
-    'yesstyle é confiável',
     'yesstyle entrega no brasil',
+    'yesstyle é confiável no reclame aqui',
     'yesstyle imposto de importação',
     'como comprar na yesstyle',
-    'yesstyle pausa pedidos brasil',
-    'k-beauty yesstyle',
-    'marcas de k-beauty',
-    'k-pop skincare',
+    'yesstyle vale a pena',
   ],
   publishedAt: '2026-11-25',
+  updatedAt: '2026-11-26',
   excerpt:
-    'A YesStyle é uma loja online de beleza e moda asiática sediada em Hong Kong. Veja como a marca é vista, como funciona a importação pro Brasil e o que a própria loja diz sobre a pausa nos pedidos.',
+    'Veja a reputação da YesStyle, a suspensão dos envios para o Brasil, os impostos de importação, o frete e em que casos a compra vale a pena.',
   blocks: [
     {
       type: 'p',
-      text: `[Visite a página da YesStyle](${AFFILIATE_LINK_TOPO}) (link de afiliado). Antes de comprar, leia o aviso sobre a pausa nos pedidos para o Brasil, logo abaixo e no fim do artigo.`,
+      text: `[Visite a página da YesStyle](${AFFILIATE_LINK_TOPO}) (link de afiliado). Antes de comprar, leia o aviso sobre a suspensão dos envios para o Brasil, logo abaixo.`,
     },
     {
       type: 'p',
-      text: 'A YesStyle é uma das lojas online mais conhecidas de beleza e moda asiática, com muito produto de skincare coreano (K-beauty). Só que, antes de qualquer coisa, um aviso: a própria loja publicou que pausou temporariamente os pedidos para o Brasil. Explicamos isso no fim do artigo, com o link oficial pra você conferir se a situação mudou.',
-    },
-    { type: 'h2', text: 'O que é a YesStyle' },
-    {
-      type: 'p',
-      text: `A YesStyle foi lançada em julho de 2006 como o braço de moda da YesAsia, varejista de produtos asiáticos que existe desde o fim dos anos 1990. Em 2026 a loja completa 20 anos e mantém uma [página comemorativa dos 20 anos](${ANNIVERSARY_PAGE}) no site. A controladora, a YesAsia Holdings, tem sede em Hong Kong e abriu capital na bolsa de Hong Kong em 2021. Segundo a empresa, o centro de distribuição principal fica em Hong Kong, com escritórios também na Coreia e no Japão.`,
+      text: 'A YesStyle é uma das lojas internacionais mais conhecidas de beleza asiática, especialmente pelos produtos de skincare coreano (K-beauty), maquiagem e cosméticos japoneses e coreanos. Mas será que vale a pena comprar na YesStyle morando no Brasil?',
     },
     {
       type: 'p',
-      text: 'A YesStyle não fabrica nada: ela revende produtos de várias marcas. Os números abaixo são os que a própria empresa divulga (não conferimos de forma independente):',
+      text: 'Antes de colocar qualquer produto no carrinho, existe um detalhe importante: **a YesStyle publicou um aviso oficial suspendendo temporariamente os pedidos e envios para o Brasil**, devido a problemas na liberação de encomendas pela alfândega.',
     },
+    {
+      type: 'p',
+      text: 'Além disso, existem questões envolvendo impostos, prazos de entrega e atendimento ao consumidor que merecem atenção.',
+    },
+    {
+      type: 'p',
+      text: 'Neste guia, analisamos a reputação da loja, as condições de importação, os custos envolvidos e o que você precisa saber antes de comprar.',
+    },
+    {
+      type: 'quote',
+      text: `**Atenção: envios para o Brasil suspensos.** Na última consulta, em ${STATUS_CHECKED}, a suspensão dos pedidos para o Brasil ainda constava na [página oficial da YesStyle](${PAUSE_NOTICE}). Portanto, não recomendamos realizar uma compra enquanto a loja não confirmar a normalização dos envios.`,
+    },
+
+    { type: 'h2', text: 'O que é a YesStyle?' },
+    {
+      type: 'p',
+      text: `Fundada em 2006, a YesStyle é uma loja internacional especializada na comercialização de produtos asiáticos. Ela faz parte do grupo YesAsia, empresa de Hong Kong que atua no comércio eletrônico de produtos de diferentes categorias. Em 2026 a loja completa 20 anos e mantém uma [página comemorativa dos 20 anos](${ANNIVERSARY_PAGE}) no site.`,
+    },
+    { type: 'p', text: 'Seu catálogo reúne produtos de diversas marcas, principalmente:' },
     {
       type: 'ul',
       items: [
-        'mais de 11 milhões de clientes ativos por mês;',
-        'mais de 800 marcas de beleza;',
-        'cerca de 300 mil itens de moda;',
-        'categorias mais vendidas: skincare coreano, cosméticos, moda urbana e streetwear.',
-      ],
-    },
-    { type: 'h2', text: 'Qual a relevância da marca no mundo' },
-    {
-      type: 'p',
-      text: 'Pelo que a empresa informa, é um varejista em escala internacional, ligado a uma controladora listada em bolsa. Ou seja, não é uma lojinha de ocasião. Isso diz que a empresa existe e é grande. Não diz nada sobre o prazo, o atendimento ou o que acontece com o seu pedido no Brasil, que são coisas diferentes (veja a próxima seção).',
-    },
-    { type: 'h2', text: 'Como a YesStyle é vista no Brasil' },
-    {
-      type: 'p',
-      text: 'Segundo a própria YesStyle, o problema atual com o Brasil é a retenção dos pacotes na alfândega, e não o fato de a loja ser duvidosa. Isso muda o tipo de risco, mas não o resultado para quem está esperando o pacote.',
-    },
-    {
-      type: 'p',
-      text: 'Essa dificuldade de importar também pesa na reputação por aqui. O prazo é longo, o imposto pode surpreender e o pacote pode ficar parado. Quem passa por isso tende a reclamar, e quem espera demais tende a não deixar avaliação positiva, o que reduz as notas boas que a loja teria em solo brasileiro. É uma hipótese nossa, não um dado: não temos números de avaliações brasileiras. Mas ela ajuda a ler notas e queixas com cuidado, porque elas podem refletir mais a experiência de importar do que a qualidade dos produtos.',
-    },
-    {
-      type: 'p',
-      text: 'Também vale ser direto sobre os limites do que pesquisamos: não encontramos um consenso, e não localizamos uma página oficial da empresa no Reclame Aqui com nota verificada. Antes de comprar, pesquise o nome da loja lá. O que encontramos:',
-    },
-    {
-      type: 'ul',
-      items: [
-        'Em sites de reclamação europeus, como o Portal da Queixa (de Portugal, não do Brasil), a satisfação aparece baixa. As queixas se concentram em atraso, encomenda extraviada e rastreio sem atualização.',
-        'Nas avaliações do Trustpilot as opiniões são mistas: tem quem elogie a qualidade e os preços e quem relate entregas que passaram de um mês.',
-        'O próprio aviso da YesStyle sobre o Brasil fala em problemas de retenção na alfândega, o que combina com o principal ponto de atenção: o prazo de entrega.',
-      ],
-    },
-    { type: 'h2', text: 'Os produtos são de qualidade?' },
-    {
-      type: 'p',
-      text: 'Depende da marca e do produto, não da loja. Como a YesStyle revende vários fabricantes, a qualidade de um sérum coreano é a da marca dele, não a da YesStyle. Nas fontes que consultamos, a queixa principal é prazo e rastreio, não produto falsificado. Isso não prova que nunca aconteça, então vale tomar alguns cuidados:',
-    },
-    {
-      type: 'ul',
-      items: [
-        'prefira marcas que você já conhece ou que tenham avaliação consistente em mais de um lugar;',
-        'leia as avaliações do produto específico, não só da loja;',
-        'confira a lista de ingredientes e o prazo de validade, que variam entre produtos e lotes;',
-        'se tem pele sensível ou alergias, faça o teste de contato antes de usar o produto no rosto inteiro;',
-        'comece com um pedido pequeno antes de montar uma rotina inteira.',
-      ],
-    },
-    { type: 'h2', text: 'Marcas conhecidas e a ligação com o K-pop' },
-    {
-      type: 'p',
-      text: 'A YesStyle diz ser parceira autorizada de mais de 400 marcas coreanas de beleza (informação da própria loja), e destaca marcas como Anua, Innisfree, SKIN1004, medicube e dasique. Na imprensa brasileira de beleza, aparecem com frequência COSRX, Beauty of Joseon, SKIN1004, TIRTIR, Banila Co, Laneige e TOCOBO, e uma reportagem aponta a COSRX como a marca coreana mais conhecida por aqui. Algumas delas já são vendidas oficialmente no Brasil, em farmácias e perfumarias, segundo reportagens. Vale comparar antes de importar.',
-    },
-    {
-      type: 'p',
-      text: 'E o K-pop? Pelo que encontramos, a YesStyle é revendedora e não tem linha própria ligada a nenhum grupo. O que existe é o costume de marcas contratarem idols como rosto das campanhas. Alguns exemplos citados pela imprensa em 2025 e 2026 (contratos mudam, então confira o anúncio oficial da marca):',
-    },
-    {
-      type: 'ul',
-      items: [
-        'Innisfree: Wonyoung, do IVE, é embaixadora global da marca desde 2021;',
-        'Dr.Jart+: o grupo ENHYPEN foi anunciado como primeiro embaixador global da marca;',
-        'Anua: a cantora e atriz Bae Suzy foi escolhida como embaixadora;',
-        'fora da K-beauty: Jungkook, do BTS, é embaixador global da Chanel Fragrance & Beauty, e Lisa, do BLACKPINK, é embaixadora da MAC Cosmetics e da Dior.',
+        'Skincare coreano (K-beauty);',
+        'Maquiagem e cosméticos;',
+        'Produtos de cuidados com os cabelos;',
+        'Moda feminina e masculina;',
+        'Acessórios e itens de lifestyle.',
       ],
     },
     {
       type: 'p',
-      text: 'Não conferimos se cada uma dessas marcas está no catálogo atual da YesStyle, então procure o nome na loja antes de contar com ela. E lembre: ser o rosto de uma marca é estratégia de marketing, não garantia de qualidade nem de que o produto combina com a sua pele. Vale o mesmo critério da seção anterior: ingredientes, validade e avaliações do produto.',
+      text: 'É importante entender que a YesStyle funciona como varejista: ela comercializa produtos de diferentes fabricantes, não sendo a responsável pela fabricação da maioria dos cosméticos vendidos.',
     },
-    { type: 'h2', text: 'Como funciona a importação' },
     {
       type: 'p',
-      text: 'Comprar da YesStyle é uma importação, mesmo que pareça uma compra de loja normal. O caminho costuma ser este:',
+      text: 'Entre as marcas encontradas em seu catálogo estão Anua, COSRX, Beauty of Joseon, SKIN1004, Innisfree, medicube e Laneige.',
     },
+    {
+      type: 'p',
+      text: 'O principal atrativo é reunir marcas asiáticas em uma única plataforma, muitas vezes com preços promocionais e produtos difíceis de encontrar em lojas brasileiras.',
+    },
+
+    { type: 'h2', text: 'A YesStyle é confiável?' },
+    {
+      type: 'p',
+      text: 'Essa pergunta precisa ser analisada por diferentes perspectivas. Uma empresa pode ser legítima, comercializar produtos originais e, ainda assim, apresentar problemas importantes na experiência de compra.',
+    },
+    { type: 'p', text: 'Consultamos duas plataformas de avaliação para entender melhor a situação.' },
+    { type: 'h3', text: 'Reclame Aqui: situação preocupante no Brasil' },
+    { type: 'p', text: 'Na consulta realizada em novembro de 2026, a página da YesStyle no Reclame Aqui apresentava:' },
+    {
+      type: 'ul',
+      items: [
+        'Empresa não verificada;',
+        'Reputação classificada como Não Recomendada;',
+        '283 reclamações entre 1º de maio e 31 de outubro de 2026;',
+        'Nenhuma reclamação respondida no período apresentado.',
+      ],
+    },
+    {
+      type: 'p',
+      text: '**Um contexto importante:** essa página não parece ser acompanhada pela empresa. Ela não é verificada, o perfil não tem descrição publicada e nenhuma reclamação do período foi respondida. Segundo o próprio Reclame Aqui, o selo "Não Recomendada" vem do fato de menos de 50% das reclamações terem resposta. Isso não apaga os relatos, mas indica que a loja não usa esse canal para atender. No Trustpilot, por exemplo, a página informa que ela respondeu a 99% das avaliações negativas.',
+    },
+    {
+      type: 'p',
+      text: 'Entre os relatos encontrados estão problemas com pedidos não entregues, encomendas devolvidas e dificuldades para conseguir reembolsos.',
+    },
+    {
+      type: 'p',
+      text: 'Esses dados merecem atenção, especialmente porque a empresa também reconheceu dificuldades logísticas com as encomendas destinadas ao Brasil.',
+    },
+    {
+      type: 'p',
+      text: `Consulte a [página da YesStyle no Reclame Aqui](${RECLAME_AQUI}) para verificar os dados e as reclamações mais recentes.`,
+    },
+    { type: 'h3', text: 'Trustpilot: avaliações internacionais positivas' },
+    { type: 'p', text: 'O cenário é diferente no Trustpilot.' },
+    {
+      type: 'p',
+      text: 'Na consulta realizada em novembro de 2026, a YesStyle apresentava nota aproximada de 4,4 de 5, baseada em mais de 105 mil avaliações.',
+    },
+    {
+      type: 'p',
+      text: 'A plataforma reúne experiências de consumidores de diferentes países. Há avaliações positivas sobre variedade, preços e produtos, mas também relatos de atrasos e problemas de entrega.',
+    },
+    { type: 'p', text: 'É importante não confundir essa nota internacional com a experiência de quem compra no Brasil.' },
+    {
+      type: 'p',
+      text: '**Nossa avaliação:** a YesStyle é uma varejista internacional estabelecida, mas isso não significa que comprar por ela seja atualmente uma experiência segura ou conveniente para consumidores brasileiros.',
+    },
+    { type: 'p', text: `Você pode consultar as [avaliações da YesStyle no Trustpilot](${TRUSTPILOT}).` },
+
+    { type: 'h2', text: 'Por que a YesStyle suspendeu os pedidos para o Brasil?' },
+    { type: 'p', text: 'Este é o principal problema para quem pretende comprar na loja atualmente.' },
+    {
+      type: 'p',
+      text: 'A própria YesStyle publicou um comunicado informando que enfrentou dificuldades com as encomendas destinadas ao Brasil quando elas chegam à alfândega.',
+    },
+    {
+      type: 'p',
+      text: 'Segundo a empresa, a transportadora responsável pelas entregas locais está trabalhando para normalizar a situação.',
+    },
+    {
+      type: 'p',
+      text: 'Para evitar que novos pedidos também fiquem retidos, a loja decidiu suspender temporariamente os pedidos e envios para o país.',
+    },
+    {
+      type: 'p',
+      text: 'A empresa afirma que entrou em contato com os consumidores afetados e que pretende retomar as operações brasileiras.',
+    },
+    { type: 'p', text: 'O comunicado, entretanto, não apresenta uma data definitiva para a normalização.' },
+    {
+      type: 'p',
+      text: `Você pode conferir a informação diretamente na [página oficial da YesStyle sobre a suspensão dos pedidos para o Brasil](${PAUSE_NOTICE}).`,
+    },
+    {
+      type: 'p',
+      text: '**Um cuidado importante:** a existência de uma tabela de frete para o Brasil na central de ajuda não significa que os envios estejam normalizados. O aviso específico de suspensão deve prevalecer na decisão de compra.',
+    },
+
+    { type: 'h2', text: 'Como funciona a importação da YesStyle?' },
+    {
+      type: 'p',
+      text: 'Quando a loja estiver novamente aceitando pedidos para o Brasil, é importante entender que a compra será uma importação internacional.',
+    },
+    { type: 'p', text: 'O processo normalmente envolve:' },
     {
       type: 'ol',
       items: [
-        'Você escolhe os produtos. Os preços aparecem em dólar (o site mostra "Brasil / USD").',
-        'Segundo a própria YesStyle, todos os pedidos são processados e enviados do armazém da empresa em Hong Kong.',
-        'A encomenda chega ao Brasil e passa pela fiscalização da Receita Federal. É nessa etapa que a YesStyle diz ter tido problemas de retenção.',
-        'Se houver imposto, ele precisa ser pago. A YesStyle afirma em sua central de ajuda que o cliente é o importador e responde por impostos e taxas de importação, e que não garante se haverá cobrança.',
-        'Depois da liberação, a transportadora local faz a entrega.',
+        'Escolha dos produtos e finalização da compra.',
+        'Processamento do pedido no centro de distribuição da empresa.',
+        'Envio internacional, com origem em Hong Kong.',
+        'Chegada ao Brasil e fiscalização alfandegária.',
+        'Pagamento dos tributos e liberação da encomenda, quando aplicável.',
+        'Entrega pela transportadora responsável no território brasileiro.',
       ],
     },
-    { type: 'h3', text: 'Frete e prazo' },
+    { type: 'p', text: 'O tempo total depende do processamento, transporte internacional e fiscalização aduaneira.' },
+
+    { type: 'h2', text: 'Quanto custa importar da YesStyle? Entenda os impostos' },
+    { type: 'p', text: 'Este é um dos pontos mais importantes antes de comprar.' },
+    { type: 'p', text: 'As regras brasileiras de tributação de compras internacionais mudaram em 2026.' },
     {
       type: 'p',
-      text: `Segundo a [tabela de frete e prazo de entrega da YesStyle](${SHIPPING_PAGE}) para o Brasil, em vigor desde 17 de novembro de 2026, existe um único método de envio, o Padrão. Valores e prazos podem mudar, então confira a página oficial antes de comprar:`,
+      text: 'A alíquota aplicável depende de a plataforma estar ou não certificada no Programa Remessa Conforme, da Receita Federal.',
     },
+    {
+      type: 'p',
+      text: `Na consulta realizada em novembro de 2026, não encontramos a YesStyle na [lista oficial de empresas certificadas](${RECEITA_CERTIFICADAS}) no programa.`,
+    },
+    {
+      type: 'p',
+      text: 'Por isso, não é correto aplicar automaticamente a regra de isenção do Imposto de Importação para compras abaixo de US$ 50.',
+    },
+    { type: 'h3', text: 'Tributação de compras fora do Remessa Conforme' },
+    { type: 'p', text: 'Segundo as regras da Receita Federal, compras em plataformas não certificadas estão sujeitas a:' },
     {
       type: 'ul',
       items: [
-        'frete grátis em pedidos a partir de US$ 80, e US$ 15 abaixo disso;',
-        'prazo estimado de 21 a 25 dias úteis, ou seja, de quatro a cinco semanas;',
-        'rastreio: a tabela do Brasil marca que o envio Padrão tem código de rastreamento, mas na descrição geral do Padrão a loja diz que o código "pode ou não" existir. Quando existe, o acompanhamento é pelos Correios locais, e o número aparece em "Minha Conta", em Envio e Rastreamento do histórico de pedidos;',
-        'envio por serviço postal: a loja descreve o Padrão como envio pelos Correios, via eParcel ou Encomenda Registrada, e diz que escolhe o agente de envio de cada pedido e pode trocá-lo sem aviso;',
-        'taxas de embalagem pra presente não entram no cálculo do frete.',
+        'Imposto de Importação: 60%, independentemente do valor da compra.',
+        'ICMS: imposto estadual, com alíquota que varia de 17% a 20%, conforme o estado.',
       ],
     },
     {
       type: 'p',
-      text: 'A YesStyle também descreve o Envio Expresso (transportadoras internacionais ou EMS) e o Envio Rápido (só em países selecionados), mas a tabela do Brasil mostra apenas o Padrão.',
+      text: 'O cálculo considera o valor aduaneiro, que inclui os produtos, o frete e o seguro, quando cobrados.',
     },
+    { type: 'p', text: 'O ICMS é calculado considerando também o Imposto de Importação.' },
     {
       type: 'p',
-      text: 'É uma estimativa da loja, não uma garantia, e o frete não inclui eventuais impostos de importação (veja a seção a seguir).',
+      text: 'Isso significa que um produto anunciado por US$ 20 pode custar consideravelmente mais depois da tributação.',
     },
-    { type: 'h3', text: 'Quanto de imposto?' },
-    {
-      type: 'p',
-      text: 'As regras mudaram em 2026 e os textos que encontramos (portais e reportagens, não a Receita) divergem em alguns pontos. O que eles descrevem para compras de pessoa física:',
-    },
+    { type: 'h3', text: 'E se a YesStyle entrar no Remessa Conforme?' },
+    { type: 'p', text: 'Nesse caso, a tributação poderá ser diferente.' },
+    { type: 'p', text: 'Para compras realizadas por pessoas físicas em plataformas certificadas:' },
     {
       type: 'ul',
       items: [
-        'até US$ 50, em lojas certificadas no programa Remessa Conforme: sem imposto de importação desde maio de 2026, mas com ICMS, entre 17% e 20% conforme o estado;',
-        'de US$ 50 até US$ 3.000: imposto de importação de 60%, com desconto fixo de US$ 30 no valor calculado, mais o ICMS.',
+        'Até US$ 50: Imposto de Importação de 0%, com cobrança de ICMS.',
+        'Acima de US$ 50 até US$ 3.000: Imposto de Importação de 60%, com desconto equivalente a US$ 30 sobre o imposto calculado, além do ICMS.',
       ],
     },
     {
       type: 'p',
-      text: 'Não confirmamos se a YesStyle é certificada no Remessa Conforme, e isso muda como e quando a cobrança acontece. Por isso não tratamos o preço em dólar da loja como o custo final: antes de comprar, confira a regra vigente no site da Receita Federal e o valor que o checkout mostra.',
+      text: `As regras podem mudar. Antes de comprar, consulte a [orientação oficial da Receita Federal sobre impostos em compras internacionais](${RECEITA_IMPOSTOS}).`,
     },
-    { type: 'h2', text: 'Para quem vale a pena importar' },
+
+    { type: 'h2', text: 'Quanto custa o frete e quanto tempo demora?' },
     {
       type: 'p',
-      text: 'Importar da YesStyle tem custo em tempo e em risco, e isso não serve pra todo mundo. Faz mais sentido pra quem:',
+      text: `A [tabela de frete da YesStyle](${SHIPPING_PAGE}) consultada em novembro de 2026 apresentava as seguintes condições para o Brasil:`,
     },
+    {
+      type: 'table',
+      headers: ['Condição', 'Envio padrão'],
+      rows: [
+        ['Frete grátis', 'A partir de US$ 80'],
+        ['Frete abaixo do mínimo', 'US$ 15'],
+        ['Prazo estimado', '21 a 25 dias úteis'],
+        ['Rastreamento', 'Informado na tabela brasileira'],
+      ],
+    },
+    { type: 'p', text: 'Esses valores são referências publicadas pela loja, não uma garantia de entrega.' },
+    {
+      type: 'p',
+      text: 'Há uma ressalva fundamental: enquanto a suspensão dos envios estiver vigente, não se deve considerar essas condições como confirmação de que é possível receber novos pedidos no Brasil.',
+    },
+    {
+      type: 'p',
+      text: 'Além disso, o prazo de transporte não necessariamente inclui todo o tempo de processamento e eventuais retenções alfandegárias.',
+    },
+
+    { type: 'h2', text: 'Os produtos da YesStyle são originais?' },
+    {
+      type: 'p',
+      text: 'Como a YesStyle comercializa produtos de diferentes fabricantes, a qualidade precisa ser avaliada considerando cada marca e cada produto.',
+    },
+    {
+      type: 'p',
+      text: 'A loja informa trabalhar com marcas autorizadas de beleza asiática, mas isso não significa que todos os produtos tenham a mesma qualidade ou sejam adequados para qualquer pessoa.',
+    },
+    { type: 'p', text: 'Antes de comprar, recomendamos:' },
     {
       type: 'ul',
       items: [
-        'já está acostumado a importar (álbuns, photocards, produtos direto da Ásia) e conhece o ritual de espera e de rastreio;',
-        'tem tempo: a tabela da loja estima de 21 a 25 dias úteis, mais o que o pacote pode ficar parado na alfândega;',
-        'aceita que o custo final pode ser maior que o preço em dólar, por causa do imposto de importação e do ICMS;',
-        'procura um produto que não encontra por aqui.',
+        'Verificar a reputação da marca;',
+        'Consultar avaliações do produto específico;',
+        'Conferir ingredientes e composição;',
+        'Observar a validade e as informações da embalagem;',
+        'Desconfiar de ofertas muito abaixo dos preços praticados em outros canais.',
       ],
     },
-    { type: 'p', text: 'Não faz sentido pra quem:' },
+    {
+      type: 'p',
+      text: 'No caso de cosméticos, também é importante verificar as condições de regularização e comercialização aplicáveis no Brasil, especialmente para produtos destinados à aplicação na pele.',
+    },
+
+    { type: 'h2', text: 'Quais marcas coreanas vale a pena conhecer?' },
+    {
+      type: 'p',
+      text: 'A popularidade da K-beauty cresceu bastante no Brasil, e algumas marcas passaram a aparecer com frequência em lojas especializadas, farmácias e perfumarias.',
+    },
+    { type: 'p', text: 'Entre as mais conhecidas estão:' },
     {
       type: 'ul',
       items: [
-        'tem prazo, como presente de aniversário, viagem ou Natal;',
-        'precisa de rastreio garantido: no envio Padrão, a loja diz que o código pode ou não existir;',
-        'não quer correr o risco de pacote retido ou de cobrança de imposto na entrega;',
-        'só quer experimentar um produto que também é vendido em loja brasileira.',
+        '**COSRX:** conhecida por produtos voltados aos cuidados com a pele, incluindo fórmulas com mucina de caracol e ácidos.',
+        '**Beauty of Joseon:** ganhou popularidade com seus produtos inspirados em ingredientes tradicionais coreanos.',
+        '**Anua:** conhecida por produtos com ingredientes como heartleaf.',
+        '**SKIN1004:** destaca produtos formulados com centella asiática.',
+        '**Innisfree:** trabalha com cosméticos e cuidados com a pele.',
+        '**Laneige:** conhecida por hidratantes e produtos para os lábios.',
       ],
     },
     {
       type: 'p',
-      text: 'Se o seu caso está no segundo grupo, vale olhar primeiro as marcas que já são vendidas oficialmente no Brasil, citadas na seção de marcas acima, e comparar preço e prazo antes de importar.',
-    },
-    { type: 'h2', text: 'Pedidos para o Brasil estão pausados?' },
-    {
-      type: 'p',
-      text: `A YesStyle publicou um aviso oficial de pausa temporária de todos os pedidos para o Brasil. Em resumo, o aviso diz que, nas últimas semanas, a loja enfrentou problemas com envios para o Brasil assim que chegam à alfândega, e que a transportadora local está trabalhando para normalizar a situação. Pra evitar que mais pedidos fiquem retidos, a empresa pausou os envios. Diz também que já contatou os clientes afetados e que pretende voltar a atender o Brasil em breve.`,
+      text: 'Algumas dessas marcas também utilizam artistas e integrantes de grupos de K-pop em suas campanhas publicitárias.',
     },
     {
       type: 'p',
-      text: `Conferimos esse aviso em 25 de novembro de 2026. Ele não traz data de publicação, então não dá pra saber há quanto tempo está no ar. Leia o [aviso oficial da YesStyle](${PAUSE_NOTICE}) e veja se ele ainda existe antes de qualquer compra. Enquanto estiver no ar, considere a loja indisponível pra entregas no Brasil.`,
+      text: 'É importante lembrar que a presença de um artista em uma campanha não representa uma recomendação dermatológica nem garante que o produto seja adequado para sua pele.',
+    },
+    { type: 'p', text: 'Antes de importar, vale pesquisar se o produto desejado já está disponível oficialmente no Brasil.' },
+
+    { type: 'h2', text: 'Vale a pena comprar na YesStyle?' },
+    { type: 'p', text: 'A resposta depende do que você procura e, principalmente, das condições de entrega.' },
+    { type: 'h3', text: 'Quando pode valer a pena' },
+    { type: 'p', text: 'A YesStyle pode ser interessante para quem:' },
+    {
+      type: 'ul',
+      items: [
+        'Procura marcas asiáticas difíceis de encontrar no Brasil;',
+        'Quer comparar diferentes fabricantes em uma única loja;',
+        'Já conhece os produtos que pretende comprar;',
+        'Não tem urgência para receber a encomenda;',
+        'Consegue calcular antecipadamente o custo total da importação.',
+      ],
+    },
+    { type: 'h3', text: 'Quando não recomendamos' },
+    { type: 'p', text: 'A compra não é uma boa escolha para quem:' },
+    {
+      type: 'ul',
+      items: [
+        'Precisa receber o produto em uma data específica;',
+        'Não quer correr riscos com atrasos e retenções alfandegárias;',
+        'Não está preparado para pagar os impostos de importação;',
+        'Encontra o mesmo produto em uma loja brasileira por preço semelhante;',
+        'Precisa de um atendimento local mais acessível em caso de problemas.',
+      ],
     },
     {
       type: 'p',
-      text: 'Um detalhe que merece atenção: a mesma central de ajuda tem uma tabela de frete e prazo para o Brasil, em vigor desde 17 de novembro de 2026 (também conferida em 25 de novembro). Isso não confirma que os envios voltaram: o aviso de pausa não tem data e a tabela pode apenas listar o destino. Na dúvida, vale mais o aviso, que é a informação específica sobre a situação do Brasil. Quem confirma de verdade se o pedido passa é o checkout ou o atendimento da loja.',
+      text: '**Nossa recomendação para novembro de 2026:** enquanto a YesStyle mantiver a suspensão dos envios para o Brasil, recomendamos aguardar a normalização antes de realizar qualquer compra.',
+    },
+    { type: 'p', text: 'Mesmo depois da retomada, vale comparar o preço final com o de lojas brasileiras.' },
+
+    { type: 'h2', text: 'Conclusão: vale a pena importar da YesStyle?' },
+    {
+      type: 'p',
+      text: 'A YesStyle continua sendo uma opção interessante para conhecer marcas e produtos de beleza asiáticos, especialmente para quem procura novidades da K-beauty.',
+    },
+    { type: 'p', text: 'Entretanto, a situação brasileira exige cautela.' },
+    {
+      type: 'p',
+      text: 'A suspensão dos envios, as dificuldades alfandegárias, as reclamações registradas no Reclame Aqui e os impostos de importação tornam a compra menos atrativa neste momento.',
     },
     {
       type: 'p',
-      text: `Se a pausa já acabou e você quer conhecer a loja, este é o [link da YesStyle](${AFFILIATE_LINK}) (link de afiliado). Compare Ofertas é parceiro afiliado da YesStyle: se você comprar pelo nosso link, podemos receber uma comissão, sem custo nenhum a mais pra você. A pausa nos pedidos não muda nada do que escrevemos aqui, e preferimos contar isso a deixar você descobrir no checkout.`,
+      text: 'Nossa recomendação é simples: não compre por impulso. Confira se a loja voltou a aceitar pedidos para o Brasil, calcule os impostos e compare o preço final com alternativas disponíveis no mercado nacional.',
+    },
+    { type: 'p', text: '**Uma promoção só vale a pena quando o produto chega e o preço final realmente compensa.**' },
+    {
+      type: 'p',
+      text: `Quando a YesStyle voltar a aceitar pedidos para o Brasil, este é o [link da YesStyle](${AFFILIATE_LINK}) (link de afiliado).`,
+    },
+    {
+      type: 'p',
+      text: 'Transparência: o Compare Ofertas pode receber comissão por compras realizadas por meio de links de afiliados, sem custo adicional para o consumidor. Isso não altera nossa análise nem nossas recomendações.',
     },
   ],
   faq: [
     {
       q: 'A YesStyle entrega no Brasil?',
-      a: 'A YesStyle publicou um aviso oficial de pausa temporária de todos os pedidos para o Brasil, por causa de retenções na alfândega, e o aviso não tem data. A central de ajuda também traz uma tabela de frete para o Brasil, em vigor desde 17 de novembro de 2026, o que não prova que os envios voltaram. Confira o aviso oficial e o checkout antes de comprar.',
+      a: `A loja publicou uma suspensão temporária dos pedidos e envios para o Brasil devido a problemas na alfândega. Na última consulta, em ${STATUS_CHECKED}, o comunicado ainda estava disponível.`,
     },
     {
       q: 'A YesStyle é confiável?',
-      a: 'É uma empresa grande, de uma controladora listada na bolsa de Hong Kong, mas as opiniões de clientes são mistas. As queixas que encontramos se concentram em atraso, extravio e rastreio, não em produto. Pesquise o nome da loja no Reclame Aqui antes de comprar.',
+      a: 'É uma varejista internacional estabelecida, mas apresenta avaliações diferentes conforme o mercado. No Brasil, a página no Reclame Aqui, não verificada e que não parece ser acompanhada pela empresa, apresenta reputação Não Recomendada, com relatos sobre entrega e reembolso sem resposta.',
     },
     {
-      q: 'Preciso pagar imposto de importação na YesStyle?',
-      a: 'Provavelmente haverá algum tributo. A YesStyle diz que o cliente é o importador e responde por impostos e taxas, e não garante se haverá cobrança. O valor depende das regras vigentes da Receita Federal, que mudaram em 2026. Confira lá e no checkout.',
+      q: 'A YesStyle vende produtos originais?',
+      a: 'A loja comercializa produtos de diversas marcas e informa trabalhar com marcas autorizadas. Ainda assim, é importante avaliar cada fabricante e produto individualmente.',
     },
     {
-      q: 'Quanto tempo demora uma encomenda da YesStyle pro Brasil?',
-      a: 'A tabela de frete da YesStyle para o Brasil, em vigor desde 17 de novembro de 2026, estima de 21 a 25 dias úteis no envio Padrão, ou seja, de quatro a cinco semanas, com código de rastreio. É uma estimativa: relatos de clientes variam, com casos acima de um mês, e a própria loja reconhece retenções na alfândega brasileira.',
+      q: 'Preciso pagar imposto ao comprar na YesStyle?',
+      a: 'Sim, deve-se considerar a tributação de importação. Na consulta à lista oficial da Receita Federal, a YesStyle não constava entre as plataformas certificadas no Remessa Conforme. Assim, aplica-se a regra geral de 60% de Imposto de Importação, além do ICMS, enquanto essa situação permanecer.',
     },
     {
-      q: 'Quanto custa o frete da YesStyle pro Brasil?',
-      a: 'Pela tabela da loja, o envio Padrão é grátis em pedidos a partir de US$ 80 e custa US$ 15 abaixo disso. O frete não inclui eventuais impostos de importação, que são do cliente.',
+      q: 'Quanto tempo demora uma entrega da YesStyle?',
+      a: 'A tabela de frete consultada apresentava prazo estimado de 21 a 25 dias úteis para o Brasil. Esse prazo não é garantia e pode ser afetado pela fiscalização alfandegária. Atualmente, os envios estão temporariamente suspensos.',
     },
     {
-      q: 'Existe marca da YesStyle ligada a grupo de K-pop?',
-      a: 'A YesStyle é uma revendedora, e não encontramos linha própria dela ligada a algum grupo. Várias marcas coreanas de beleza usam idols como embaixadores, como a Innisfree (Wonyoung, do IVE) e a Dr.Jart+ (ENHYPEN), segundo a imprensa. Confira no site da YesStyle se a marca que você procura está disponível.',
+      q: 'A YesStyle tem loja física no Brasil?',
+      a: 'A YesStyle é uma varejista internacional e não identificamos uma operação de loja física brasileira.',
     },
     {
-      q: 'De onde a YesStyle envia os pedidos?',
-      a: 'Segundo a própria loja, todos os pedidos são processados e enviados do armazém da YesStyle em Hong Kong. Por isso a compra é tratada como importação.',
+      q: 'De onde vêm os produtos da YesStyle?',
+      a: 'Segundo a empresa, os pedidos são processados e enviados de seu centro de distribuição em Hong Kong.',
     },
   ],
 }

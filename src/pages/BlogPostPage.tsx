@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { Fragment, type ReactNode } from 'react'
 import { useParams } from 'react-router-dom'
 import { Link } from '../components/Link'
 import { CalendarDays, Gift } from '../components/Icon'
@@ -23,8 +23,21 @@ const INLINE_LINK = /\[([^\]]+)\]\(([^)]+)\)/g
 // nem pagos, então não levam rel="sponsored" (o padrão pra qualquer outro link
 // externo aqui, que na prática é sempre afiliado).
 // yesstyle.com entra aqui só pelos links DIRETOS (ex.: aviso da central de ajuda);
-// o link de afiliado passa por awin1.com, que continua "sponsored".
-const EDITORIAL_HOSTS = new Set(['pantone.com.br', 'www.pantone.com.br', 'pantone.com', 'www.pantone.com', 'colorcombinations.org', 'colorindicator.com', 'yesstyle.com', 'www.yesstyle.com'])
+// o link de afiliado passa por awin1.com, que continua "sponsored". Reclame Aqui,
+// Trustpilot e gov.br são fontes citadas no artigo da YesStyle.
+const EDITORIAL_HOSTS = new Set([
+  'pantone.com.br',
+  'www.pantone.com.br',
+  'pantone.com',
+  'www.pantone.com',
+  'colorcombinations.org',
+  'colorindicator.com',
+  'yesstyle.com',
+  'www.yesstyle.com',
+  'www.reclameaqui.com.br',
+  'www.trustpilot.com',
+  'www.gov.br',
+])
 
 function isEditorialLink(href: string): boolean {
   try {
@@ -34,7 +47,20 @@ function isEditorialLink(href: string): boolean {
   }
 }
 
+// **negrito** dentro do texto; os links de cada trecho seguem pela regra de
+// renderLinks.
+const INLINE_BOLD = /\*\*(.+?)\*\*/g
+
 function renderInline(text: string): ReactNode {
+  const segments = text.split(INLINE_BOLD)
+  if (segments.length === 1) return renderLinks(text)
+  // split com grupo de captura: índices ímpares são os trechos em negrito
+  return segments.map((segment, i) =>
+    i % 2 ? <strong key={i}>{renderLinks(segment)}</strong> : <Fragment key={i}>{renderLinks(segment)}</Fragment>,
+  )
+}
+
+function renderLinks(text: string): ReactNode {
   const parts: ReactNode[] = []
   let lastIndex = 0
   let match: RegExpExecArray | null
@@ -92,7 +118,7 @@ function Block({ block, url }: { block: BlogContentBlock; url: string }) {
         </ol>
       )
     case 'quote':
-      return <blockquote>{block.text}</blockquote>
+      return <blockquote>{renderInline(block.text)}</blockquote>
     case 'table':
       return (
         <div className="blog-post__table-wrap">
@@ -188,6 +214,7 @@ export function BlogPostPage() {
       <header className="blog-post__header">
         <span className="blog-post__date">
           <CalendarDays size={13} aria-hidden="true" /> {formatSimpleDateBr(post.publishedAt)}
+          {post.updatedAt && post.updatedAt !== post.publishedAt ? ` · Atualizado em ${formatSimpleDateBr(post.updatedAt)}` : ''}
         </span>
         <h1>{post.title}</h1>
       </header>
